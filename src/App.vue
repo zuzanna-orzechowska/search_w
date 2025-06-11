@@ -1,26 +1,49 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <v-app id="app">
+    <AppHeader />
+    <v-main id="main">
+      <router-view>
+        <h2>Hello</h2>
+      </router-view>
+    </v-main>
+    <AppFooter />
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import AppFooter from './components/AppFooter.vue';
+import AppHeader from './components/AppHeader.vue';
+import '@fontsource-variable/fredoka';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    AppFooter,
+    AppHeader
   }
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
+<style lang="scss">
+ *{
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Fredoka Variable', sans-serif;
+
+  body {
+    background-color: #f9f9f9;
+
+    #app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      
+      #main {
+        background-color: pink;
+      }
+    }
+  }
+ }
 </style>
