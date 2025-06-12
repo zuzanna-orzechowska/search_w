@@ -41,7 +41,7 @@ export default {
       grid-template-rows: 1fr auto;
       
       #main {
-        background-color: pink;
+        height: 100vh;
       }
     }
   }

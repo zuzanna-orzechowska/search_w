@@ -14,6 +14,5 @@ export default {
     top: 0;
     height: auto;
     position: static;
-    background-color: yellow;
 }
 </style>
