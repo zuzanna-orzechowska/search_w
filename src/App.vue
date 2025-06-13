@@ -38,10 +38,10 @@ export default {
     #app {
       min-height: 100vh;
       display: grid;
-      grid-template-rows: 1fr auto;
+      grid-template-rows: auto 1fr auto;
       
       #main {
-        height: 100vh;
+        //height: 80vh;
       }
     }
   }
