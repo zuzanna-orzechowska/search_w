@@ -3,7 +3,7 @@
     <AppHeader />
     <v-main id="main">
       <router-view>
-        <h2>Hello</h2>
+        <img src="./assets/logo_text.png" alt="SearchW">
       </router-view>
     </v-main>
     <AppFooter />
@@ -39,9 +39,19 @@ export default {
       min-height: 100vh;
       display: grid;
       grid-template-rows: auto 1fr auto;
+      background-image: url(./assets/background_drawing.png);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 85%;
       
       #main {
-        //height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img {
+          width: 140%;
+          margin-bottom: 32%;
+        }
       }
     }
   }
