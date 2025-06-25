@@ -5,7 +5,7 @@
            <q>The smart, fun way to test your mind and spot every hidden word.</q>
          </div>
          <div class="btns">
-             <router-link to="/register" id="register-link">
+             <router-link to="/login" id="login-link">
                  <button type="button" id="sign-in">Sign in</button>
              </router-link>
              <button type="button" id="random">Random</button>

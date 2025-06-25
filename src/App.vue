@@ -24,7 +24,7 @@ export default {
   },
   setup() {
     const route = useRoute();
-    const registerActive = computed(() => route.path === '/register');
+    const registerActive = computed(() => route.path === '/login');
     return { registerActive}
   }
 }
