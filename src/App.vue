@@ -1,10 +1,10 @@
 <template>
-  <v-app :class="{ 'background-enabled': !registerActive }" id="app">
-    <AppHeader v-if="!registerActive" />
+  <v-app :class="{ 'background-enabled': !backgroundDisabled }" id="app">
+    <AppHeader v-if="!backgroundDisabled" />
     <v-main id="main">
       <router-view />
     </v-main>
-    <AppFooter v-if="!registerActive"/>
+    <AppFooter v-if="!backgroundDisabled"/>
   </v-app>
 </template>
 
@@ -24,8 +24,8 @@ export default {
   },
   setup() {
     const route = useRoute();
-    const registerActive = computed(() => route.path === '/login');
-    return { registerActive}
+    const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register');
+    return { backgroundDisabled}
   }
 }
 </script>
