@@ -21,8 +21,6 @@ export default {
 
 <style lang="scss">
 .wrapper {
-    margin-bottom: 44px;
-
     #logo-text {
         width: 420px;
         margin-left: 52px;
