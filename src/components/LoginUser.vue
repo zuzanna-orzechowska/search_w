@@ -1,12 +1,12 @@
 <template>
-    <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom">
+    <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom-login">
     <main>
         <div class="wrapper-login">
             <h2>Login</h2>
             <form>
-                <label for="usernameLogin">
+                <label for="userLogin">
                     <img src="../assets/user-icon.svg" alt="user icon" class="user-icon">
-                    <input type="text" id="usernameLogin" name="Username" placeholder="Username" required>
+                    <input type="text" id="userLogin" name="userLogin" placeholder="Username or email" v-model="userLogin" required>
                 </label>
                 <label for="passwordLogin">
                     <img src="../assets/password-icon.svg" alt="password-icon" class="user-icon">
@@ -21,6 +21,14 @@
                 </div>
                 <button type="submit" class="userButton">Login</button>
             </form>
+            <div class="otherRegister">
+                <p>or</p>
+                <div class="linksRegister">
+                    <img src="../assets/google-icon.svg" alt="Google icon">
+                    <img src="../assets/apple-icon.svg" alt="Apple icon">
+                    <img src="../assets/facebook-icon.svg" alt="Facebook icon">
+                </div>
+            </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
         </div>
     </main>
@@ -33,11 +41,9 @@ export default {
 </script>
 
 <style lang="scss">
-.lines-top-bottom {
+.lines-top-bottom-login {
   position: absolute;
-  top: 16;
-  left: 60;
-  height: 75%;
+  height: 95%;
   object-fit: contain;
   z-index: 1;
   pointer-events: none;
@@ -56,7 +62,7 @@ main {
         background-color: rgba(174, 210, 229,0.5);
         //backdrop-filter: blur(20px); ???
         //-webkit-backdrop-filter: blur(100px);
-        height: 564px;
+        height: 700px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
         z-index: 0;
@@ -90,7 +96,7 @@ main {
                 border: none;
                 border-radius: 16px;
                 height: 34px;
-                padding: 8px 0px 8px 48px;
+                padding: 24px 0 24px 48px;
                 color: #f9f9f9;
                 transition: all 0.3s ease;
             }
@@ -166,6 +172,46 @@ main {
           a {
             color: #000;
           }
+
+          .otherRegister {
+           p {
+            text-align: center;
+            overflow: hidden;
+           }
+
+           p:before, p:after {
+            background-color: #000;
+            content: "";
+            display: inline-block;
+            height: 2px;
+            position: relative;
+            vertical-align: middle;
+            width: 20%;
+           }
+
+           p:before {
+            right: 0.5em;
+            margin-left: -50%;
+        }
+
+            p:after {
+            left: 0.5em;
+            margin-right: -50%;
+        }
+
+            .linksRegister {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 36px;
+                margin-top: 24px;
+
+                img {
+                    width: 40px;
+                    cursor: pointer;
+                }
+            }
+        }
     }
 }
 </style>

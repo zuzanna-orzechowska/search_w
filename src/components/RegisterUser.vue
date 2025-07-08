@@ -1,9 +1,12 @@
 <template>
-    <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom">
+    <img src="../assets/linesTopBottomRegister.png" alt="drawing of lines" class="lines-top-bottom">
     <main>
         <div class="wrapper-register">
             <h2>Register</h2>
             <form>
+                <label for="">
+                    <img src="../assets/avatar-icon.svg" alt="plus" class="avatar-icon">
+                </label>
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
                     <input type="text" id="usernameRegister" name="Username" placeholder="Username" required>
@@ -49,9 +52,10 @@ export default {
 <style lang="scss">
 .lines-top-bottom {
   position: absolute;
-  top: 16;
-  left: 60;
-  height: 95%;
+  //bottom: 12px;
+  //top: -64px;
+  //left: px;
+  height: 105%;
   object-fit: contain;
   z-index: 1;
   pointer-events: none;
@@ -66,17 +70,20 @@ main {
     background-color: #f9f9f9;
     
     .wrapper-register {
+        position: relative;
         width: 600px;
         background-color: rgba(174, 210, 229,0.5);
-        height: 700px;
+        height: 800px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
         z-index: 0;
 
         h2 {
+            position: relative;
+            z-index: 10;
             font-size: 64px;
             text-align: center;
-            margin-top: 100px;
+            margin-top: 52px;
             margin-bottom: 22px;
             font-weight: 450;
         }
@@ -87,6 +94,10 @@ main {
             align-items: center;
             //background-color: aqua;
             gap: 22px;
+
+            .avatar-icon {
+                width: 100px;
+            }
 
             .icon {
                 position: relative;
@@ -102,7 +113,7 @@ main {
                 border: none;
                 border-radius: 16px;
                 height: 34px;
-                padding: 8px 0px 8px 48px;
+                padding: 24px 0 24px 48px;
                 color: #f9f9f9;
                 transition: all 0.3s ease;
             }
