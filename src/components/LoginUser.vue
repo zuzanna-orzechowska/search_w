@@ -43,7 +43,7 @@ export default {
 <style lang="scss">
 .lines-top-bottom-login {
   position: absolute;
-  height: 95%;
+  height: 90%;
   object-fit: contain;
   z-index: 1;
   pointer-events: none;
