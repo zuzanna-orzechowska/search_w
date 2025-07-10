@@ -22,23 +22,24 @@
                 </div>
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
-                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" required>
+                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required>
                 </label>
                 <label for="emailRegister">
                     <img src="../assets/email-icon.svg" alt="email icon" class="icon">
-                    <input type="email" id="usernameRegister" name="Email" placeholder="Email" required>
+                    <input type="email" id="usernameRegister" name="Email" placeholder="Email" v-model="email" required>
                 </label>
                 <label for="passwordRegister">
                     <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                    <input type="password" id="passwordRegister" name="Password" placeholder="Password" required>
+                    <input type="password" id="passwordRegister" name="Password" placeholder="Password" v-model="password" required>
                 </label>
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
-                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" required>
+                        <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
+                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="privacyPolicy" required>
                         Accept <router-link> Privacy Policy</router-link>
                     </label>
                     <label for="accTermsofUse">
-                        <input type="checkbox" name="Remember-me" id="accTermsofUse" required>
+                        <input type="checkbox" name="Remember-me" id="accTermsofUse" v-model="termsOfUse" required>
                         Accept <router-link> Terms of Use</router-link>
                     </label>
                 </div>
@@ -59,7 +60,11 @@
 </template>
 
 <script>
+//import { ref } from 'vue';
+//import { account, ID } from '../src/lib/appwrite'
+
 export default {
+
   name: 'RegisterUser',
   //this function has all needed data that will be used - visibility of avatars, selected avatar and array of avatars to choose from
   data() {
@@ -83,7 +88,9 @@ export default {
   //used to handle events, it's using data from data() function
   methods: {
     chooseAvatar(imgSrc) {
-        this.selectedAvatar = imgSrc;
+        //pop() returns the element it removed
+        const imgName = imgSrc.split('/').pop();
+        this.selectedAvatar = imgName; //this will be send to database as a name for proper avatar!
         this.avatars = false;
     }
   }
