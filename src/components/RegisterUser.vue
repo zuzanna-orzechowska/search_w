@@ -2,7 +2,8 @@
     <main>
         <div class="wrapper-register">
             <h2>Register</h2>
-            <form>
+            <!--instead of submiting form and reloading page function register will be called - register user within database-->
+            <form @submit.prevent="register">
                 <div class="wrapper-avatars">
                     <!--v-bind is a directive that cooperate with JS - change avatar icon depending on a choice - default is "+", any other is user choice
                     v-on (short is @) is a directive that handles DOM events and run handlers when triggered - in this case via click event ;
@@ -22,24 +23,24 @@
                 </div>
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
-                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required>
+                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required autocomplete="off">
                 </label>
                 <label for="emailRegister">
                     <img src="../assets/email-icon.svg" alt="email icon" class="icon">
-                    <input type="email" id="usernameRegister" name="Email" placeholder="Email" v-model="email" required>
+                    <input type="email" id="usernameRegister" name="Email" placeholder="Email" v-model="email" required autocomplete="off">
                 </label>
                 <label for="passwordRegister">
                     <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                    <input type="password" id="passwordRegister" name="Password" placeholder="Password" v-model="password" required>
+                    <input type="password" id="passwordRegister" name="Password" placeholder="Password" v-model="password" required autocomplete="off">
                 </label>
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
-                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="privacyPolicy" required>
+                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" required>
                         Accept <router-link> Privacy Policy</router-link>
                     </label>
                     <label for="accTermsofUse">
-                        <input type="checkbox" name="Remember-me" id="accTermsofUse" v-model="termsOfUse" required>
+                        <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" required>
                         Accept <router-link> Terms of Use</router-link>
                     </label>
                 </div>
@@ -60,8 +61,8 @@
 </template>
 
 <script>
-//import { ref } from 'vue';
-//import { account, ID } from '../src/lib/appwrite'
+import { ref } from 'vue';
+import { account, databases, ID } from '../lib/appwrite'
 
 export default {
 
@@ -70,7 +71,7 @@ export default {
   data() {
     return {
         avatars : false,
-        selectedAvatar : '',
+        selectedAvatar : '', //this variable is forwarded to database
         avatarsArr: [
             //require is used to import other modules - in this case svg images
             require('../assets/avatars/av1.svg'),
@@ -81,7 +82,14 @@ export default {
             require('../assets/avatars/av6.svg'),
             require('../assets/avatars/av7.svg'),
             require('../assets/avatars/av8.svg')
-        ]
+        ],
+
+        //data for database in appwrite
+        username : ref(''),
+        email : ref(''),
+        password : ref(''),
+        database_id : process.env.VUE_APP_DATABASE_ID,
+        collection_id : process.env.VUE_APP_COLLECTION_ID
     };
   },
 
@@ -89,9 +97,31 @@ export default {
   methods: {
     chooseAvatar(imgSrc) {
         //pop() returns the element it removed
-        const imgName = imgSrc.split('/').pop();
-        this.selectedAvatar = imgName; //this will be send to database as a name for proper avatar!
+        //const imgName = imgSrc.split('/').pop();
+        this.selectedAvatar = imgSrc; //this will be send to database as a name for proper avatar!
         this.avatars = false;
+    },
+
+    async register() {
+        try {
+            await account.create(ID.unique(), this.email, this.password, this.username);
+
+            //await account.createEmailPasswordSession(this.email, this.password);
+            const user = await account.get(); //getting created user's info
+            //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
+
+            await databases.createDocument(this.database_id,this.collection_id,ID.unique(), {
+                id_user: user.$id,
+                username : this.username,
+                email : this.email,
+                avatar : this.selectedAvatar
+            });
+            //console.log('Zarejestrowano użytkownika:', await account.get());
+        } catch (err) {
+            console.log('Error : ', err);
+        }
+
+
     }
   }
 }
