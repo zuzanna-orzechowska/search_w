@@ -23,11 +23,12 @@
                 </div>
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
+                    <!--v-model is used because it connects value of this input with value of variable in script-->
                     <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required autocomplete="off">
                 </label>
                 <label for="emailRegister">
                     <img src="../assets/email-icon.svg" alt="email icon" class="icon">
-                    <input type="email" id="usernameRegister" name="Email" placeholder="Email" v-model="email" required autocomplete="off">
+                    <input type="email" id="usernameRegister" name="Email" placeholder="E-mail" v-model="email" required autocomplete="off">
                 </label>
                 <label for="passwordRegister">
                     <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
@@ -61,7 +62,6 @@
 </template>
 
 <script>
-import { ref } from 'vue';
 import { account, databases, ID } from '../lib/appwrite'
 
 export default {
@@ -85,9 +85,9 @@ export default {
         ],
 
         //data for database in appwrite
-        username : ref(''),
-        email : ref(''),
-        password : ref(''),
+        username : '',
+        email : '',
+        password : '',
         database_id : process.env.VUE_APP_DATABASE_ID,
         collection_id : process.env.VUE_APP_COLLECTION_ID
     };
@@ -106,7 +106,8 @@ export default {
         try {
             await account.create(ID.unique(), this.email, this.password, this.username);
 
-            //await account.createEmailPasswordSession(this.email, this.password);
+            //login user after creating an account
+            await account.createEmailPasswordSession(this.email, this.password);
             const user = await account.get(); //getting created user's info
             //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
 
@@ -116,12 +117,11 @@ export default {
                 email : this.email,
                 avatar : this.selectedAvatar
             });
-            //console.log('Zarejestrowano użytkownika:', await account.get());
+            console.log('Zarejestrowano użytkownika:', await account.get());
+            this.$router.push('/login');
         } catch (err) {
             console.log('Error : ', err);
         }
-
-
     }
   }
 }

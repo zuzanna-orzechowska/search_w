@@ -3,14 +3,14 @@
     <main>
         <div class="wrapper-login">
             <h2>Login</h2>
-            <form>
+            <form @submit.prevent="login">
                 <label for="userLogin">
                     <img src="../assets/user-icon.svg" alt="user icon" class="user-icon">
-                    <input type="text" id="userLogin" name="userLogin" placeholder="Username or email" v-model="userLogin" required>
+                    <input type="email" id="userLogin" name="userLogin" placeholder="E-mail" v-model="userLogin" required>
                 </label>
                 <label for="passwordLogin">
                     <img src="../assets/password-icon.svg" alt="password-icon" class="user-icon">
-                    <input type="password" id="passwordLogin" name="Password" placeholder="Password" required>
+                    <input type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" required>
                 </label>
                 <div class="bottom-form-txt">
                     <label for="rememberLogin">
@@ -35,8 +35,32 @@
 </template>
 
 <script>
+import { account} from '@/lib/appwrite';
+
 export default {
-    name: 'LoginUser'
+    name: 'LoginUser',
+    
+    data () {
+        return {
+            userLogin : '',
+            password : ''
+        };
+    },
+
+    methods: {
+        async login() {
+            try {
+                await account.deleteSession('current'); //deleting current session so user can Login without problems - after Registration
+
+                await account.createEmailPasswordSession(this.userLogin,this.password);
+                const user = account.get();
+                console.log('Zalogowano jako ',user);
+                this.$router.push('/');
+            } catch(err) {
+                console.log('Error: ',err);
+            }
+        }
+    }
 }
 </script>
 
@@ -89,7 +113,7 @@ main {
                 width: 30px;
             }
 
-            input[type="text"], input[type="password"] {
+            input[type="email"], input[type="password"] {
                 width: 364px;
                 font-size: 24px;
                 background-color: #6AAED3;
@@ -101,13 +125,13 @@ main {
                 transition: all 0.3s ease;
             }
 
-            input[type="text"]::placeholder, input[type="password"]::placeholder {
+            input[type="email"]::placeholder, input[type="password"]::placeholder {
                 color: #f9f9f9d1;
                 //padding-left: 30px;
                 font-weight: 300px;
             }
 
-            input[type="text"]:focus, input[type="password"]:focus {
+            input[type="email"]:focus, input[type="password"]:focus {
                 border: 3px solid #2A8DC1;
                 outline: none;
             }
