@@ -31,8 +31,13 @@
                     <input type="email" id="usernameRegister" name="Email" placeholder="E-mail" v-model="email" required autocomplete="off">
                 </label>
                 <label for="passwordRegister">
-                    <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                    <input type="password" id="passwordRegister" name="Password" placeholder="Password" v-model="password" required autocomplete="off">
+                    <div class="password-wrapper">
+                        <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
+                        <input v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <!--require() dynamically loads the file with given url-->
+                        <button class="toggleBtn" @click.prevent="toogleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+                    </div>
                 </label>
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
@@ -71,6 +76,7 @@ export default {
   data() {
     return {
         avatars : false,
+        hidPassword : true,
         selectedAvatar : '', //this variable is forwarded to database
         avatarsArr: [
             //require is used to import other modules - in this case svg images
@@ -122,7 +128,11 @@ export default {
         } catch (err) {
             console.log('Error : ', err);
         }
-    }
+    },
+
+    toogleState() {
+            this.hidPassword = !this.hidPassword;
+        }
   }
 }
 </script>
@@ -251,6 +261,34 @@ main {
             input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
                 border: 3px solid #2A8DC1;
                 outline: none;
+            }
+
+            .password-wrapper {
+                position: relative;
+
+                input {
+                    padding-right: 64px;
+                }
+
+                .toggleBtn {
+                    position: absolute;
+                    right: 0px;
+                    top: 0px;
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 0 16px 16px 0;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    width: 64px;
+                    cursor: pointer;
+
+                    img {
+                        width: 32px;
+                    }
+                }
             }
 
             .bottom-form-txt {
