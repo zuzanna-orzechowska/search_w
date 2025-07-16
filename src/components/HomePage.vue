@@ -7,7 +7,7 @@
          <div class="btns">
              <button type="button" id="sign-in" @click="toLogin">Sign in</button>
              <button type="button" id="random">Random</button>
-              <!--<button @click="logout">Logout</button>-->
+              <button @click="logout">Logout</button>
          </div>
      </div>
 </template>
@@ -29,14 +29,14 @@ const toLogin = async () => {
     }
 }
 
-/*const logout = async () => {
+const logout = async () => {
     try {
         await account.deleteSession('current');
         console.log('Logged out');
     } catch (err) {
         console.error('Logout error:', err);
     }
-}; */
+}; 
 
 </script>
 

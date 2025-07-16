@@ -24,11 +24,11 @@
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
                     <!--v-model is used because it connects value of this input with value of variable in script-->
-                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required autocomplete="off">
+                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required autocomplete="off" ref="usernameInput">
                 </label>
                 <label for="emailRegister">
                     <img src="../assets/email-icon.svg" alt="email icon" class="icon">
-                    <input type="email" id="usernameRegister" name="Email" placeholder="E-mail" v-model="email" required autocomplete="off">
+                    <input type="email" id="emailRegister" name="Email" placeholder="E-mail" v-model="email" required autocomplete="off" ref="emailInput">
                 </label>
                 <label for="passwordRegister">
                     <div class="password-wrapper">
@@ -50,7 +50,7 @@
                         Accept <router-link> Terms of Use</router-link>
                     </label>
                 </div>
-                <button type="submit" class="userButton">Register</button>
+                <button type="submit" class="userButton" >Register</button>
             </form>
             <div class="otherRegister">
                 <p>or</p>
@@ -68,6 +68,8 @@
 
 <script>
 import { account, databases, ID } from '../lib/appwrite'
+import { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 export default {
 
@@ -75,6 +77,7 @@ export default {
   //this function has all needed data that will be used - visibility of avatars, selected avatar and array of avatars to choose from
   data() {
     return {
+        //loading : false,
         avatars : false,
         hidPassword : true,
         selectedAvatar : '', //this variable is forwarded to database
@@ -113,7 +116,7 @@ export default {
             await account.create(ID.unique(), this.email, this.password, this.username);
 
             //login user after creating an account
-            await account.createEmailPasswordSession(this.email, this.password);
+            //await account.createEmailPasswordSession(this.email, this.password);
             const user = await account.get(); //getting created user's info
             //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
 
@@ -127,6 +130,17 @@ export default {
             this.$router.push('/login');
         } catch (err) {
             console.log('Error : ', err);
+            if(err.code == 409) { //error number 409 means that something went wrong with the request to database - registration, it's inputs
+                if(err.message.includes("email")) {
+                    toast.error("This email is already in use");
+                    this.$refs.emailInput.value = '';
+                }else if(err.message.includes("username") || err.message.includes("name")) {
+                    toast.error("This username is already in use");
+                    this.$refs.usernameInput.value = '';
+                } else if(err.code == 429) {
+                    console.log(err);
+                }
+            }
         }
     },
 
