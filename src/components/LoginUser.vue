@@ -19,7 +19,7 @@
                 </label>
                 <div class="bottom-form-txt">
                     <label for="rememberLogin">
-                        <input type="checkbox" name="Remember-me" id="rememberLogin">
+                        <input type="checkbox" name="Remember-me" id="rememberLogin" v-model="rememberMe">
                         Remember me
                     </label>
                     <label for="">Forgot password?</label>
@@ -49,19 +49,27 @@ export default {
         return {
             userLogin : '',
             password : '',
-            hidPassword: true
+            hidPassword: true,
+            //rememberMe : false
         };
     },
 
     methods: {
         async login() {
             try {
-                await account.deleteSession('current'); //deleting current session so user can Login without problems - after Registration
-
+                await this.$nextTick(); // executes code after some data have changed and Vue.js has updated the virtual DOM
                 await account.createEmailPasswordSession(this.userLogin,this.password);
-                const user = account.get();
-                console.log('Zalogowano jako ',user);
-                this.$router.push('/');
+
+                const rememberMe = document.getElementById('rememberLogin').checked;
+                if(rememberMe) {
+                    localStorage.setItem("rememberMe","true"); //setting variable to true value - that's how account session won't be deleted
+                } else {
+                    localStorage.removeItem("rememberMe"); //if checkbox isn't checked then that variable will be deleted
+                }
+
+                this.$router.push('/user'); // NOT WORKING?!
+                // const user = account.get();
+                // console.log('Zalogowano jako ',user);
             } catch(err) {
                 console.log('Error: ',err);
             }

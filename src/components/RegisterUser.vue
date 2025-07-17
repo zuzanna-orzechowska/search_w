@@ -67,7 +67,8 @@
 </template>
 
 <script>
-import { account, databases, ID } from '../lib/appwrite'
+import { account, databases, ID} from '../lib/appwrite'
+import { Query } from 'appwrite';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
@@ -111,36 +112,77 @@ export default {
         this.avatars = false;
     },
 
+    async uniqueEmail(email) {
+        try {
+            //.listDocuments check all of the documents from given database and collection
+            //Query searches for matching email
+            const checkEmail = await databases.listDocuments(this.database_id,this.collection_id,[Query.equal('email',email)]);
+            return checkEmail.total === 0; //unique
+        } catch (err) {
+            console.log("Error: ", err);
+            return false;
+        }
+    },
+
+    async uniqueUsername(username) {
+        try {
+            const checkUsername = await databases.listDocuments(this.database_id,this.collection_id,[Query.equal('username',username)]);
+            return checkUsername.total === 0;
+        } catch (err) {
+            console.log("Error: ", err);
+            return false;
+        }
+    },
+
     async register() {
         try {
-            await account.create(ID.unique(), this.email, this.password, this.username);
+            //checking if given email is alredy in use
+            const isEmailUnique = await this.uniqueEmail(this.email);
+            if(!isEmailUnique) {
+                toast.error("This email is already in use");
+                this.$refs.emailInput.value = '';
+                return;
+            }
 
+            //checking if given username is already in use
+            const isUsernameUnique = await this.uniqueUsername(this.username);
+            if(!isUsernameUnique) {
+                toast.error("This username is already in use"); 
+                this.$refs.emailInput.value = '';
+                return;
+            }
+
+            const newUserId = ID.unique();
+            await account.create(newUserId, this.email, this.password, this.username);
+            
             //login user after creating an account
             //await account.createEmailPasswordSession(this.email, this.password);
-            const user = await account.get(); //getting created user's info
             //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
 
+            //checking if user selected an avatar - if not then the deafult one will be send to database
+            if (!this.selectedAvatar) {
+                this.selectedAvatar = require('../assets/avatars/unk.svg');
+            }
+
             await databases.createDocument(this.database_id,this.collection_id,ID.unique(), {
-                id_user: user.$id,
+                id_user: newUserId,
                 username : this.username,
                 email : this.email,
                 avatar : this.selectedAvatar
             });
-            console.log('Zarejestrowano użytkownika:', await account.get());
+            //console.log('Zarejestrowano użytkownika:', await account.get());
             this.$router.push('/login');
         } catch (err) {
             console.log('Error : ', err);
-            if(err.code == 409) { //error number 409 means that something went wrong with the request to database - registration, it's inputs
-                if(err.message.includes("email")) {
-                    toast.error("This email is already in use");
-                    this.$refs.emailInput.value = '';
-                }else if(err.message.includes("username") || err.message.includes("name")) {
-                    toast.error("This username is already in use");
-                    this.$refs.usernameInput.value = '';
-                } else if(err.code == 429) {
-                    console.log(err);
-                }
-            }
+            // if(err.code == 409) { //error number 409 means that something went wrong with the request to database - registration, it's inputs
+            //     if(err.message.includes("email")) {
+            //     }else if(err.message.includes("username") || err.message.includes("name")) {
+            //         toast.error("This username is already in use");
+            //         this.$refs.usernameInput.value = '';
+            //     } else if(err.code == 429) {
+            //         console.log(err);
+            //     }
+            // }
         }
     },
 

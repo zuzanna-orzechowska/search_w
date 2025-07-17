@@ -12,6 +12,7 @@
 import AppFooter from './components/AppFooter.vue';
 import AppHeader from './components/AppHeader.vue';
 import '@fontsource-variable/fredoka';
+import { account } from './lib/appwrite';
 
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -22,10 +23,35 @@ export default {
     AppFooter,
     AppHeader,
   },
+
   setup() {
     const route = useRoute();
     const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register');
     return { backgroundDisabled}
+  },
+
+  async mounted() { //mounted is lifecycle hook and it will executed before creating the component.
+    try {
+      await account.get(); // checking session status - if user is already logged in
+
+      // if user is on main page or after successful login then redirect to component for users
+      if (this.$route.path === '/' || this.$route.path === '/login') {
+        this.$router.push('/user');
+      }
+    } catch (err) { //if user is not logged in CHECK?
+      console.log("Error: ",err);
+    }
+
+    window.addEventListener('beforeunload',async () => { // event is fired when the current window, contained document, and associated resources are about to be unloaded.
+      const rememberUser = localStorage.getItem("rememberMe");
+      if(!rememberUser) {
+        try {
+          await account.deleteSession('current');
+        } catch (err) {
+          console.log("Error: ",err);
+        }
+      }
+    })
   }
 }
 </script>
