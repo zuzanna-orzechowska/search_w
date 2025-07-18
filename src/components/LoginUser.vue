@@ -41,6 +41,7 @@
 
 <script>
 import { account} from '@/lib/appwrite';
+import { toast } from 'vue3-toastify';
 
 export default {
     name: 'LoginUser',
@@ -67,11 +68,14 @@ export default {
                     localStorage.removeItem("rememberMe"); //if checkbox isn't checked then that variable will be deleted
                 }
 
-                this.$router.push('/user'); // NOT WORKING?!
+                this.$router.push('/user');
                 // const user = account.get();
                 // console.log('Zalogowano jako ',user);
             } catch(err) {
                 console.log('Error: ',err);
+                if (err.code === 401) {
+                    toast.error("Invalid username or email");
+                }
             }
         },
 

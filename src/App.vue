@@ -40,6 +40,7 @@ export default {
       }
     } catch (err) { //if user is not logged in CHECK?
       console.log("Error: ",err);
+      this.$router.push('/');
     }
 
     window.addEventListener('beforeunload',async () => { // event is fired when the current window, contained document, and associated resources are about to be unloaded.

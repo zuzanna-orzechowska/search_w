@@ -42,11 +42,11 @@
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
-                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" required>
+                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredTerms">
                         Accept <router-link> Privacy Policy</router-link>
                     </label>
                     <label for="accTermsofUse">
-                        <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" required>
+                        <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" v-model="requiredTerms">
                         Accept <router-link> Terms of Use</router-link>
                     </label>
                 </div>
@@ -93,6 +93,7 @@ export default {
             require('../assets/avatars/av7.svg'),
             require('../assets/avatars/av8.svg')
         ],
+        requiredTerms: false,
 
         //data for database in appwrite
         username : '',
@@ -139,7 +140,7 @@ export default {
             //checking if given email is alredy in use
             const isEmailUnique = await this.uniqueEmail(this.email);
             if(!isEmailUnique) {
-                toast.error("This email is already in use");
+                toast.error("This email is already in use.");
                 this.$refs.emailInput.value = '';
                 return;
             }
@@ -147,8 +148,14 @@ export default {
             //checking if given username is already in use
             const isUsernameUnique = await this.uniqueUsername(this.username);
             if(!isUsernameUnique) {
-                toast.error("This username is already in use"); 
+                toast.error("This username is already in use."); 
                 this.$refs.emailInput.value = '';
+                return;
+            }
+
+            //checking if Policy privacy and Terms of use are checked and accepted
+            if (!this.acceptTerms) {
+                toast.error("You must accept the terms and conditions.");
                 return;
             }
 
