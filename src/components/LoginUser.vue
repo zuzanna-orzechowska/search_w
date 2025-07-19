@@ -14,7 +14,7 @@
                         <input v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
                         <input v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
                         <!--require() dynamically loads the file with given url-->
-                        <button class="toggleBtn" @click.prevent="toogleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+                        <button class="toggleBtn" @click.prevent="toggleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
                     </div>
                 </label>
                 <div class="bottom-form-txt">
@@ -39,50 +39,42 @@
     </main>
 </template>
 
-<script>
+<script setup>
 import { account} from '@/lib/appwrite';
 import { toast } from 'vue3-toastify';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-export default {
-    name: 'LoginUser',
+//dynamic variables
+const userLogin = ref('');
+const password = ref('');
+let hidPassword = ref(true);
+let rememberMe = ref(false);
+
+const router = useRouter();
     
-    data () {
-        return {
-            userLogin : '',
-            password : '',
-            hidPassword: true,
-            //rememberMe : false
-        };
-    },
+//functions
+async function login() {
+    try {
+        await account.createEmailPasswordSession(userLogin.value,password.value);
+        router.push('/user');
 
-    methods: {
-        async login() {
-            try {
-                await this.$nextTick(); // executes code after some data have changed and Vue.js has updated the virtual DOM
-                await account.createEmailPasswordSession(this.userLogin,this.password);
+        if (!rememberMe.value) {
+            await account.deleteSession('current');
+        } 
 
-                const rememberMe = document.getElementById('rememberLogin').checked;
-                if(rememberMe) {
-                    localStorage.setItem("rememberMe","true"); //setting variable to true value - that's how account session won't be deleted
-                } else {
-                    localStorage.removeItem("rememberMe"); //if checkbox isn't checked then that variable will be deleted
-                }
-
-                this.$router.push('/user');
-                // const user = account.get();
-                // console.log('Zalogowano jako ',user);
-            } catch(err) {
-                console.log('Error: ',err);
-                if (err.code === 401) {
-                    toast.error("Invalid username or email");
-                }
-            }
-        },
-
-        toogleState() {
-            this.hidPassword = !this.hidPassword;
+        // const user = account.get();
+        // console.log('Zalogowano jako ',user);
+    } catch(err) {
+        console.log('Error: ',err);
+        if (err.code === 401) {
+            toast.error("Invalid username or email");
         }
     }
+}
+
+function toggleState() {
+    hidPassword.value = !hidPassword.value;
 }
 </script>
 

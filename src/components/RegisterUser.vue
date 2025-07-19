@@ -66,137 +66,124 @@
     </main>
 </template>
 
-<script>
+<script setup>
 import { account, databases, ID} from '../lib/appwrite'
 import { Query } from 'appwrite';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
-export default {
+const avatars = ref(false);
+const hidPassword = ref(true);
+let selectedAvatar = ref(''); //this variable is forwarded to database
 
-  name: 'RegisterUser',
-  //this function has all needed data that will be used - visibility of avatars, selected avatar and array of avatars to choose from
-  data() {
-    return {
-        //loading : false,
-        avatars : false,
-        hidPassword : true,
-        selectedAvatar : '', //this variable is forwarded to database
-        avatarsArr: [
-            //require is used to import other modules - in this case svg images
-            require('../assets/avatars/av1.svg'),
-            require('../assets/avatars/av2.svg'),
-            require('../assets/avatars/av3.svg'),
-            require('../assets/avatars/av4.svg'),
-            require('../assets/avatars/av5.svg'),
-            require('../assets/avatars/av6.svg'),
-            require('../assets/avatars/av7.svg'),
-            require('../assets/avatars/av8.svg')
-        ],
-        requiredTerms: false,
+//require is used to import other modules - in this case svg images
+const avatarsArr = [
+    require('../assets/avatars/av1.svg'),
+    require('../assets/avatars/av2.svg'),
+    require('../assets/avatars/av3.svg'),
+    require('../assets/avatars/av4.svg'),
+    require('../assets/avatars/av5.svg'),
+    require('../assets/avatars/av6.svg'),
+    require('../assets/avatars/av7.svg'),
+    require('../assets/avatars/av8.svg')
+];
 
-        //data for database in appwrite
-        username : '',
-        email : '',
-        password : '',
-        database_id : process.env.VUE_APP_DATABASE_ID,
-        collection_id : process.env.VUE_APP_COLLECTION_ID
-    };
-  },
+const requiredTerms = ref(false);
+const router = useRouter();
 
-  //used to handle events, it's using data from data() function
-  methods: {
-    chooseAvatar(imgSrc) {
-        //pop() returns the element it removed
-        //const imgName = imgSrc.split('/').pop();
-        this.selectedAvatar = imgSrc; //this will be send to database as a name for proper avatar!
-        this.avatars = false;
-    },
+//data for databse
+const username =  ref('');
+const email = ref('');
+const password = ref('');
+const usernameInput = ref(null);
+const emailInput = ref(null);
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_id = process.env.VUE_APP_COLLECTION_ID;
 
-    async uniqueEmail(email) {
-        try {
-            //.listDocuments check all of the documents from given database and collection
-            //Query searches for matching email
-            const checkEmail = await databases.listDocuments(this.database_id,this.collection_id,[Query.equal('email',email)]);
-            return checkEmail.total === 0; //unique
-        } catch (err) {
-            console.log("Error: ", err);
-            return false;
+//functions 
+function chooseAvatar(imgSrc) {
+    //pop() returns the element it removed
+    //const imgName = imgSrc.split('/').pop();
+    selectedAvatar.value = imgSrc; //this will be send to database as a name for proper avatar!
+    avatars.value = false;
+}
+
+async function uniqueEmail(email) {
+    try {
+        //.listDocuments check all of the documents from given database and collection
+        //Query searches for matching email
+        const checkEmail = await databases.listDocuments(database_id,collection_id,[Query.equal('email',email)]);
+        return checkEmail.total === 0; //unique
+    } catch (err) {
+        console.log("Error: ", err);
+        return false;
+    }
+}
+
+async function uniqueUsername(username) {
+    try {
+        const checkUsername = await databases.listDocuments(database_id,collection_id,[Query.equal('username',username)]);
+        return checkUsername.total === 0;
+    } catch (err) {
+        console.log("Error: ", err);
+        return false;
+    }
+}
+
+async function register() {
+    try {
+        //checking if given username is already in use
+        const isUsernameUnique = await uniqueUsername(username.value);
+        if(!isUsernameUnique) {
+            toast.error("This username is already in use."); 
+            if (usernameInput.value) usernameInput.value.value = '';
+            return;
         }
-    },
 
-    async uniqueUsername(username) {
-        try {
-            const checkUsername = await databases.listDocuments(this.database_id,this.collection_id,[Query.equal('username',username)]);
-            return checkUsername.total === 0;
-        } catch (err) {
-            console.log("Error: ", err);
-            return false;
+        //checking if given email is alredy in use
+        const isEmailUnique = await uniqueEmail(email.value);
+        if(!isEmailUnique) {
+            toast.error("This email is already in use.");
+            if (emailInput.value) emailInput.value.value = '';
+            return;
         }
-    },
 
-    async register() {
-        try {
-            //checking if given email is alredy in use
-            const isEmailUnique = await this.uniqueEmail(this.email);
-            if(!isEmailUnique) {
-                toast.error("This email is already in use.");
-                this.$refs.emailInput.value = '';
-                return;
-            }
 
-            //checking if given username is already in use
-            const isUsernameUnique = await this.uniqueUsername(this.username);
-            if(!isUsernameUnique) {
-                toast.error("This username is already in use."); 
-                this.$refs.emailInput.value = '';
-                return;
-            }
-
-            //checking if Policy privacy and Terms of use are checked and accepted
-            if (!this.acceptTerms) {
-                toast.error("You must accept the terms and conditions.");
-                return;
-            }
-
-            const newUserId = ID.unique();
-            await account.create(newUserId, this.email, this.password, this.username);
-            
-            //login user after creating an account
-            //await account.createEmailPasswordSession(this.email, this.password);
-            //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
-
-            //checking if user selected an avatar - if not then the deafult one will be send to database
-            if (!this.selectedAvatar) {
-                this.selectedAvatar = require('../assets/avatars/unk.svg');
-            }
-
-            await databases.createDocument(this.database_id,this.collection_id,ID.unique(), {
-                id_user: newUserId,
-                username : this.username,
-                email : this.email,
-                avatar : this.selectedAvatar
-            });
-            //console.log('Zarejestrowano użytkownika:', await account.get());
-            this.$router.push('/login');
-        } catch (err) {
-            console.log('Error : ', err);
-            // if(err.code == 409) { //error number 409 means that something went wrong with the request to database - registration, it's inputs
-            //     if(err.message.includes("email")) {
-            //     }else if(err.message.includes("username") || err.message.includes("name")) {
-            //         toast.error("This username is already in use");
-            //         this.$refs.usernameInput.value = '';
-            //     } else if(err.code == 429) {
-            //         console.log(err);
-            //     }
-            // }
+        //checking if Policy privacy and Terms of use are checked and accepted
+        if (!requiredTerms.value) {
+            toast.error("You must accept the terms and conditions.");
+            return;
         }
-    },
 
-    toogleState() {
-            this.hidPassword = !this.hidPassword;
+        const newUserId = ID.unique();
+        await account.create(newUserId, email.value, password.value, username.value);
+        
+        //login user after creating an account
+        //await account.createEmailPasswordSession(email, password);
+        //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
+
+        //checking if user selected an avatar - if not then the deafult one will be send to database
+        if (!selectedAvatar.value) {
+            selectedAvatar.value = require('../assets/avatars/unk.svg');
         }
-  }
+
+        await databases.createDocument(database_id,collection_id,ID.unique(), {
+            id_user: newUserId,
+            username : username.value,
+            email : email.value,
+            avatar : selectedAvatar.value
+        });
+        //console.log('Zarejestrowano użytkownika:', await account.get());
+        router.push('/login');
+    } catch (err) {
+        console.log('Error : ', err);
+    }
+}
+
+function toogleState() {
+        hidPassword.value = !hidPassword.value;
 }
 </script>
 <style lang="scss">
