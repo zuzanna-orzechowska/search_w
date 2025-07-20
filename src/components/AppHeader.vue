@@ -6,21 +6,21 @@
           <span class="slider"></span>
         </label>
         <div class="dropdown">
-          <span class="material-symbols-outlined">account_circle</span>
-          <div class="dropdown-content">
+          <span class="material-symbols-outlined" @click="toggleVisibility">account_circle</span>
+          <div v-if="dropdownActive" class="dropdown-content">
             <div class="dropdown-section">
               <p>Come back to word searching’s journey</p>
-              <button class="dropdown-btn">Sign in</button>
+              <button class="dropdown-btn" @click="toLogin">Sign in</button>
             </div>
             <div class="dropdown-section">
               <p>Don’t have an account?</p>
-              <button class="dropdown-btn white">Sign up</button>
+              <button class="dropdown-btn white" @click="toRegister">Sign up</button>
               <div class="otherRegister">
                 <p>or</p>
                 <div class="linksRegister">
                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/facebook-icon.svg" alt="Facebook icon">
+                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
               </div>
             </div>
@@ -29,8 +29,38 @@
     </header>
 </template>
 
-<script>
-export default {
+<script setup>
+import { account } from '@/lib/appwrite';
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+
+const router = useRouter();
+const dropdownActive = ref(false);
+
+const toLogin = async () => {
+    try {
+        const user = await account.get();
+        console.log('User exists:', user);
+        router.push('/');
+    } catch(err) {
+        console.log('No session, redirecting to login');
+        router.push('/login');
+    }
+}
+
+const toRegister = async () => {
+    try {
+        const user = await account.get();
+        console.log('User exists:', user);
+        router.push('/');
+    } catch(err) {
+        console.log('No session, redirecting to login');
+        router.push('/register');
+    }
+}
+
+const toggleVisibility = () => {
+  dropdownActive.value = !dropdownActive.value;
 }
 </script>
 
@@ -112,7 +142,12 @@ export default {
     }
 
     .dropdown-content {
-      display: none;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+
       position: absolute;
       width: 300px;
       height: 292px;
@@ -199,20 +234,7 @@ export default {
             }
         }
       }
-
     }
   }
-
-  .dropdown:hover {
-    .dropdown-content {
-      display: flex;
-      justify-content: center;
-      flex-direction: column;
-      align-items: center;
-      gap: 40px;
-    }
-  }
-
 }
-
 </style>

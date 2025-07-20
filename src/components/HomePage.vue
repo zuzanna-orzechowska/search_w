@@ -5,18 +5,29 @@
            <q>The smart, fun way to test your mind and spot every hidden word.</q>
          </div>
          <div class="btns">
-             <router-link to="/login" id="login-link">
-                 <button type="button" id="sign-in">Sign in</button>
-             </router-link>
+             <button type="button" id="sign-in" @click="toLogin">Sign in</button>
              <button type="button" id="random">Random</button>
          </div>
      </div>
 </template>
 
-<script>
-export default {
-    name: 'HomePage'
+<script setup>
+import { account } from '@/lib/appwrite';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const toLogin = async () => {
+    try {
+        const user = await account.get();
+        console.log('User exists:', user);
+        router.push('/');
+    } catch(err) {
+        console.log('No session, redirecting to login');
+        router.push('/login');
+    }
 }
+
 </script>
 
 <style lang="scss">

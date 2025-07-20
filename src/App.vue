@@ -8,26 +8,37 @@
   </v-app>
 </template>
 
-<script>
+<script setup>
 import AppFooter from './components/AppFooter.vue';
 import AppHeader from './components/AppHeader.vue';
 import '@fontsource-variable/fredoka';
+import { account } from './lib/appwrite';
+import { computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+//variables
+const route = useRoute();
+const router = useRouter();
+const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register'); //computed is used in ordere to handle reactive data
 
-export default {
-  name: 'App',
-  components: {
-    AppFooter,
-    AppHeader,
-  },
-  setup() {
-    const route = useRoute();
-    const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register');
-    return { backgroundDisabled}
-  }
+async function checkSessionStatus() {
+    try {
+      const user = await account.get(); // checking session status - if user is already logged in 
+      console.log({ user })
+
+      // if user is on main page or after successful login then redirect to component for users
+      if (route.path === '/' || route.path === '/login') {
+        router.push('/user');
+      }
+    } catch (err) {
+      console.log("Error: ",err);
+      router.push('/');
+    }
 }
+
+onMounted(() => { //lifecycle hook that calls given function after the component shows up on a screen
+  checkSessionStatus();
+});
 </script>
 
 

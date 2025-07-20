@@ -3,18 +3,23 @@
     <main>
         <div class="wrapper-login">
             <h2>Login</h2>
-            <form>
+            <form @submit.prevent="login">
                 <label for="userLogin">
-                    <img src="../assets/user-icon.svg" alt="user icon" class="user-icon">
-                    <input type="text" id="userLogin" name="userLogin" placeholder="Username or email" v-model="userLogin" required>
+                    <img src="../assets/user-icon.svg" alt="user icon" class="icon">
+                    <input type="email" id="userLogin" name="userLogin" placeholder="E-mail" v-model="userLogin" autocomplete="off" required>
                 </label>
                 <label for="passwordLogin">
-                    <img src="../assets/password-icon.svg" alt="password-icon" class="user-icon">
-                    <input type="password" id="passwordLogin" name="Password" placeholder="Password" required>
+                    <div class="password-wrapper">
+                        <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
+                        <input v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <!--require() dynamically loads the file with given url-->
+                        <button class="toggleBtn" @click.prevent="toggleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+                    </div>
                 </label>
                 <div class="bottom-form-txt">
                     <label for="rememberLogin">
-                        <input type="checkbox" name="Remember-me" id="rememberLogin">
+                        <input type="checkbox" name="Remember-me" id="rememberLogin" v-model="rememberMe">
                         Remember me
                     </label>
                     <label for="">Forgot password?</label>
@@ -26,7 +31,7 @@
                 <div class="linksRegister">
                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/facebook-icon.svg" alt="Facebook icon">
+                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
             </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
@@ -34,9 +39,42 @@
     </main>
 </template>
 
-<script>
-export default {
-    name: 'LoginUser'
+<script setup>
+import { account} from '@/lib/appwrite';
+import { toast } from 'vue3-toastify';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+//dynamic variables
+const userLogin = ref('');
+const password = ref('');
+let hidPassword = ref(true);
+let rememberMe = ref(false);
+
+const router = useRouter();
+    
+//functions
+async function login() {
+    try {
+        await account.createEmailPasswordSession(userLogin.value,password.value);
+        router.push('/user');
+
+        if (!rememberMe.value) {
+            await account.deleteSession('current');
+        } 
+
+        // const user = account.get();
+        // console.log('Zalogowano jako ',user);
+    } catch(err) {
+        console.log('Error: ',err);
+        if (err.code === 401) {
+            toast.error("Invalid username or email");
+        }
+    }
+}
+
+function toggleState() {
+    hidPassword.value = !hidPassword.value;
 }
 </script>
 
@@ -82,14 +120,14 @@ main {
             //background-color: aqua;
             gap: 22px;
 
-            .user-icon, .password-icon {
+            .icon{
                 position: relative;
                 left: 40px;
                 top: 6px;
                 width: 30px;
             }
 
-            input[type="text"], input[type="password"] {
+            input[type="email"], input[type="password"], input[type="text"] {
                 width: 364px;
                 font-size: 24px;
                 background-color: #6AAED3;
@@ -101,15 +139,43 @@ main {
                 transition: all 0.3s ease;
             }
 
-            input[type="text"]::placeholder, input[type="password"]::placeholder {
+            input[type="email"]::placeholder, input[type="password"]::placeholder, input[type="text"]::placeholder {
                 color: #f9f9f9d1;
                 //padding-left: 30px;
                 font-weight: 300px;
             }
 
-            input[type="text"]:focus, input[type="password"]:focus {
+            input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus {
                 border: 3px solid #2A8DC1;
                 outline: none;
+            }
+
+            .password-wrapper {
+                position: relative;
+
+                input {
+                    padding-right: 64px;
+                }
+
+                .toggleBtn {
+                    position: absolute;
+                    right: 0px;
+                    top: 0px;
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 0 16px 16px 0;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    width: 64px;
+                    cursor: pointer;
+
+                    img {
+                        width: 32px;
+                    }
+                }
             }
 
             .bottom-form-txt {
