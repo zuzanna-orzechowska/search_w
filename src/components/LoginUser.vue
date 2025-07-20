@@ -31,7 +31,7 @@
                 <div class="linksRegister">
                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/facebook-icon.svg" alt="Facebook icon">
+                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
             </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>

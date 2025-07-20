@@ -24,30 +24,34 @@
                 <label for="usernameRegister">
                     <img src="../assets/user-icon.svg" alt="user icon" class="icon">
                     <!--v-model is used because it connects value of this input with value of variable in script-->
-                    <input type="text" id="usernameRegister" name="Username" placeholder="Username" v-model="username" required autocomplete="off" ref="usernameInput">
+                    <input type="text" id="usernameRegister" name="Username" placeholder="Username *" v-model="username" required autocomplete="off" ref="usernameInput">
+                    <p class="error" :class="{active: username.length > 21}">Username can't be longer than 21 characters!</p>
                 </label>
                 <label for="emailRegister">
                     <img src="../assets/email-icon.svg" alt="email icon" class="icon">
-                    <input type="email" id="emailRegister" name="Email" placeholder="E-mail" v-model="email" required autocomplete="off" ref="emailInput">
+                    <!--@blur calls given method when input is out of focus-->
+                    <input @blur="isEmailCorrect" type="email" id="emailRegister" name="Email" placeholder="E-mail *" v-model="email" required autocomplete="off" ref="emailInput">
+                    <p class="error" :class="{active : emailError}">Invalid e-mail address!</p>
                 </label>
                 <label for="passwordRegister">
                     <div class="password-wrapper">
                         <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                        <input v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
-                        <input v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input @blur="isPassworValid" v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input @blur="isPassworValid" v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
                         <!--require() dynamically loads the file with given url-->
                         <button class="toggleBtn" @click.prevent="toogleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
                     </div>
+                    <p class="error errPass" :class="{active : passwordError}">Incorrect password! It must be at least 8 characters, with uppercase, lowercase, number and special character.</p>
                 </label>
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
                         <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredTerms">
-                        Accept <router-link> Privacy Policy</router-link>
+                        Accept <router-link> Privacy Policy</router-link><span>*</span>
                     </label>
                     <label for="accTermsofUse">
                         <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" v-model="requiredTerms">
-                        Accept <router-link> Terms of Use</router-link>
+                        Accept <router-link> Terms of Use</router-link><span>*</span>
                     </label>
                 </div>
                 <button type="submit" class="userButton" >Register</button>
@@ -57,7 +61,7 @@
                 <div class="linksRegister">
                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/facebook-icon.svg" alt="Facebook icon">
+                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
             </div>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
@@ -92,6 +96,8 @@ const avatarsArr = [
 
 const requiredTerms = ref(false);
 const router = useRouter();
+let emailError = ref(false); //variable for checking if email is correct
+let passwordError = ref(false); //variable for checking if password is correct
 
 //data for databse
 const username =  ref('');
@@ -108,6 +114,16 @@ function chooseAvatar(imgSrc) {
     //const imgName = imgSrc.split('/').pop();
     selectedAvatar.value = imgSrc; //this will be send to database as a name for proper avatar!
     avatars.value = false;
+}
+
+function isEmailCorrect() {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    emailError.value = !regex.test(email.value); //test method checks if given string - email, matches the pattern of regex
+}
+
+function isPassworValid() {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    passwordError.value = !regex.test(password.value);
 }
 
 async function uniqueEmail(email) {
@@ -210,7 +226,7 @@ main {
         position: relative;
         width: 600px;
         background-color: rgba(174, 210, 229,0.5);
-        height: 800px;
+        height: 820px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
         z-index: 0;
@@ -231,6 +247,27 @@ main {
             align-items: center;
             //background-color: aqua;
             gap: 22px;
+
+            .error {
+                display: none;
+                position: relative;
+                left: 36px;
+                top: 4px;
+                color: rgb(156, 6, 6);
+                font-size: 12px;
+            }
+
+            .error.active {
+                display: block;
+            }
+
+            .error.errPass {
+                width: 364px;
+            }
+
+            span {
+                color: rgb(156, 6, 6);
+            }
 
             .wrapper-avatars {
                 display: flex;
