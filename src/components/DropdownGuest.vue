@@ -1,5 +1,5 @@
 <template>
-    <div v-if="dropdownActive" class="dropdown-content">
+    <div class="dropdown-content">
         <div class="dropdown-section">
             <p>Come back to word searching’s journey</p>
             <button class="dropdown-btn" @click="toLogin">Sign in</button>
@@ -18,6 +18,128 @@
         </div>
     </div>
 </template>
-
 <script setup>
+import { account } from '@/lib/appwrite';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const toLogin = async () => {
+    try {
+        const user = await account.get();
+        console.log('User exists:', user);
+        router.push('/');
+    } catch(err) {
+        console.log('No session, redirecting to login');
+        router.push('/login');
+    }
+}
+
+const toRegister = async () => {
+    try {
+        const user = await account.get();
+        console.log('User exists:', user);
+        router.push('/');
+    } catch(err) {
+        console.log('No session, redirecting to login');
+        router.push('/register');
+    }
+}
 </script>
+
+<style lang="scss">
+.dropdown-content {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+
+      position: absolute;
+      width: 300px;
+      height: 292px;
+      z-index: 1;
+      right: 20px;
+      margin-top: 8px;
+      border-radius: 6px;
+      background-color: rgba(174, 210, 229,0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
+
+      .dropdown-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        p { 
+          text-align: center;
+          width: 224px;
+        }
+  
+        .dropdown-btn {
+          font-size: 18px;
+          padding: 1% 6%;
+          font-weight: 500;
+          width: 100px;
+          background-color: #2A8DC1;
+          border: 2px solid black;
+          border-radius: 6px;
+          cursor: pointer;
+          transform: perspective(1px) translateZ(0);
+          box-shadow: 0 0 1px transparent;
+          transition-duration: 0.3s;
+          transition-property: box-shadow, transform;
+        }
+
+        .dropdown-btn:hover {
+          box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+          transform: scale(1.1);
+        }
+
+        .white {
+          background-color: #f9f9f9;
+        }
+
+        .otherRegister {
+          p {
+            text-align: center;
+            overflow: hidden;
+          }
+
+           p:before, p:after {
+            background-color: #000;
+            content: "";
+            display: inline-block;
+            height: 2px;
+            position: relative;
+            vertical-align: middle;
+            width: 40%;
+           }
+
+           p:before {
+            right: 0.5em;
+            margin-left: -50%;
+          }
+
+            p:after {
+            left: 0.5em;
+            margin-right: -50%;
+        }
+
+            .linksRegister {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              gap: 36px;
+              margin-top: 12px;
+
+              img {
+                width: 24px;
+                 cursor: pointer;
+              }
+            }
+        }
+      }
+}
+</style>

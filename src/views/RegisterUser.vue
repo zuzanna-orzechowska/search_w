@@ -253,7 +253,7 @@ main {
                 position: relative;
                 left: 36px;
                 top: 4px;
-                color: rgb(156, 6, 6);
+                color: #9c0606;
                 font-size: 12px;
             }
 
