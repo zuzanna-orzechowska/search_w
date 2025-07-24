@@ -1,8 +1,8 @@
 <template>
     <div class="dropdown-content">
         <div class="dropdown-section">
-            <p>Welcome Username</p>
-            <img src="../assets/user-icon.svg" alt="">
+            <p>Welcome {{username}}</p>
+            <img :src="avatar" alt="User avatar">
         </div>
         <div class="dropdown-section-left">
             <div class="dropdown-option">
@@ -21,7 +21,7 @@
                 <img src="../assets/help-icon.svg" alt="Help icon">
                 <p>Help</p>
             </div>
-            <div class="dropdown-option">
+            <div @click="signOut" class="dropdown-option last">
                 <img src="../assets/sign-out-icon.svg" alt="Sign out icon">
                 <p>Sign out</p>
             </div>
@@ -30,7 +30,46 @@
 </template>
 
 <script setup>
+import { account, databases } from '@/lib/appwrite';
+import { ref, onMounted } from 'vue';
+import { Query } from 'appwrite';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
+const username = ref('');
+const avatar = ref('');
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_id = process.env.VUE_APP_COLLECTION_ID;
+
+onMounted(async () => {
+    try {
+        const user = await account.get();
+        const userId = user.$id;
+        username.value = user.name;
+
+        //searching user by id to find avatar src
+        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
+        const searchedUser = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
+
+        if(searchedUser.total > 0) { //checking if databse return any document
+            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
+            avatar.value = userDocuments.avatar;
+            //console.log("Img src: ",avatar.value);
+        }
+    } catch(err) {
+        console.log("Error: ",err);
+    }
+})
+
+async function signOut() {
+    try {
+         await account.deleteSession('current');
+         console.log('Logged out');
+         router.push('/');
+     } catch (err) {
+         console.error('Logout error:', err);
+    }
+}
 </script>
 
 <style lang="scss">
@@ -43,7 +82,7 @@
 
       position: absolute;
       width: 300px;
-      height: 336px;
+      height: 420px;
       z-index: 1;
       right: 20px;
       margin-top: 8px;
@@ -66,7 +105,8 @@
         }
 
         img {
-            width: 64px;
+            width: 80px;
+            padding: 8px 0px;
         }
 
       }
@@ -82,6 +122,7 @@
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid black;
+            padding-bottom: 8px;
 
             img {
                 width: 30px;
@@ -91,6 +132,10 @@
                 font-size: 18px;
             }
             
+        }
+
+        .dropdown-option.last {
+            border-bottom: none;
         }
     }
 }
