@@ -57,7 +57,7 @@ const toRegister = async () => {
 
       position: absolute;
       width: 300px;
-      height: 292px;
+      height: 304px;
       z-index: 1;
       right: 20px;
       margin-top: 8px;

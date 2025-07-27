@@ -1,5 +1,5 @@
 <template>
-    <div class="dropdown-content">
+    <div class="dropdown-content long">
         <div class="dropdown-section">
             <p>Welcome {{username}}</p>
             <img :src="avatar" alt="User avatar">
@@ -73,6 +73,10 @@ async function signOut() {
 </script>
 
 <style lang="scss">
+.long {
+    height: 420px;
+}
+
 .dropdown-content {
       display: flex;
       justify-content: center;
@@ -82,7 +86,6 @@ async function signOut() {
 
       position: absolute;
       width: 300px;
-      height: 420px;
       z-index: 1;
       right: 20px;
       margin-top: 8px;
