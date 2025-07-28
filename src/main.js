@@ -6,6 +6,7 @@ import LoginUser from './views/LoginUser.vue'
 import HomePage from './views/HomePage.vue'
 import RegisterUser from './views/RegisterUser.vue'
 import UserPage from './views/UserPage.vue'
+import PlayPage from './views/PlayPage.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -13,7 +14,8 @@ const router = createRouter ({
         {path: '/', component: HomePage},
         {path: '/login', component: LoginUser},
         {path: '/register', component: RegisterUser},
-        {path: '/user', component: UserPage}
+        {path: '/user', component: UserPage},
+        {path: '/play', component: PlayPage}
     ]
 });
 

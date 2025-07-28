@@ -19,7 +19,7 @@ import { useRoute, useRouter } from 'vue-router';
 //variables
 const route = useRoute();
 const router = useRouter();
-const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register'); //computed is used in ordere to handle reactive data
+const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/play'); //computed is used in ordere to handle reactive data
 
 async function checkSessionStatus() {
     try {
