@@ -1,22 +1,24 @@
 <template>
-    <div class="container">
-        <div class="wrapper">
-            <div class="text-container">
-                <h2>Play</h2>
-                <p class="bigger">Choose a category</p>
-                <p class="smaller">0/{{categoryLen}} completed</p>
-            </div>
-            <div class="scroll">
-                <div class="categories-container">
-                    <div class="category" v-for="category in categories" :key="category.name">
-                        <img :src="category.image" :alt="category.name">
-                        <button>Play</button>
-                    </div>
-            </div>
-            </div>
-
-            <div class="footer">
-                <button @click="goBack">Back</button>
+    <div class="background-lines">
+        <div class="container">
+            <div class="wrapper">
+                <div class="text-container">
+                    <h2>Play</h2>
+                    <p class="bigger">Choose a category</p>
+                    <p class="smaller">0/{{categoryLen}} completed</p>
+                </div>
+                <div class="scroll">
+                    <div class="categories-container">
+                        <div class="category" v-for="category in categories" :key="category.name">
+                            <img :src="category.image" :alt="category.name">
+                            <button>Play</button>
+                        </div>
+                </div>
+                </div>
+    
+                <div class="footer">
+                    <button @click="goBack">Back</button>
+                </div>
             </div>
         </div>
     </div>
@@ -24,33 +26,10 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import categories from '@/lib/categoriesPlay'
 
 const router = useRouter();
-// MAYBE CHANGE THIS TO UTILS? will be used later in other files
-const categories = [{ name: "fruit", image: require("@/assets/categories/fruit.png") },
-        { name: "vegetables", image: require("@/assets/categories/vegetables.png") },
-        { name: "animals", image: require("@/assets/categories/animals.png") },
-        { name: "body", image: require("@/assets/categories/body.png") },
-        { name: "emotions", image: require("@/assets/categories/emotions.png") },
-        { name: "cities", image: require("@/assets/categories/cities.png") },
-        { name: "countries", image: require("@/assets/categories/countries.png") },
-        { name: "school", image: require("@/assets/categories/school.png") },
-        { name: "movies", image: require("@/assets/categories/movies.png") },
-        { name: "actors", image: require("@/assets/categories/actors.png") },
-        { name: "fairytales", image: require("@/assets/categories/fairytales.png") },
-        { name: "disney", image: require("@/assets/categories/disney.png") },
-        { name: "games", image: require("@/assets/categories/games.png") },
-        { name: "music", image: require("@/assets/categories/music.png") },
-        { name: "electronics", image: require("@/assets/categories/electronics.png") },
-        { name: "food", image: require("@/assets/categories/food.png") },
-        { name: "drinks", image: require("@/assets/categories/drinks.png") },
-        { name: "plants", image: require("@/assets/categories/plants.png") },
-        { name: "space", image: require("@/assets/categories/space.png") },
-        { name: "summer", image: require("@/assets/categories/summer.png") },
-        { name: "halloween", image: require("@/assets/categories/halloween.png") },
-        { name: "christmas", image: require("@/assets/categories/christmas.png") },
-        { name: "easter", image: require("@/assets/categories/easter.png") }
-    ]
+
 
 const categoryLen = categories.length;
 
@@ -60,11 +39,13 @@ function goBack() {
 </script>
 
 <style lang="scss">
-body {
+.background-lines { //! if its body then in main 
     background-image: url("../assets/background-play.png");
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    height: 100vh;
+    width: 100vw;
 }
 
 .container {
