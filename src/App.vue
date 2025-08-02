@@ -1,10 +1,10 @@
 <template>
-  <v-app :class="{ 'background-enabled': !backgroundDisabled }" id="app">
-    <AppHeader v-if="!backgroundDisabled" />
+  <v-app :class="{ 'background-enabled': backgroundEnabled }" id="app">
+    <AppHeader v-if="backgroundEnabled" />
     <v-main id="main">
       <router-view />
     </v-main>
-    <AppFooter v-if="!backgroundDisabled"/>
+    <AppFooter v-if="backgroundEnabled"/>
   </v-app>
 </template>
 
@@ -19,7 +19,7 @@ import { useRoute, useRouter } from 'vue-router';
 //variables
 const route = useRoute();
 const router = useRouter();
-const backgroundDisabled = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/play'); //computed is used in ordere to handle reactive data
+const backgroundEnabled = computed(() => route.path === '/' || route.path === '/user');
 
 async function checkSessionStatus() {
     try {

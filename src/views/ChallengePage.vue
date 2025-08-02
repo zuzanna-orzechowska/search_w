@@ -3,15 +3,15 @@
         <div class="container">
             <div class="wrapper">
                 <div class="text-container">
-                    <h2>Play</h2>
-                    <p class="bigger">Choose a category</p>
+                    <h2>Challenge</h2>
+                    <p class="bigger">Take the challenge and test your skills</p>
                     <p class="smaller">0/{{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
-                            <img :src="category.image" :alt="category.name">
-                            <button>Play</button>
+                            <img :src="category.image" :alt="category.name" class="challenge-img">
+                            <button class="challenge-btn">Play</button>
                         </div>
                 </div>
                 </div>
@@ -26,7 +26,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import categories from '@/lib/categoriesPlay'
+import categories from '@/lib/categoriesChallenge'
 
 const router = useRouter();
 
@@ -103,17 +103,17 @@ function goBack() {
                 align-items: center;
                 gap: 1vw;
     
-                img {
+                .challenge-img {
                     width: 136px;
-                    border: 2px solid black;
+                    border: 3px solid #FFBA08;
                     border-radius: 6px;
                 }
     
-                button {
+                .challenge-btn {
                     font-size: 20px;
                     padding: 1% 6%;
                     font-weight: 500;
-                    background-color: #2A8DC1;
+                    background-color: #FFBA08;
                     border: 2px solid black;
                     border-radius: 12px;
                     cursor: pointer;

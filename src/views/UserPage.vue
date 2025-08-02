@@ -6,14 +6,13 @@
          </div>
          <div class="btns">
              <button type="button" id="play" @click="goToPlay">Play</button>
-             <button type="button" id="challenge">Challenge</button>
+             <button type="button" id="challenge" @click="goToChallenge">Challenge</button>
              <button type="button" id="shop">Shop</button>
          </div>
      </div>
 </template>
 
 <script setup>
-// import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -22,16 +21,9 @@ function goToPlay () {
     router.push('/play');
 }
 
-
-// const logout = async () => {
-//     try {
-//         await account.deleteSession('current');
-//         console.log('Logged out');
-//         router.push('/');
-//     } catch (err) {
-//         console.error('Logout error:', err);
-//     }
-// }; 
+function goToChallenge() {
+    router.push('/challenge');
+}
 </script>
 
 <style lang="scss">
