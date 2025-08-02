@@ -1,0 +1,26 @@
+const categories = [{ name: "fruit", image: require("@/assets/categoriesPlay/fruit.png") },
+        { name: "vegetables", image: require("@/assets/categoriesPlay/vegetables.png") },
+        { name: "animals", image: require("@/assets/categoriesPlay/animals.png") },
+        { name: "body", image: require("@/assets/categoriesPlay/body.png") },
+        { name: "emotions", image: require("@/assets/categoriesPlay/emotions.png") },
+        { name: "cities", image: require("@/assets/categoriesPlay/cities.png") },
+        { name: "countries", image: require("@/assets/categoriesPlay/countries.png") },
+        { name: "school", image: require("@/assets/categoriesPlay/school.png") },
+        { name: "movies", image: require("@/assets/categoriesPlay/movies.png") },
+        { name: "actors", image: require("@/assets/categoriesPlay/actors.png") },
+        { name: "fairytales", image: require("@/assets/categoriesPlay/fairytales.png") },
+        { name: "disney", image: require("@/assets/categoriesPlay/disney.png") },
+        { name: "games", image: require("@/assets/categoriesPlay/games.png") },
+        { name: "music", image: require("@/assets/categoriesPlay/music.png") },
+        { name: "electronics", image: require("@/assets/categoriesPlay/electronics.png") },
+        { name: "food", image: require("@/assets/categoriesPlay/food.png") },
+        { name: "drinks", image: require("@/assets/categoriesPlay/drinks.png") },
+        { name: "plants", image: require("@/assets/categoriesPlay/plants.png") },
+        { name: "space", image: require("@/assets/categoriesPlay/space.png") },
+        { name: "summer", image: require("@/assets/categoriesPlay/summer.png") },
+        { name: "halloween", image: require("@/assets/categoriesPlay/halloween.png") },
+        { name: "christmas", image: require("@/assets/categoriesPlay/christmas.png") },
+        { name: "easter", image: require("@/assets/categoriesPlay/easter.png") }
+    ]
+
+export default categories;

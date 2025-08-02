@@ -5,30 +5,25 @@
            <q>The smart, fun way to test your mind and spot every hidden word.</q>
          </div>
          <div class="btns">
-             <button type="button" id="play">Play</button>
-             <button type="button" id="challenge">Challenge</button>
+             <button type="button" id="play" @click="goToPlay">Play</button>
+             <button type="button" id="challenge" @click="goToChallenge">Challenge</button>
              <button type="button" id="shop">Shop</button>
          </div>
      </div>
 </template>
 
 <script setup>
-// import { account } from '@/lib/appwrite';
-// import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
-// const router = useRouter();
+const router = useRouter();
 
+function goToPlay () {
+    router.push('/play');
+}
 
-
-// const logout = async () => {
-//     try {
-//         await account.deleteSession('current');
-//         console.log('Logged out');
-//         router.push('/');
-//     } catch (err) {
-//         console.error('Logout error:', err);
-//     }
-// }; 
+function goToChallenge() {
+    router.push('/challenge');
+}
 </script>
 
 <style lang="scss">
@@ -58,6 +53,9 @@
         margin-left: 52px;
 
         button{
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 24px;
             padding: 1% 6%;
             border: 2px black solid;
