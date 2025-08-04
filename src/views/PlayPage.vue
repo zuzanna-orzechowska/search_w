@@ -11,7 +11,7 @@
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
                             <img :src="category.image" :alt="category.name">
-                            <button>Play</button>
+                            <button @click="playCategory(category.name)">Play</button>
                         </div>
                 </div>
                 </div>
@@ -36,9 +36,13 @@ const categoryLen = categories.length;
 function goBack() {
     router.back();
 }
+
+function playCategory(name) {
+    router.push({path: '/ws', query: {category: name}});
+}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .background-lines {
     background-image: url("../assets/background-play.png");
     background-repeat: no-repeat;

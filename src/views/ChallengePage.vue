@@ -38,7 +38,7 @@ function goBack() {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .background-lines {
     background-image: url("../assets/background-play.png");
     background-repeat: no-repeat;
