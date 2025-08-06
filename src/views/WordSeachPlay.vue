@@ -1,17 +1,31 @@
 <template>
     <div class="background-container">
         <div class="container">
-            <div class="words-list">
-                <ul>
-                    <li v-for="(word,ind) in wordsToFind" :key="ind">{{ word }}</li>
-                </ul>
+            <div class="text-container">
+                <h2>{{ categoryName }}</h2>
+                <p class="bigger">Stage 1 / 5</p>
+                <p class="smaller">Words appear horizontally, vertically and diagonally.</p>
+            </div>
+            <div class="wrapper-search">
+                <div class="words-list">
+                    <h4>Words to find:</h4>
+                    <ul>
+                        <li v-for="(word,ind) in wordsToFind" :key="ind">{{ word }}</li>
+                    </ul>
+                </div>
+    
+                <div class="grid">
+                    <!--2D array-->
+                    <div class="row" v-for="(row,indRow) in grid" :key="indRow">
+                        <span class="cell" v-for="(cell,indCell) in row" :key="indCell"> {{ cell }}</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="grid">
-                <!--2D array-->
-                <div class="row" v-for="(row,indRow) in grid" :key="indRow">
-                    <span class="cell" v-for="(cell,indCell) in row" :key="indCell"> {{ cell }}</span>
-                </div>
+            <div class="bottom-btns">
+                <img src="../assets/replay-icon.svg" alt="replay icon">
+                <img src="../assets/home-icon.svg" alt="home icon">
+                <img src="../assets/hint-icon.svg" alt="hint icon">
             </div>
         </div>
     </div>
@@ -27,12 +41,16 @@ const route = useRoute();
 const grid = ref([]); //blank array
 const gridSize = 12;
 
+const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
+const categoryName = ref('');
+categoryName.value = category.charAt(0).toUpperCase()+category.slice(1);
+
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 
 async function loadSearchWord() {
     try{
-        const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
+        // const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
         const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
         const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
 
@@ -129,28 +147,102 @@ onMounted(() => {
 }
 
 .container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
 
+    .text-container {
+        text-align: center;
+        margin-top: 12px;
 
-    .grid{
+        h2{
+            font-size: 56px;
+            margin-bottom: 4px;
+        }
+
+        .bigger{
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .smaller {
+            font-size: 24px;
+            margin-bottom: 64px;
+        }
+    }
+
+    .wrapper-search {
         display: flex;
-        flex-direction: column;
-        gap: 8px;
+        justify-content: center;
+        //align-items: center;
+        gap: 96px;
 
-        .row {
-            display: flex;
-            gap: 4px;
+        .words-list {
+            text-align: center;
 
-            .cell {
-                background: white;
-                width: 32px;
-                height: 32px;
-                text-align: center;
-                line-height: 32px;
-                font-weight: bold;
-                border: 1px solid #ccc;
+            h4{
+                font-size: 36px;
+                font-weight: 500;
+                margin-bottom: 4px;
+            }
+
+            ul {
+                list-style: none;
+
+                li {
+                    font-size: 24px;
+                    line-height: 1.8;
+                }
+            }
+
+            .found {
+                color: rgba(0, 0, 0, 0.5);
+                text-decoration: line-through;
+                text-decoration-color: black;
+                text-decoration-thickness: 3px;
             }
         }
 
+        .grid{
+            display: flex;
+            flex-direction: column;
+            border: 4px solid #57A4CD;
+            // gap: 2px;
+    
+            .row {
+                display: flex;
+                // gap: 2px;
+    
+                .cell {
+                    background: #f9f9f9;
+                    width: 44px;
+                    height: 44px;
+                    text-align: center;
+                    line-height: 44px;
+                    font-weight: 400;
+                    //border: 2px solid #ccc;
+                    font-size: 28px;
+                }
+            }
+    
+        }
+    }
+
+    .bottom-btns{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 64px;
+        background-color: #57A4CD;
+        width: 280px;
+        border: 4px solid black;
+        border-radius: 24px;
+        gap: 24px;
+
+        img{
+            width: 44px;
+            cursor: pointer;
+        }
     }
 }
 </style>
