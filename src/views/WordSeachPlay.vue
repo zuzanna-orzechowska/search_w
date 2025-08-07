@@ -10,21 +10,29 @@
                 <div class="words-list">
                     <h4>Words to find:</h4>
                     <ul>
-                        <li v-for="(word,ind) in wordsToFind" :key="ind">{{ word }}</li>
+                        <li :class="{foundWord : foundWords.includes(word)}" v-for="(word,ind) in wordsToFind" :key="ind">{{ word }}</li>
                     </ul>
                 </div>
     
                 <div class="grid">
                     <!--2D array-->
                     <div class="row" v-for="(row,indRow) in grid" :key="indRow">
-                        <span class="cell" v-for="(cell,indCell) in row" :key="indCell"> {{ cell }}</span>
+                        <!--getCellClass takes coordinates of a letter and gives it proper class - selected or found
+                        mousedown - mouse is clicked, .prevent prevents default behavior like selecting text, mouseover when clicked mouse is being drag across letter
+                        mouseup when user stops clicking mouse
+                        .some checks if at least one element in the array passes the test-->
+                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell" 
+                        :class="{selected: selection.some(c => c.row === indRow && c.col === indCell), found: foundCoords.some(c => c.row === indRow && c.col === indCell)}"
+                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
+                        {{ cell }}
+                        </span>
                     </div>
                 </div>
             </div>
 
             <div class="bottom-btns">
                 <img src="../assets/replay-icon.svg" alt="replay icon">
-                <img src="../assets/home-icon.svg" alt="home icon">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
                 <img src="../assets/hint-icon.svg" alt="hint icon">
             </div>
         </div>
@@ -33,11 +41,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { databases } from '@/lib/appwrite';
 
 const wordsToFind = ref([]);
 const route = useRoute();
+const router = useRouter();
 const grid = ref([]); //blank array
 const gridSize = 12;
 
@@ -47,6 +56,67 @@ categoryName.value = category.charAt(0).toUpperCase()+category.slice(1);
 
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
+
+const foundWords = ref([]);
+const selection = ref([]); //letters that are selected - its' coordinates x,y
+const foundCoords = ref([]);
+const isSelecting = ref(false); //does user is selecting letter with clicked mouse
+const startCell = ref(null); //first letter from selected word
+
+function startSelection(row, col) {
+    isSelecting.value = true; //letter is being selected
+    selection.value = [{ row, col }]; //coords of selected letters
+    startCell.value = { row, col }; //the same as above (only first letter)
+}
+
+function extendSelection(row, col) { //after user drags mouse to select more letters
+  if (!isSelecting.value || !startCell.value) return;  //if user already clicked mouse
+
+  //calculating distance between letter
+  const dx = col - startCell.value.col;
+  const dy = row - startCell.value.row;
+
+  const len = Math.max(Math.abs(dx), Math.abs(dy)) + 1; //how much letters should be selected from the start, +1 because if user is selecting letters from 
+  // (2,2) to (2,5) then its 4 not 3
+
+  let stepX; 
+  if(dx === 0) { //we don't move horizontally
+    stepX = 0 }
+  else {
+    stepX = dx / Math.abs(dx);} // we move in right if dx>0, in left if dx<0 
+
+  let stepY; 
+  if(dy === 0) { //we don't move vertically
+    stepY = 0 }
+  else {
+    stepY = dy / Math.abs(dy);}
+
+  const path = []; //list of selected letter
+  for (let i = 0; i < len; i++) {
+    path.push({ //pushing to list coords of every selected letter
+      row: startCell.value.row + stepY * i,
+      col: startCell.value.col + stepX * i,
+    });
+  }
+  selection.value = path; //selected space
+}
+
+function endSelection() { //if user stops clicking mouse
+  if (!isSelecting.value) return; //if user is not selecting anything
+  isSelecting.value = false; //stop selecting
+
+  const word = selection.value.map(({ row, col }) => grid.value[row][col]).join(''); //making whole word from selected letters, {row,col} is coords, 
+  // .map - for every letter from grid with proper cords, .join - joining it in one word
+  const match = wordsToFind.value.find(w => w === word); //checking if selected word is in searchWord list - words to find
+
+  if (match && !foundWords.value.includes(word)) {
+    foundCoords.value.push(...selection.value); //writing coords of found words
+    foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
+  }
+
+  selection.value = []; //reseting selection
+  startCell.value = null; //reseting first selected letter
+}
 
 async function loadSearchWord() {
     try{
@@ -134,6 +204,11 @@ function generateGrid() {
     grid.value = temp;
 }
 
+//functions for icons on bottom
+function goBack() {
+    router.back();
+}
+
 onMounted(() => {
     loadSearchWord();
 })
@@ -195,7 +270,7 @@ onMounted(() => {
                 }
             }
 
-            .found {
+            .foundWord {
                 color: rgba(0, 0, 0, 0.5);
                 text-decoration: line-through;
                 text-decoration-color: black;
@@ -222,6 +297,23 @@ onMounted(() => {
                     font-weight: 400;
                     //border: 2px solid #ccc;
                     font-size: 28px;
+                    cursor: pointer;
+                }
+
+                .cell:hover:not(.cell.selected):not(.cell.found) {
+                    outline: 2px solid #ccc; //unlike border, this doesn't affect size of a cell 
+                    outline-offset: -2px; //so this border won't be outside the cell
+                    
+                }
+
+                .cell.selected {
+                    background-color: rgba(0, 123, 255, 0.4);
+                }
+
+                .cell.found {
+                    background-color: rgba(40, 167, 69, 0.6);
+                    color: white;
+                    font-weight: bold;
                 }
             }
     
