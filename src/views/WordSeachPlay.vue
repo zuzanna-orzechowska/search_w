@@ -22,7 +22,7 @@
                         mouseup when user stops clicking mouse
                         .some checks if at least one element in the array passes the test-->
                         <span class="cell" v-for="(cell, indCell) in row" :key="indCell" 
-                        :class="{selected: selection.some(c => c.row === indRow && c.col === indCell), found: foundCoords.some(c => c.row === indRow && c.col === indCell)}"
+                        :style="getCellStyle(indRow, indCell)"
                         @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
                         {{ cell }}
                         </span>
@@ -31,7 +31,6 @@
             </div>
 
             <div class="bottom-btns">
-                <img src="../assets/replay-icon.svg" alt="replay icon">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
                 <img src="../assets/hint-icon.svg" alt="hint icon">
             </div>
@@ -59,18 +58,23 @@ const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 
 const foundWords = ref([]);
 const selection = ref([]); //letters that are selected - its' coordinates x,y
-const foundCoords = ref([]);
 const isSelecting = ref(false); //does user is selecting letter with clicked mouse
 const startCell = ref(null); //first letter from selected word
+const selectionColor = ref(null) // current color of selecting letter
+const wordsColor = ref({}); //which word has which color
+const foundWordsData = ref([]) //info of found - value of word and it's cords
 
 function startSelection(row, col) {
+     if (!isValidCell(row, col)) return;
     isSelecting.value = true; //letter is being selected
     selection.value = [{ row, col }]; //coords of selected letters
     startCell.value = { row, col }; //the same as above (only first letter)
+    selectionColor.value = randomColor(); //selecting random color for word
 }
 
 function extendSelection(row, col) { //after user drags mouse to select more letters
   if (!isSelecting.value || !startCell.value) return;  //if user already clicked mouse
+  if (!isValidCell(row, col)) return;
 
   //calculating distance between letter
   const dx = col - startCell.value.col;
@@ -105,17 +109,33 @@ function endSelection() { //if user stops clicking mouse
   if (!isSelecting.value) return; //if user is not selecting anything
   isSelecting.value = false; //stop selecting
 
-  const word = selection.value.map(({ row, col }) => grid.value[row][col]).join(''); //making whole word from selected letters, {row,col} is coords, 
+const word = selection.value
+  .map(({ row, col }) => {
+    if (!grid.value[row] || grid.value[row][col] === undefined) { //checking if while selecting error will be displayed
+      console.warn(`Invalid grid access at row ${row}, col ${col}`);
+      return '';
+    }
+    return grid.value[row][col];
+  }).join(''); //making whole word from selected letters, {row,col} is coords, 
   // .map - for every letter from grid with proper cords, .join - joining it in one word
   const match = wordsToFind.value.find(w => w === word); //checking if selected word is in searchWord list - words to find
 
   if (match && !foundWords.value.includes(word)) {
-    foundCoords.value.push(...selection.value); //writing coords of found words
+    if(!wordsColor.value[match]) {
+        wordsColor.value[match] = selectionColor.value;
+    }
+    foundWordsData.value.push({ word: match, coords: [...selection.value] });
     foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
   }
 
   selection.value = []; //reseting selection
   startCell.value = null; //reseting first selected letter
+  selectionColor.value - null //reseting selection color, so if user selectes another letters color will be different
+}
+
+//checking if selecting rows and cols fit in grid array
+function isValidCell(row, col) {
+  return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
 
 async function loadSearchWord() {
@@ -203,6 +223,29 @@ function generateGrid() {
     }
     grid.value = temp;
 }
+//random selection colors
+function randomColor() {
+    const r = Math.floor(Math.random() * 156 + 50);
+    const g = Math.floor(Math.random() * 156 + 50);
+    const b = Math.floor(Math.random() * 156 + 50);
+    return `rgb(${r},${g},${b})`
+}
+
+function getCellStyle(row, col) {
+  //if letter is being selected
+  if (selection.value.some(c => c.row === row && c.col === col)) {
+    return { backgroundColor: selectionColor.value, color: 'white' };
+  }
+
+  for (const item of foundWordsData.value) {
+    if (item.coords.some(c => c.row === row && c.col === col)) {
+      return { backgroundColor: wordsColor.value[item.word], color: 'white' };
+    }
+  }
+
+  return {};
+}
+
 
 //functions for icons on bottom
 function goBack() {
@@ -306,15 +349,6 @@ onMounted(() => {
                     
                 }
 
-                .cell.selected {
-                    background-color: rgba(0, 123, 255, 0.4);
-                }
-
-                .cell.found {
-                    background-color: rgba(40, 167, 69, 0.6);
-                    color: white;
-                    font-weight: bold;
-                }
             }
     
         }
