@@ -30,9 +30,37 @@
                 </div>
             </div>
 
-            <div class="bottom-btns">
+            <div class="bottom">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
                 <img src="../assets/hint-icon.svg" alt="hint icon">
+            </div>
+
+            <div class="puzzle-done" v-if="showPuzzleDone">
+                <h2>Puzzle completed!</h2>
+                <div class="rewards-txt">
+                    <div class="txt-icon">
+                        <p>+ 10 coins</p>
+                        <img src="../assets/coin-icon.svg" alt="coin icon">
+                    </div>
+                    <div class="txt-icon">
+                        <p>+ 25 exp</p>
+                        <img src="../assets/exp-icon.svg" alt="exp icon">
+                    </div>
+                </div>
+                <div class="btns">
+                    <button @click="goBack">Back</button>
+                    <button class="next-btn" @click="nextStage">Next</button>
+                </div>
+            </div>
+
+            <div class="category-done">
+                <h2>Congratulations!</h2>
+                <p>You've completed all puzzles in this category</p>
+                <img src="../assets/blueFluff.svg" alt="blue fluff">
+                <div class="btns">
+                    <button @click="goBack">Back</button>
+                    <button class="next-btn">Next</button>
+                </div>
             </div>
         </div>
     </div>
@@ -126,6 +154,9 @@ const word = selection.value
     }
     foundWordsData.value.push({ word: match, coords: [...selection.value] });
     foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
+    if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
+        showPuzzleDone.value = true
+    }
   }
 
   selection.value = []; //reseting selection
@@ -136,23 +167,6 @@ const word = selection.value
 //checking if selecting rows and cols fit in grid array
 function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
-}
-
-async function loadSearchWord() {
-    try{
-        // const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
-        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
-        const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
-
-        if (words) { //if array of words was found
-            wordsToFind.value = words.searchWord;
-            generateGrid();
-        } else {
-            console.log("Error, couldn't find category", category);
-        }
-    }catch (err) {
-        console.log("Error: ",err);
-    }
 }
 
 function generateGrid() {
@@ -246,6 +260,77 @@ function getCellStyle(row, col) {
   return {};
 }
 
+//database and words
+let title = ref('');
+let currentStage = ref(1);
+let maxStage = ref();
+const showPuzzleDone = ref(false);
+
+async function loadData() {
+    try {
+        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
+        const puzzlesData = data.documents.filter(doc => doc.title === category);
+        const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
+        
+        if (puzzlesData.length > 0) {
+            title.value = puzzlesData[0].title
+
+            //finding max puzzleId - to know how many of stages there are
+            const stages = puzzlesData.map(doc => {
+                const num = parseInt(doc.puzzleId.split('-')[1]) //spliting name for example fruit-2 to array - "fruit","2", taking second element and parsing it to int
+                return isNaN(num) ? 0 : num //if there is no number then 0
+            })
+            maxStage.value = Math.max(...stages) //taking max number from given array
+
+            loadStage(currentStage.value); //loading numer of current stage
+        }
+
+        if (words) { //if array of words was found
+            wordsToFind.value = words.searchWord;
+            generateGrid();
+        } else {
+            console.log("Error, couldn't find category", category);
+        }
+
+        // console.log('Title:', title.value)
+        // console.log('Max stage:', maxStage.value)
+        // console.log('Current puzzleId:', puzzlesData[0]?.puzzleId)
+
+    } catch (err) {
+        console.log("Error: ",err);
+    }
+}
+
+async function loadStage(stage) {
+    try {
+        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
+        const puzzlesData = data.documents.filter(doc => doc.title === category);
+    
+        const stageDoc = puzzlesData.find(doc => {
+            const num = parseInt(doc.puzzleId.split('-')[1]);
+            return num === stage;
+        });
+    
+        if (stageDoc) {
+            wordsToFind.value = stageDoc.searchWord;
+            generateGrid();
+            console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
+        } else {
+            console.log("Stage not found:", stage);
+        }
+    } catch (err) {
+        console.log("Error: ",err);
+    }
+}
+
+function nextStage() {
+    if (currentStage.value < maxStage.value) {
+        currentStage.value++;
+        loadStage(currentStage.value);
+    } else {
+        console.log("No more stages");
+    }
+}
 
 //functions for icons on bottom
 function goBack() {
@@ -253,7 +338,8 @@ function goBack() {
 }
 
 onMounted(() => {
-    loadSearchWord();
+    // loadSearchWord();
+    loadData();
 })
 </script>
 
@@ -354,13 +440,14 @@ onMounted(() => {
         }
     }
 
-    .bottom-btns{
+    .bottom{
         display: flex;
         justify-content: center;
         align-items: center;
         margin-top: 64px;
         background-color: #57A4CD;
         width: 280px;
+        height: auto;
         border: 4px solid black;
         border-radius: 24px;
         gap: 24px;
@@ -368,7 +455,152 @@ onMounted(() => {
         img{
             width: 44px;
             cursor: pointer;
+            margin-top: 0;
         }
     }
+
+    .puzzle-done{
+        //display: none;
+        background-color: pink;
+        border-radius: 6px;
+        width: 540px;
+        height: 420px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: rgba(113, 172, 204,0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        h2{
+            font-size: 54px;
+            font-weight: 500;
+            text-align: center;
+            width: 300px;
+            margin-bottom: 24px;
+        }
+
+        .rewards-txt {
+            display: flex;
+            gap: 64px;
+            font-size: 24px;
+            margin-bottom: 24px;
+
+            .txt-icon {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                
+                img {
+                    width: 48px;
+                    position: relative;
+                    bottom: 8px;
+                }
+            }
+
+        }
+
+        .btns {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 64px;
+
+            button {
+            font-size: 24px;
+            padding: 1% 12%;
+            font-weight: 500;
+            background-color: #f9f9f9;
+            border: 2px solid black;
+            border-radius: 6px;
+            cursor: pointer;
+            transform: perspective(1px) translateZ(0);
+            box-shadow: 0 0 1px transparent;
+            transition-duration: 0.3s;
+            transition-property: box-shadow, transform;
+            }
+
+            button:hover {
+                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+                transform: scale(1.1);
+            }
+
+            .next-btn {
+                background-color: #71ACCC;
+            }
+        }
+
+    }
+
+    .category-done {
+        display: none;
+        background-color: pink;
+        border-radius: 6px;
+        width: 696px;
+        height: 496px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        // display: flex;
+        // align-items: center;
+        // justify-content: center;
+        // flex-direction: column;
+        background-color: rgba(113, 172, 204,0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    h2 {
+        font-size: 54px;
+        font-weight: 500;
+        text-align: center !important;
+        margin-bottom: 24px;
+    }
+
+    p{
+        font-size: 28px;
+        text-align: center;
+    }
+
+    img {
+        margin-top: 24px;
+        width: 200px;
+    }
+
+    .btns {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 64px;
+
+        button {
+            font-size: 24px;
+            padding: 1% 12%;
+            font-weight: 500;
+            background-color: #f9f9f9;
+            border: 2px solid black;
+            border-radius: 6px;
+            cursor: pointer;
+            transform: perspective(1px) translateZ(0);
+            box-shadow: 0 0 1px transparent;
+            transition-duration: 0.3s;
+            transition-property: box-shadow, transform;
+        }
+
+        button:hover {
+                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+                transform: scale(1.1);
+        }
+
+        .next-btn {
+                background-color: #71ACCC;
+        }
+        }
 }
 </style>
