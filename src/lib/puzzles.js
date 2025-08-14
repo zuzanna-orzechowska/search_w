@@ -44,7 +44,7 @@ export const puzzles = [
     {
         title: "vegetables",
         puzzleId: "vegetables-2",
-        searchWord: ["BROCCOLI", "CAULI", "KALE", "LEEK", "OKRA", "CABBAGE", "CUCUMBER", "POTATO", "TOMATO", "ZUCCHINI"],
+        searchWord: ["BROCCOLI", "SQUASH", "KALE", "LEEK", "OKRA", "CABBAGE", "CUCUMBER", "POTATO", "TOMATO", "ZUCCHINI"],
         coin: 10,
         xp: 25
     },
@@ -58,14 +58,14 @@ export const puzzles = [
     {
         title: "vegetables",
         puzzleId: "vegetables-4",
-        searchWord: ["ARTICHOKE", "BRUSSELS", "CAULIFLOW", "ENDIVE", "KALE", "OKRA", "ONION", "PEAS", "SWEETCORN", "YAM"],
+        searchWord: ["ARTICHOKE", "BRUSSELS", "CAULIFLOWER", "ENDIVE", "KOHLRABI", "WATERCRESS", "SEAWEED", "PLANTAIN", "SWEETCORN", "YAM"],
         coin: 10,
         xp: 25
     },
     {
         title: "vegetables",
         puzzleId: "vegetables-5",
-        searchWord: ["BOKCHOY", "CHIVES", "COLLARD", "DANDELION", "EGGPLANT", "JICAMA", "MIZUNA", "PUMPKIN", "RADISH", "TARO"],
+        searchWord: ["BOKCHOY", "CHIVES", "COLLARD", "DANDELION", "EGGPLANT", "JICAMA", "MIZUNA", "PUMPKIN", "CASSAVA", "TARO"],
         coin: 20,
         xp: 50
     },

@@ -53,13 +53,12 @@
                 </div>
             </div>
 
-            <div class="category-done">
+            <div class="category-done" v-if="showCategoryDone">
                 <h2>Congratulations!</h2>
                 <p>You've completed all puzzles in this category</p>
                 <img src="../assets/blueFluff.svg" alt="blue fluff">
                 <div class="btns">
                     <button @click="goBack">Back</button>
-                    <button class="next-btn">Next</button>
                 </div>
             </div>
         </div>
@@ -166,7 +165,15 @@ const word = selection.value
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         showPuzzleDone.value = true
-        localStorage.removeItem(`puzzleProgress_${category}`);
+
+        for (let key in localStorage) { //removing all variables from local storage and marking it as completed
+            if (key.startsWith(`puzzleProgress_${category}_stage_`) || 
+                key.startsWith(`puzzleGrid_${category}_stage_`) ||
+                key === `currentStage_${category}`) {
+                localStorage.removeItem(key);
+            }
+        }
+        localStorage.setItem(`categoryCompleted_${category}`, "true");
     }
   }
 
@@ -284,6 +291,7 @@ let title = ref('');
 let currentStage = ref(1);
 let maxStage = ref();
 const showPuzzleDone = ref(false);
+const showCategoryDone = ref(false);
 
 async function loadData() {
     try {
@@ -368,6 +376,9 @@ function nextStage() {
         showPuzzleDone.value = false;
         loadStage(currentStage.value);
     } else {
+        if(currentStage.value === maxStage.value) {
+            showCategoryDone.value = true;
+        }
         console.log("No more stages");
     }
 }
@@ -598,7 +609,7 @@ onMounted(() => {
     }
 
     .category-done {
-        display: none;
+        //display: none;
         background-color: pink;
         border-radius: 6px;
         width: 696px;
@@ -607,10 +618,10 @@ onMounted(() => {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        // display: flex;
-        // align-items: center;
-        // justify-content: center;
-        // flex-direction: column;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
         background-color: rgba(113, 172, 204,0.6);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);

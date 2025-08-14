@@ -5,13 +5,21 @@
                 <div class="text-container">
                     <h2>Play</h2>
                     <p class="bigger">Choose a category</p>
-                    <p class="smaller">0/{{categoryLen}} completed</p>
+                    <p class="smaller">{{ completedLen }} / {{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
                             <img :src="category.image" :alt="category.name">
-                            <button @click="playCategory(category.name)">Play</button>
+
+                            <div class="overlay-txt" v-if="isCategoryCompleted(category.name)"> 
+                                <p>Completed</p>
+                            </div>
+
+                            <button v-if="!isCategoryCompleted(category.name)" @click="playCategory(category.name)">Play</button>
+                            <div v-else>
+                                <img src="../assets/tick.svg" alt="tick" class="tick">
+                            </div>
                         </div>
                 </div>
                 </div>
@@ -26,7 +34,8 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import categories from '@/lib/categoriesPlay'
+import categories from '@/lib/categoriesPlay';
+import { ref } from 'vue';
 
 const router = useRouter();
 
@@ -40,6 +49,15 @@ function goBack() {
 function playCategory(name) {
     router.push({path: '/ws', query: {category: name}});
 }
+
+function isCategoryCompleted(name) {
+    return localStorage.getItem(`categoryCompleted_${name}`) === "true";
+}
+
+const completedLen = ref();
+const categoriesNumber = categories.filter(c => isCategoryCompleted(c.name)).length
+completedLen.value = categoriesNumber;
+
 </script>
 
 <style lang="scss" scoped>
@@ -78,6 +96,7 @@ function playCategory(name) {
             font-size: 56px;
             font-weight: 500;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
@@ -97,20 +116,47 @@ function playCategory(name) {
 
         .categories-container {
             display: grid;
-            grid-template-columns: repeat(5,1fr);
+            grid-template-columns: repeat(4,1fr);
             gap: 2vw;
             margin-top: 42px;
     
             .category {
+                position: relative;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 1vw;
+
+                .overlay-txt {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 180px;
+                    height: 180px;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 6px;
+                    
+                    p {
+                        color: #15FF38;
+                        -webkit-text-stroke: 3px black;
+                        font-weight: bold;
+                        font-size: 28px;
+                        text-transform: uppercase;
+                    }
+                }
     
                 img {
-                    width: 136px;
+                    width: 180px;
                     border: 2px solid black;
                     border-radius: 6px;
+                }
+
+                .tick {
+                    border: none;
+                    width: 42px;
                 }
     
                 button {
