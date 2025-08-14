@@ -3,7 +3,7 @@
         <div class="container">
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
-                <p class="bigger">Stage 1 / 5</p>
+                <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
                 <p class="smaller">Words appear horizontally, vertically and diagonally.</p>
             </div>
             <div class="wrapper-search">
@@ -154,14 +154,25 @@ const word = selection.value
     }
     foundWordsData.value.push({ word: match, coords: [...selection.value] });
     foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
+
+    const progressKey = `puzzleProgress_${category}_stage_${currentStage.value}`;
+    localStorage.setItem(progressKey, JSON.stringify({
+        foundWords: foundWords.value,
+        foundWordsData: foundWordsData.value,
+        grid: grid.value,
+        currentStage: currentStage.value,
+        wordsColor: wordsColor.value 
+    }));
+
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         showPuzzleDone.value = true
+        localStorage.removeItem(`puzzleProgress_${category}`);
     }
   }
 
   selection.value = []; //reseting selection
   startCell.value = null; //reseting first selected letter
-  selectionColor.value - null //reseting selection color, so if user selectes another letters color will be different
+  selectionColor.value = null //reseting selection color, so if user selectes another letters color will be different
 }
 
 //checking if selecting rows and cols fit in grid array
@@ -170,6 +181,13 @@ function isValidCell(row, col) {
 }
 
 function generateGrid() {
+    const gridKey = `puzzleGrid_${category}_stage_${currentStage.value}`; //used with local storage to store progress to proper word search puzzle
+    const savedGrid = localStorage.getItem(gridKey); //checking if user has already played the game
+    if (savedGrid) { //if yes, then this grid is parsed into actual array
+        grid.value = JSON.parse(savedGrid);
+        return;
+    }
+
     const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
     //Array.from creates new copied Array from array-like object, namely grid
     const directions = [{x:1,y:0},{x:0,y:1},{x:1,y:1}] //three directions of words placement - x=1,y=0 is horizontally, x=0,y=0 is vertically, x=1,y=1 is diagonally
@@ -236,6 +254,7 @@ function generateGrid() {
         }
     }
     grid.value = temp;
+    localStorage.setItem(gridKey, JSON.stringify(temp)); //placing created grid to local storage, so user can go back to puzzle later without losing progress
 }
 //random selection colors
 function randomColor() {
@@ -305,16 +324,35 @@ async function loadStage(stage) {
     try {
         const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
         const puzzlesData = data.documents.filter(doc => doc.title === category);
-    
-        const stageDoc = puzzlesData.find(doc => {
-            const num = parseInt(doc.puzzleId.split('-')[1]);
+
+        const stageDoc = puzzlesData.find(doc => { //finding last stage of puzzle that user used
+            const num = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is for example fruit-1, we only need a number
             return num === stage;
         });
-    
+
         if (stageDoc) {
             wordsToFind.value = stageDoc.searchWord;
+
+            // checking if user has saved progress to proper stage
+            const progressKey = `puzzleProgress_${category}_stage_${stage}`;
+            const savedProgress = localStorage.getItem(progressKey);
+
+            if (savedProgress) {
+                const parsed = JSON.parse(savedProgress); //parsed is an array with saved informations about puzzle and user's progress like found words
+                foundWords.value = parsed.foundWords || [];
+                foundWordsData.value = parsed.foundWordsData || [];
+                wordsColor.value = parsed.wordsColor || {};
+                // showPuzzleDone is visible when all of the words was found
+                showPuzzleDone.value = (foundWords.value.length === wordsToFind.value.length);
+            } else {
+                foundWords.value = [];
+                foundWordsData.value = [];
+                wordsColor.value = {};
+                showPuzzleDone.value = false; //reseting for new stage
+            }
+
             generateGrid();
-            console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
+            //console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
         } else {
             console.log("Stage not found:", stage);
         }
@@ -326,11 +364,14 @@ async function loadStage(stage) {
 function nextStage() {
     if (currentStage.value < maxStage.value) {
         currentStage.value++;
+        localStorage.setItem(`currentStage_${category}`, currentStage.value); //saving curent stage to local storage
+        showPuzzleDone.value = false;
         loadStage(currentStage.value);
     } else {
         console.log("No more stages");
     }
 }
+
 
 //functions for icons on bottom
 function goBack() {
@@ -338,9 +379,28 @@ function goBack() {
 }
 
 onMounted(() => {
-    // loadSearchWord();
+    //checking what was the last stage to certain category
+    const savedStage = localStorage.getItem(`currentStage_${category}`);
+    if (savedStage) {
+        currentStage.value = parseInt(savedStage, 10); //converting string to Int, 10 is for decimal system
+    } else {
+        currentStage.value = 1; //starting from 1
+    }
+
+    //loading progress to current stage and category
+    const progressKey = `puzzleProgress_${category}_stage_${currentStage.value}`;
+    const saved = localStorage.getItem(progressKey);
+    if (saved) { //loading proper data form saved progress
+        const parsed = JSON.parse(saved);
+        foundWords.value = parsed.foundWords || [];
+        foundWordsData.value = parsed.foundWordsData || [];
+        grid.value = parsed.grid || [];
+        wordsColor.value = parsed.wordsColor || {};
+    }
+
     loadData();
-})
+});
+
 </script>
 
 <style lang="scss" scoped>
