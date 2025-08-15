@@ -13,7 +13,7 @@
                             <img :src="category.image" :alt="category.name">
 
                             <div class="overlay-txt" v-if="isCategoryCompleted(category.name)"> 
-                                <p>Completed</p>
+                                <img src="../assets/completed-text.svg" alt="completed text">
                             </div>
 
                             <button v-if="!isCategoryCompleted(category.name)" @click="playCategory(category.name)">Play</button>
@@ -139,12 +139,9 @@ completedLen.value = categoriesNumber;
                     align-items: center;
                     border-radius: 6px;
                     
-                    p {
-                        color: #15FF38;
-                        -webkit-text-stroke: 3px black;
-                        font-weight: bold;
-                        font-size: 28px;
-                        text-transform: uppercase;
+                    img {
+                        border: none;
+                        padding: 0px 12px;
                     }
                 }
     

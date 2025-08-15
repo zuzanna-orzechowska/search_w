@@ -630,7 +630,7 @@ onMounted(() => {
     h2 {
         font-size: 54px;
         font-weight: 500;
-        text-align: center !important;
+        text-align: center;
         margin-bottom: 24px;
     }
 
