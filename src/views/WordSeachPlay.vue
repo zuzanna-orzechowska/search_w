@@ -69,7 +69,8 @@
 //imports
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { databases } from '@/lib/appwrite';
+import { databases, account } from '@/lib/appwrite';
+import { Query, ID } from 'appwrite';
 
 //all variables
 //global variables
@@ -94,53 +95,70 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
+const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
 let title = ref('');
 let currentStage = ref(1);
 let maxStage = ref();
 const showPuzzleDone = ref(false);
 const showCategoryDone = ref(false);
+let currentUser = ref(null); //needed for saving progress for currently logged in user
 
 //functions related to database
-async function loadStage(stage) {
+async function getUser() { //what user is currenlty logged in
     try {
-        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
-        const puzzlesData = data.documents.filter(doc => doc.title === category);
-
-        const stageDoc = puzzlesData.find(doc => { //finding last stage of puzzle that user used
-            const num = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is for example fruit-1, we only need a number
-            return num === stage;
-        });
-
-        if (stageDoc) {
-            wordsToFind.value = stageDoc.searchWord;
-
-            // checking if user has saved progress to proper stage
-            const progressKey = `puzzleProgress_${category}_stage_${stage}`;
-            const savedProgress = localStorage.getItem(progressKey);
-
-            if (savedProgress) {
-                const parsed = JSON.parse(savedProgress); //parsed is an array with saved informations about puzzle and user's progress like found words
-                foundWords.value = parsed.foundWords || [];
-                foundWordsData.value = parsed.foundWordsData || [];
-                wordsColor.value = parsed.wordsColor || {};
-                // showPuzzleDone is visible when all of the words was found
-                showPuzzleDone.value = (foundWords.value.length === wordsToFind.value.length);
-            } else {
-                foundWords.value = [];
-                foundWordsData.value = [];
-                wordsColor.value = {};
-                showPuzzleDone.value = false; //reseting for new stage
-            }
-
-            generateGrid();
-            //console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
-        } else {
-            console.log("Stage not found:", stage);
-        }
+        const user = await account.get(); //getting info from session
+        currentUser.value = user;
+        return user;
     } catch (err) {
         console.log("Error: ",err);
     }
 }
+
+async function loadStage(stage) {
+    try {
+        const data = await databases.listDocuments(database_id, collection_id);
+        const stageDoc = data.documents.find(doc => { //finding proper stage for current category
+            return doc.title === category && parseInt(doc.puzzleId.split('-')[1]) === stage;
+        });
+
+        if (!stageDoc) {
+            console.log("Stage not found:", stage);
+            return;
+        }
+
+        wordsToFind.value = stageDoc.searchWord;
+        currentStage.value = stage;
+
+        const progressDocs = await databases.listDocuments( //finding document from progress collection - current user, category and stage
+            database_id,
+            collection_progress_id,
+            [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category), Query.equal("stage", stage)]);
+
+        if (progressDocs.total > 0) { // if document was found then
+            const progress = progressDocs.documents[0]; //first element from list of documents 
+            foundWords.value = progress.foundWords || []; // || [] means if there is no info given it would be blank array
+            foundWordsData.value = progress.foundWordsData ? JSON.parse(progress.foundWordsData) : []; // .parse converts string to JS object
+            wordsColor.value = progress.wordsColor ? JSON.parse(progress.wordsColor) : {};
+            grid.value = progress.grid ? JSON.parse(progress.grid) : [];
+            showPuzzleDone.value = progress.completed || false;
+            //console.log("Loaded progress:", progress);
+        } else {
+            // if its new stage, then we reset all of the info
+            foundWords.value = [];
+            foundWordsData.value = [];
+            wordsColor.value = {};
+            grid.value = [];
+            showPuzzleDone.value = false;
+        }
+
+        if (grid.value.length === 0) generateGrid(); //for new stage we generate new grid
+
+    } catch (err) {
+        console.log("Error:", err);
+    }
+}
+
+
 
 async function loadData() {
     try {
@@ -150,43 +168,79 @@ async function loadData() {
         
         if (puzzlesData.length > 0) {
             title.value = puzzlesData[0].title
-
+            
             //finding max puzzleId - to know how many of stages there are
             const stages = puzzlesData.map(doc => {
                 const num = parseInt(doc.puzzleId.split('-')[1]) //spliting name for example fruit-2 to array - "fruit","2", taking second element and parsing it to int
                 return isNaN(num) ? 0 : num //if there is no number then 0
             })
             maxStage.value = Math.max(...stages) //taking max number from given array
-
+            
             loadStage(currentStage.value); //loading numer of current stage
         }
-
+        
         if (words) { //if array of words was found
             wordsToFind.value = words.searchWord;
             generateGrid();
         } else {
             console.log("Error, couldn't find category", category);
         }
-
+        
         // console.log('Title:', title.value)
         // console.log('Max stage:', maxStage.value)
         // console.log('Current puzzleId:', puzzlesData[0]?.puzzleId)
-
+        
     } catch (err) {
         console.log("Error: ",err);
+    }
+}
+
+async function loadCurrentStage() {
+    const stageDocs = await databases.listDocuments( //taking all documents that are connected with current user
+        database_id,
+        collection_progress_id,
+        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category)]);
+    
+    if (stageDocs.total > 0) {
+        const maxReached = Math.max(...stageDocs.documents.map(d => d.stage)); //making array of stages, choosing the one that's the highest
+        currentStage.value = maxReached; //max stage number is current stage
+    } else {
+        currentStage.value = 1;
+    }
+}
+
+async function saveProgress(completed = false) {
+    const puzzleId = `${category}-${currentStage.value}`;
+
+    const progressDocs = await databases.listDocuments(
+        database_id,
+        collection_progress_id,
+        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category), Query.equal("stage", currentStage.value)]);
+
+    const info = { //info that will be stored in collection for progress
+        user_id: currentUser.value.$id,
+        category,
+        stage: currentStage.value,
+        puzzleId,
+        foundWords: foundWords.value,
+        foundWordsData: JSON.stringify(foundWordsData.value), //stringifying data so it can be stored properly in database
+        grid: JSON.stringify(grid.value),
+        wordsColor: JSON.stringify(wordsColor.value),
+        completed
+    };
+
+    if (progressDocs.total > 0) {
+        //updating existing document
+        await databases.updateDocument(database_id, collection_progress_id, progressDocs.documents[0].$id, info);
+    } else {
+        //creating new document
+        await databases.createDocument(database_id, collection_progress_id, ID.unique(),info);
     }
 }
 
 
 //function related to word search - creating grid, color
 function generateGrid() {
-    const gridKey = `puzzleGrid_${category}_stage_${currentStage.value}`; //used with local storage to store progress to proper word search puzzle
-    const savedGrid = localStorage.getItem(gridKey); //checking if user has already played the game
-    if (savedGrid) { //if yes, then this grid is parsed into actual array
-        grid.value = JSON.parse(savedGrid);
-        return;
-    }
-
     const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
     //Array.from creates new copied Array from array-like object, namely grid
     const directions = [{x:1,y:0},{x:0,y:1},{x:1,y:1}] //three directions of words placement - x=1,y=0 is horizontally, x=0,y=0 is vertically, x=1,y=1 is diagonally
@@ -253,7 +307,7 @@ function generateGrid() {
         }
     }
     grid.value = temp;
-    localStorage.setItem(gridKey, JSON.stringify(temp)); //placing created grid to local storage, so user can go back to puzzle later without losing progress
+
 }
 
 //random selection colors
@@ -265,13 +319,13 @@ function randomColor() {
 }
 
 function getCellStyle(row, col) {
-  //if letter is being selected
-  if (selection.value.some(c => c.row === row && c.col === col)) {
+  // if letter is being selected
+  if (selection.value?.some(c => c.row === row && c.col === col)) {
     return { backgroundColor: selectionColor.value, color: 'white' };
   }
 
-  for (const item of foundWordsData.value) {
-    if (item.coords.some(c => c.row === row && c.col === col)) {
+  for (const item of foundWordsData.value || []) {
+    if (item.coords?.some(c => c.row === row && c.col === col)) {
       return { backgroundColor: wordsColor.value[item.word], color: 'white' };
     }
   }
@@ -322,7 +376,7 @@ function extendSelection(row, col) { //after user drags mouse to select more let
   selection.value = path; //selected space
 }
 
-function endSelection() { //if user stops clicking mouse
+async function endSelection() { //if user stops clicking mouse
   if (!isSelecting.value) return; //if user is not selecting anything
   isSelecting.value = false; //stop selecting
 
@@ -344,26 +398,11 @@ const word = selection.value
     foundWordsData.value.push({ word: match, coords: [...selection.value] });
     foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
 
-    const progressKey = `puzzleProgress_${category}_stage_${currentStage.value}`;
-    localStorage.setItem(progressKey, JSON.stringify({
-        foundWords: foundWords.value,
-        foundWordsData: foundWordsData.value,
-        grid: grid.value,
-        currentStage: currentStage.value,
-        wordsColor: wordsColor.value 
-    }));
+    const isCompleted = foundWords.value.length === wordsToFind.value.length;
+    await saveProgress(isCompleted); // <-- Save progress here, with the correct state
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         showPuzzleDone.value = true
-
-        for (let key in localStorage) { //removing all variables from local storage and marking it as completed
-            if (key.startsWith(`puzzleProgress_${category}_stage_`) || 
-                key.startsWith(`puzzleGrid_${category}_stage_`) ||
-                key === `currentStage_${category}`) {
-                localStorage.removeItem(key);
-            }
-        }
-        localStorage.setItem(`categoryCompleted_${category}`, "true");
     }
   }
 
@@ -379,12 +418,10 @@ function isValidCell(row, col) {
 
 
 //functions for icons on bottom
-function nextStage() {
+async function nextStage() {
     if (currentStage.value < maxStage.value) {
         currentStage.value++;
-        localStorage.setItem(`currentStage_${category}`, currentStage.value); //saving curent stage to local storage
-        showPuzzleDone.value = false;
-        loadStage(currentStage.value);
+        await loadStage(currentStage.value);
     } else {
         if(currentStage.value === maxStage.value) {
             showCategoryDone.value = true;
@@ -399,27 +436,10 @@ function goBack() {
 
 
 // loading before mounting component
-onMounted(() => {
-    //checking what was the last stage to certain category
-    const savedStage = localStorage.getItem(`currentStage_${category}`);
-    if (savedStage) {
-        currentStage.value = parseInt(savedStage, 10); //converting string to Int, 10 is for decimal system
-    } else {
-        currentStage.value = 1; //starting from 1
-    }
-
-    //loading progress to current stage and category
-    const progressKey = `puzzleProgress_${category}_stage_${currentStage.value}`;
-    const saved = localStorage.getItem(progressKey);
-    if (saved) { //loading proper data form saved progress
-        const parsed = JSON.parse(saved);
-        foundWords.value = parsed.foundWords || [];
-        foundWordsData.value = parsed.foundWordsData || [];
-        grid.value = parsed.grid || [];
-        wordsColor.value = parsed.wordsColor || {};
-    }
-
-    loadData();
+onMounted(async () => {
+   await getUser();
+   await loadCurrentStage();
+   await loadData();
 });
 
 </script>
