@@ -66,23 +66,23 @@
 </template>
 
 <script setup>
+//imports
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { databases } from '@/lib/appwrite';
 
-const wordsToFind = ref([]);
+//all variables
+//global variables
 const route = useRoute();
 const router = useRouter();
+
+//variables related to word search 
+const wordsToFind = ref([]);
 const grid = ref([]); //blank array
 const gridSize = 12;
-
 const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
 const categoryName = ref('');
 categoryName.value = category.charAt(0).toUpperCase()+category.slice(1);
-
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
-
 const foundWords = ref([]);
 const selection = ref([]); //letters that are selected - its' coordinates x,y
 const isSelecting = ref(false); //does user is selecting letter with clicked mouse
@@ -91,6 +91,196 @@ const selectionColor = ref(null) // current color of selecting letter
 const wordsColor = ref({}); //which word has which color
 const foundWordsData = ref([]) //info of found - value of word and it's cords
 
+//variables related to database
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
+let title = ref('');
+let currentStage = ref(1);
+let maxStage = ref();
+const showPuzzleDone = ref(false);
+const showCategoryDone = ref(false);
+
+//functions related to database
+async function loadStage(stage) {
+    try {
+        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
+        const puzzlesData = data.documents.filter(doc => doc.title === category);
+
+        const stageDoc = puzzlesData.find(doc => { //finding last stage of puzzle that user used
+            const num = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is for example fruit-1, we only need a number
+            return num === stage;
+        });
+
+        if (stageDoc) {
+            wordsToFind.value = stageDoc.searchWord;
+
+            // checking if user has saved progress to proper stage
+            const progressKey = `puzzleProgress_${category}_stage_${stage}`;
+            const savedProgress = localStorage.getItem(progressKey);
+
+            if (savedProgress) {
+                const parsed = JSON.parse(savedProgress); //parsed is an array with saved informations about puzzle and user's progress like found words
+                foundWords.value = parsed.foundWords || [];
+                foundWordsData.value = parsed.foundWordsData || [];
+                wordsColor.value = parsed.wordsColor || {};
+                // showPuzzleDone is visible when all of the words was found
+                showPuzzleDone.value = (foundWords.value.length === wordsToFind.value.length);
+            } else {
+                foundWords.value = [];
+                foundWordsData.value = [];
+                wordsColor.value = {};
+                showPuzzleDone.value = false; //reseting for new stage
+            }
+
+            generateGrid();
+            //console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
+        } else {
+            console.log("Stage not found:", stage);
+        }
+    } catch (err) {
+        console.log("Error: ",err);
+    }
+}
+
+async function loadData() {
+    try {
+        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
+        const puzzlesData = data.documents.filter(doc => doc.title === category);
+        const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
+        
+        if (puzzlesData.length > 0) {
+            title.value = puzzlesData[0].title
+
+            //finding max puzzleId - to know how many of stages there are
+            const stages = puzzlesData.map(doc => {
+                const num = parseInt(doc.puzzleId.split('-')[1]) //spliting name for example fruit-2 to array - "fruit","2", taking second element and parsing it to int
+                return isNaN(num) ? 0 : num //if there is no number then 0
+            })
+            maxStage.value = Math.max(...stages) //taking max number from given array
+
+            loadStage(currentStage.value); //loading numer of current stage
+        }
+
+        if (words) { //if array of words was found
+            wordsToFind.value = words.searchWord;
+            generateGrid();
+        } else {
+            console.log("Error, couldn't find category", category);
+        }
+
+        // console.log('Title:', title.value)
+        // console.log('Max stage:', maxStage.value)
+        // console.log('Current puzzleId:', puzzlesData[0]?.puzzleId)
+
+    } catch (err) {
+        console.log("Error: ",err);
+    }
+}
+
+
+//function related to word search - creating grid, color
+function generateGrid() {
+    const gridKey = `puzzleGrid_${category}_stage_${currentStage.value}`; //used with local storage to store progress to proper word search puzzle
+    const savedGrid = localStorage.getItem(gridKey); //checking if user has already played the game
+    if (savedGrid) { //if yes, then this grid is parsed into actual array
+        grid.value = JSON.parse(savedGrid);
+        return;
+    }
+
+    const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
+    //Array.from creates new copied Array from array-like object, namely grid
+    const directions = [{x:1,y:0},{x:0,y:1},{x:1,y:1}] //three directions of words placement - x=1,y=0 is horizontally, x=0,y=0 is vertically, x=1,y=1 is diagonally
+
+    //function that checks if given words will fit into the grid in given place (starting from given x and y and direction)
+    function doesWordFits(word,startX,startY,direction) {
+        //firstly we need to calculate end of the word, using it's length
+        const endX = startX + direction.x * (word.length - 1); //first letter is in starting position that's why word.length-1
+        const endY = startY + direction.y * (word.length - 1);
+
+        if(endX >= gridSize || endY >=gridSize) return false;
+
+        //checking if it's a letter coliision - if yes then given letter is shared
+        for (let i = 0; i < word.length; i++) {
+            const x = startX + direction.x * i;
+            const y = startY + direction.y * i;
+            if (temp[y][x] !== '' && temp[y][x] !== word[i]) {
+                return false; 
+            }
+        }
+
+        return true;
+    }
+
+    //function that places word in given space and direction
+    function placeWord(word) {
+        const positions = [] //array of possible positions, that word can be placed, needed to have 100% guarantee that the word to find will be in this grid
+
+        //list of all possibles
+        directions.forEach(direction => {
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    positions.push({ x, y, direction }); //push adds object to array
+                }
+            }
+        });
+
+        //sorting array randomly
+        positions.sort(() => Math.random() - 0.5)
+
+        for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
+         //checking if word fits with these parameters
+            if (doesWordFits(word, p.x, p.y, p.direction)) {
+                //placing letter on grid
+                for (let i = 0; i < word.length; i++) {
+                    const xx = p.x + (p.direction.x * i);
+                    const yy = p.y + (p.direction.y * i);
+                    temp[yy][xx] = word[i];
+                }
+                return;
+            }
+        }
+    }
+
+    //placing random letter in blank spaces in grid, but fisrtly placing all words to find in grid
+    wordsToFind.value.forEach(word => placeWord(word.toUpperCase()));
+
+    const letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for(let i = 0; i<gridSize; i++){
+        for(let j = 0; j<gridSize; j++){
+            if(temp[j][i] === '') {
+                temp[j][i] = letter[Math.floor(Math.random()*letter.length)];
+            }
+        }
+    }
+    grid.value = temp;
+    localStorage.setItem(gridKey, JSON.stringify(temp)); //placing created grid to local storage, so user can go back to puzzle later without losing progress
+}
+
+//random selection colors
+function randomColor() {
+    const r = Math.floor(Math.random() * 156 + 50);
+    const g = Math.floor(Math.random() * 156 + 50);
+    const b = Math.floor(Math.random() * 156 + 50);
+    return `rgb(${r},${g},${b})`
+}
+
+function getCellStyle(row, col) {
+  //if letter is being selected
+  if (selection.value.some(c => c.row === row && c.col === col)) {
+    return { backgroundColor: selectionColor.value, color: 'white' };
+  }
+
+  for (const item of foundWordsData.value) {
+    if (item.coords.some(c => c.row === row && c.col === col)) {
+      return { backgroundColor: wordsColor.value[item.word], color: 'white' };
+    }
+  }
+
+  return {};
+}
+
+
+//functions related to word search - selecting letters
 function startSelection(row, col) {
      if (!isValidCell(row, col)) return;
     isSelecting.value = true; //letter is being selected
@@ -187,188 +377,8 @@ function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
 
-function generateGrid() {
-    const gridKey = `puzzleGrid_${category}_stage_${currentStage.value}`; //used with local storage to store progress to proper word search puzzle
-    const savedGrid = localStorage.getItem(gridKey); //checking if user has already played the game
-    if (savedGrid) { //if yes, then this grid is parsed into actual array
-        grid.value = JSON.parse(savedGrid);
-        return;
-    }
 
-    const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
-    //Array.from creates new copied Array from array-like object, namely grid
-    const directions = [{x:1,y:0},{x:0,y:1},{x:1,y:1}] //three directions of words placement - x=1,y=0 is horizontally, x=0,y=0 is vertically, x=1,y=1 is diagonally
-
-    //function that checks if given words will fit into the grid in given place (starting from given x and y and direction)
-    function doesWordFits(word,startX,startY,direction) {
-        //firstly we need to calculate end of the word, using it's length
-        const endX = startX + direction.x * (word.length - 1); //first letter is in starting position that's why word.length-1
-        const endY = startY + direction.y * (word.length - 1);
-
-        if(endX >= gridSize || endY >=gridSize) return false;
-
-        //checking if it's a letter coliision - if yes then given letter is shared
-        for (let i = 0; i < word.length; i++) {
-            const x = startX + direction.x * i;
-            const y = startY + direction.y * i;
-            if (temp[y][x] !== '' && temp[y][x] !== word[i]) {
-                return false; 
-            }
-        }
-
-        return true;
-    }
-
-    //function that places word in given space and direction
-    function placeWord(word) {
-        const positions = [] //array of possible positions, that word can be placed, needed to have 100% guarantee that the word to find will be in this grid
-
-        //list of all possibles
-        directions.forEach(direction => {
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    positions.push({ x, y, direction }); //push adds object to array
-                }
-            }
-        });
-
-        //sorting array randomly
-        positions.sort(() => Math.random() - 0.5)
-
-        for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
-         //checking if word fits with these parameters
-            if (doesWordFits(word, p.x, p.y, p.direction)) {
-                //placing letter on grid
-                for (let i = 0; i < word.length; i++) {
-                    const xx = p.x + (p.direction.x * i);
-                    const yy = p.y + (p.direction.y * i);
-                    temp[yy][xx] = word[i];
-                }
-                return;
-            }
-        }
-    }
-
-    //placing random letter in blank spaces in grid, but fisrtly placing all words to find in grid
-    wordsToFind.value.forEach(word => placeWord(word.toUpperCase()));
-
-    const letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for(let i = 0; i<gridSize; i++){
-        for(let j = 0; j<gridSize; j++){
-            if(temp[j][i] === '') {
-                temp[j][i] = letter[Math.floor(Math.random()*letter.length)];
-            }
-        }
-    }
-    grid.value = temp;
-    localStorage.setItem(gridKey, JSON.stringify(temp)); //placing created grid to local storage, so user can go back to puzzle later without losing progress
-}
-//random selection colors
-function randomColor() {
-    const r = Math.floor(Math.random() * 156 + 50);
-    const g = Math.floor(Math.random() * 156 + 50);
-    const b = Math.floor(Math.random() * 156 + 50);
-    return `rgb(${r},${g},${b})`
-}
-
-function getCellStyle(row, col) {
-  //if letter is being selected
-  if (selection.value.some(c => c.row === row && c.col === col)) {
-    return { backgroundColor: selectionColor.value, color: 'white' };
-  }
-
-  for (const item of foundWordsData.value) {
-    if (item.coords.some(c => c.row === row && c.col === col)) {
-      return { backgroundColor: wordsColor.value[item.word], color: 'white' };
-    }
-  }
-
-  return {};
-}
-
-//database and words
-let title = ref('');
-let currentStage = ref(1);
-let maxStage = ref();
-const showPuzzleDone = ref(false);
-const showCategoryDone = ref(false);
-
-async function loadData() {
-    try {
-        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
-        const puzzlesData = data.documents.filter(doc => doc.title === category);
-        const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
-        
-        if (puzzlesData.length > 0) {
-            title.value = puzzlesData[0].title
-
-            //finding max puzzleId - to know how many of stages there are
-            const stages = puzzlesData.map(doc => {
-                const num = parseInt(doc.puzzleId.split('-')[1]) //spliting name for example fruit-2 to array - "fruit","2", taking second element and parsing it to int
-                return isNaN(num) ? 0 : num //if there is no number then 0
-            })
-            maxStage.value = Math.max(...stages) //taking max number from given array
-
-            loadStage(currentStage.value); //loading numer of current stage
-        }
-
-        if (words) { //if array of words was found
-            wordsToFind.value = words.searchWord;
-            generateGrid();
-        } else {
-            console.log("Error, couldn't find category", category);
-        }
-
-        // console.log('Title:', title.value)
-        // console.log('Max stage:', maxStage.value)
-        // console.log('Current puzzleId:', puzzlesData[0]?.puzzleId)
-
-    } catch (err) {
-        console.log("Error: ",err);
-    }
-}
-
-async function loadStage(stage) {
-    try {
-        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
-        const puzzlesData = data.documents.filter(doc => doc.title === category);
-
-        const stageDoc = puzzlesData.find(doc => { //finding last stage of puzzle that user used
-            const num = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is for example fruit-1, we only need a number
-            return num === stage;
-        });
-
-        if (stageDoc) {
-            wordsToFind.value = stageDoc.searchWord;
-
-            // checking if user has saved progress to proper stage
-            const progressKey = `puzzleProgress_${category}_stage_${stage}`;
-            const savedProgress = localStorage.getItem(progressKey);
-
-            if (savedProgress) {
-                const parsed = JSON.parse(savedProgress); //parsed is an array with saved informations about puzzle and user's progress like found words
-                foundWords.value = parsed.foundWords || [];
-                foundWordsData.value = parsed.foundWordsData || [];
-                wordsColor.value = parsed.wordsColor || {};
-                // showPuzzleDone is visible when all of the words was found
-                showPuzzleDone.value = (foundWords.value.length === wordsToFind.value.length);
-            } else {
-                foundWords.value = [];
-                foundWordsData.value = [];
-                wordsColor.value = {};
-                showPuzzleDone.value = false; //reseting for new stage
-            }
-
-            generateGrid();
-            //console.log("Loaded stage:", stage, "PuzzleId:", stageDoc.puzzleId);
-        } else {
-            console.log("Stage not found:", stage);
-        }
-    } catch (err) {
-        console.log("Error: ",err);
-    }
-}
-
+//functions for icons on bottom
 function nextStage() {
     if (currentStage.value < maxStage.value) {
         currentStage.value++;
@@ -383,12 +393,12 @@ function nextStage() {
     }
 }
 
-
-//functions for icons on bottom
 function goBack() {
     router.back();
 }
 
+
+// loading before mounting component
 onMounted(() => {
     //checking what was the last stage to certain category
     const savedStage = localStorage.getItem(`currentStage_${category}`);
