@@ -35,13 +35,65 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import categories from '@/lib/categoriesPlay';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { databases, account } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 
 const router = useRouter();
 
-
 const categoryLen = categories.length;
+const completedLen = ref(0);
+const completedCategories = ref({}); //here will be storing info about categories that has been completed
 
+const currentUser = ref(null);
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
+
+
+//functions related to database
+function isCategoryCompleted(name) {
+    return !!completedCategories.value[name]; // !! is used, so the value will always be boolean
+}
+
+async function fetchPuzzlesProgress() {
+    try {
+        const user = await account.get(); //getting id of current user
+        currentUser.value = user;
+
+        //all of the documents that are realted to the current user
+        const data = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)])
+        const documents = data.documents;
+
+        const categoriesData = {}; //collecting info of categories form collection
+        documents.forEach(doc => {//grouping categories
+            const categoryName = doc.category;
+            if (!categoriesData[categoryName]) {
+                categoriesData[categoryName] = [];//if category isn't alredy in array, new one is added
+            }
+            categoriesData[categoryName].push(doc);
+        });
+
+        for (const category in categoriesData) {
+            const puzzles = categoriesData[category]; //listing all stages from category and finding stage with highest number
+            const maxStage = Math.max(...puzzles.map(p => p.stage));
+            const completedDoc = puzzles.find(p => p.stage === maxStage && p.completed); // checking if this stage is the last one and if is completed
+            
+            if (completedDoc) {
+                completedCategories.value[category] = true;
+            } else {
+                completedCategories.value[category] = false;
+            }
+        }
+        
+        completedLen.value = Object.values(completedCategories.value).filter(Boolean).length; //Object makes this an array of values, only elements with true value stays
+
+    } catch (err) {
+        console.error("Error fetching puzzle progress:", err);
+    }
+}
+
+
+//other functions
 function goBack() {
     router.back();
 }
@@ -50,14 +102,7 @@ function playCategory(name) {
     router.push({path: '/ws', query: {category: name}});
 }
 
-function isCategoryCompleted(name) {
-    return localStorage.getItem(`categoryCompleted_${name}`) === "true";
-}
-
-const completedLen = ref();
-const categoriesNumber = categories.filter(c => isCategoryCompleted(c.name)).length
-completedLen.value = categoriesNumber;
-
+onMounted(fetchPuzzlesProgress);
 </script>
 
 <style lang="scss" scoped>
