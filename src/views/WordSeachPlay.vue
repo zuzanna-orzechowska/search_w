@@ -32,7 +32,7 @@
 
             <div class="bottom">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <img src="../assets/hint-icon.svg" alt="hint icon">
+                <img @click="showHint" src="../assets/hint-icon.svg" alt="hint icon">
             </div>
 
             <div class="puzzle-done" v-if="showPuzzleDone">
@@ -91,6 +91,7 @@ const startCell = ref(null); //first letter from selected word
 const selectionColor = ref(null) // current color of selecting letter
 const wordsColor = ref({}); //which word has which color
 const foundWordsData = ref([]) //info of found - value of word and it's cords
+const hintedCell = ref()// {row,col} will be stored here
 
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
@@ -305,20 +306,31 @@ function randomColor() {
 }
 
 function getCellStyle(row, col) {
-  // if letter is being selected
-  if (selection.value?.some(c => c.row === row && c.col === col)) {
-    return { backgroundColor: selectionColor.value, color: 'white' };
+  let style = {}; //variable that stores active style for cell
+
+  //checking if the current cell is part of an active selection
+  const isSelected = selection.value?.some(c => c.row === row && c.col === col); // ? ensures the code doesn't throw an error if the value is null or undefined
+  if (isSelected) {
+    style = { ...style, backgroundColor: selectionColor.value, color: 'white' }; //updating style, ...style copies all existing properties from the object
   }
 
+  //checking if the cell is part of a found word
   for (const item of foundWordsData.value || []) {
-    if (item.coords?.some(c => c.row === row && c.col === col)) {
-      return { backgroundColor: wordsColor.value[item.word], color: 'white' };
+    const isFound = item.coords?.some(c => c.row === row && c.col === col);
+    if (isFound) {
+      style = { ...style, backgroundColor: wordsColor.value[item.word], color: 'white' };
     }
   }
 
-  return {};
-}
+  //checking if the current cell is the hinted cell -  only applied if the cell is not part of a found word and is not being selected
+  const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
+  const isWordFound = foundWords.value.includes(wordsToFind.value.find(word => word.charAt(0) === grid.value[row][col]));
+  if (isHinted && !isWordFound && !isSelected) {
+    style = { ...style, border: '2px solid red' };
+  }
 
+  return style;
+}
 
 //functions related to word search - selecting letters
 function startSelection(row, col) {
@@ -384,8 +396,10 @@ const word = selection.value
     foundWordsData.value.push({ word: match, coords: [...selection.value] });
     foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
 
+    hintedCell.value = null;
+
     const isCompleted = foundWords.value.length === wordsToFind.value.length;
-    await saveProgress(isCompleted); // <-- Save progress here, with the correct state
+    await saveProgress(isCompleted); // <-- saving progress with correct state
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         showPuzzleDone.value = true
@@ -400,6 +414,52 @@ const word = selection.value
 //checking if selecting rows and cols fit in grid array
 function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
+}
+
+function showHint() {
+    // checking words that haven't been found yet
+    const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
+
+    if (unfoundWords.length > 0) {
+        //selecting a random unfound word
+        const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+
+        //finding the coordinates of the first letter of that word
+        const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
+        
+        if (foundWordData) {
+            //using the first set of coordinates
+            hintedCell.value = foundWordData.coords[0];
+        } else {
+            // if the data isn't loaded yet, you need to find the word on the grid
+            
+            //finding the coordinates if they aren't in foundWordsData.
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    //checking all directions from each cell to find the word
+                    if (grid.value[r][c].toUpperCase() === randomWord[0]) {
+                        //checking horizontally, vertically, and diagonally
+                        const directions = [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}];
+                        for (const dir of directions) {
+                            let match = true;
+                            for (let i = 0; i < randomWord.length; i++) {
+                                const newRow = r + dir.y * i;
+                                const newCol = c + dir.x * i;
+                                if (newRow >= gridSize || newCol >= gridSize || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                hintedCell.value = { row: r, col: c };
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
