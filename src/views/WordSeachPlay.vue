@@ -96,12 +96,13 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
-let title = ref('');
 let currentStage = ref(1);
 let maxStage = ref();
 const showPuzzleDone = ref(false);
 const showCategoryDone = ref(false);
 let currentUser = ref(null); //needed for saving progress for currently logged in user
+let progressDocumentId = null; // storing the ID of the single progress document
+let progressData = {}; // storing the entire stages_data object
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -116,11 +117,7 @@ async function getUser() { //what user is currenlty logged in
 
 async function loadStage(stage) {
     try {
-        const data = await databases.listDocuments(database_id, collection_id);
-        const stageDoc = data.documents.find(doc => { //finding proper stage for current category
-            return doc.title === category && parseInt(doc.puzzleId.split('-')[1]) === stage;
-        });
-
+        const stageDoc = await findStagePuzzle(stage); // Find the original puzzle data
         if (!stageDoc) {
             console.log("Stage not found:", stage);
             return;
@@ -129,21 +126,16 @@ async function loadStage(stage) {
         wordsToFind.value = stageDoc.searchWord;
         currentStage.value = stage;
 
-        const progressDocs = await databases.listDocuments( //finding document from progress collection - current user, category and stage
-            database_id,
-            collection_progress_id,
-            [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category), Query.equal("stage", stage)]);
-
-        if (progressDocs.total > 0) { // if document was found then
-            const progress = progressDocs.documents[0]; //first element from list of documents 
-            foundWords.value = progress.foundWords || []; // || [] means if there is no info given it would be blank array
-            foundWordsData.value = progress.foundWordsData ? JSON.parse(progress.foundWordsData) : []; // .parse converts string to JS object
-            wordsColor.value = progress.wordsColor ? JSON.parse(progress.wordsColor) : {};
-            grid.value = progress.grid ? JSON.parse(progress.grid) : [];
-            showPuzzleDone.value = progress.completed || false;
-            //console.log("Loaded progress:", progress);
+        const stageProgress = progressData[stage];
+        if (stageProgress) {
+            //loading progress from the single document
+            foundWords.value = stageProgress.foundWords || [];
+            foundWordsData.value = JSON.parse(stageProgress.foundWordsData || '[]');
+            wordsColor.value = JSON.parse(stageProgress.wordsColor || '{}');
+            grid.value = JSON.parse(stageProgress.grid || '[]');
+            showPuzzleDone.value = stageProgress.completed || false;
         } else {
-            // if its new stage, then we reset all of the info
+            //if it's new stage, reset everything
             foundWords.value = [];
             foundWordsData.value = [];
             wordsColor.value = {};
@@ -151,60 +143,63 @@ async function loadStage(stage) {
             showPuzzleDone.value = false;
         }
 
-        if (grid.value.length === 0) generateGrid(); //for new stage we generate new grid
+        if (grid.value.length === 0) generateGrid();
+    } catch (err) {
+        console.log("Error loading stage:", err);
+    }
+}
 
+async function findStagePuzzle(stage) {
+    //optimized query to only fetch documents for the specific category
+    const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
+
+    //filter the fetched documents to find the specific stage
+    return data.documents.find(doc => parseInt(doc.puzzleId.split('-')[1]) === stage);
+}
+
+async function loadData() {
+    try {
+        //finding max stage from original puzzle collection
+        const puzzlesData = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
+        if (puzzlesData.total === 0) {
+            console.log("Error, couldn't find category", category);
+            return;
+        }
+
+        const stages = puzzlesData.documents.map(doc => parseInt(doc.puzzleId.split('-')[1]));
+        maxStage.value = Math.max(...stages);
+        
+        //loading or create the single progress document
+        await loadProgressDocument();
+        
+        loadStage(currentStage.value);
     } catch (err) {
         console.log("Error:", err);
     }
 }
 
-
-
-async function loadData() {
-    try {
-        const data = await databases.listDocuments(database_id,collection_id); //finding proper collection
-        const puzzlesData = data.documents.filter(doc => doc.title === category);
-        const words = data.documents.find(doc => doc.title === category); //finding proper document with given category name as title value
-        
-        if (puzzlesData.length > 0) {
-            title.value = puzzlesData[0].title
-            
-            //finding max puzzleId - to know how many of stages there are
-            const stages = puzzlesData.map(doc => {
-                const num = parseInt(doc.puzzleId.split('-')[1]) //spliting name for example fruit-2 to array - "fruit","2", taking second element and parsing it to int
-                return isNaN(num) ? 0 : num //if there is no number then 0
-            })
-            maxStage.value = Math.max(...stages) //taking max number from given array
-            
-            loadStage(currentStage.value); //loading numer of current stage
-        }
-        
-        if (words) { //if array of words was found
-            wordsToFind.value = words.searchWord;
-            generateGrid();
-        } else {
-            console.log("Error, couldn't find category", category);
-        }
-        
-        // console.log('Title:', title.value)
-        // console.log('Max stage:', maxStage.value)
-        // console.log('Current puzzleId:', puzzlesData[0]?.puzzleId)
-        
-    } catch (err) {
-        console.log("Error: ",err);
-    }
-}
-
-async function loadCurrentStage() {
-    const stageDocs = await databases.listDocuments( //taking all documents that are connected with current user
+async function loadProgressDocument() {
+    const progressDocs = await databases.listDocuments(
         database_id,
         collection_progress_id,
-        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category)]);
-    
-    if (stageDocs.total > 0) {
-        const maxReached = Math.max(...stageDocs.documents.map(d => d.stage)); //making array of stages, choosing the one that's the highest
-        currentStage.value = maxReached; //max stage number is current stage
+        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category)]
+    );
+
+    if (progressDocs.total > 0) {
+        //if document exists, load its data
+        const doc = progressDocs.documents[0];
+        progressDocumentId = doc.$id;
+        progressData = JSON.parse(doc.stages_data);
+        currentStage.value = progressData.maxStage || 1; //loading the highest stage reached
     } else {
+        //if document does not exist, create it
+        const newDoc = await databases.createDocument(
+            database_id,
+            collection_progress_id,
+            ID.unique(),
+            {user_id: currentUser.value.$id, category,stages_data: '{}'});
+        progressDocumentId = newDoc.$id;
+        progressData = {};
         currentStage.value = 1;
     }
 }
@@ -212,30 +207,21 @@ async function loadCurrentStage() {
 async function saveProgress(completed = false) {
     const puzzleId = `${category}-${currentStage.value}`;
 
-    const progressDocs = await databases.listDocuments(
-        database_id,
-        collection_progress_id,
-        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category), Query.equal("stage", currentStage.value)]);
-
-    const info = { //info that will be stored in collection for progress
-        user_id: currentUser.value.$id,
-        category,
-        stage: currentStage.value,
+    //updating the progressData object for the current stage
+    progressData[currentStage.value] = {
+        completed,
         puzzleId,
         foundWords: foundWords.value,
-        foundWordsData: JSON.stringify(foundWordsData.value), //stringifying data so it can be stored properly in database
+        foundWordsData: JSON.stringify(foundWordsData.value),
         grid: JSON.stringify(grid.value),
         wordsColor: JSON.stringify(wordsColor.value),
-        completed
     };
+    
+    //updating the max stage if the current stage is higher
+    progressData.maxStage = Math.max(progressData.maxStage || 0, currentStage.value);
 
-    if (progressDocs.total > 0) {
-        //updating existing document
-        await databases.updateDocument(database_id, collection_progress_id, progressDocs.documents[0].$id, info);
-    } else {
-        //creating new document
-        await databases.createDocument(database_id, collection_progress_id, ID.unique(),info);
-    }
+    //saving the entire updated stages_data to the single document
+    await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { stages_data: JSON.stringify(progressData) });
 }
 
 
@@ -422,11 +408,15 @@ async function nextStage() {
     if (currentStage.value < maxStage.value) {
         currentStage.value++;
         await loadStage(currentStage.value);
+        //completed status is false by default for a new stage
+        await saveProgress(false); 
     } else {
-        if(currentStage.value === maxStage.value) {
+        //checking if the final stage is completed
+        if (progressData[maxStage.value]?.completed) {
             showCategoryDone.value = true;
+        } else {
+            console.log("No more stages available or the final stage is not yet completed.");
         }
-        console.log("No more stages");
     }
 }
 
@@ -438,7 +428,6 @@ function goBack() {
 // loading before mounting component
 onMounted(async () => {
    await getUser();
-   await loadCurrentStage();
    await loadData();
 });
 

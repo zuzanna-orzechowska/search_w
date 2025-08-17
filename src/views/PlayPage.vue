@@ -57,35 +57,40 @@ function isCategoryCompleted(name) {
 
 async function fetchPuzzlesProgress() {
     try {
-        const user = await account.get(); //getting id of current user
+        const user = await account.get();
         currentUser.value = user;
 
-        //all of the documents that are realted to the current user
-        const data = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)])
-        const documents = data.documents;
+        //fetching all progress documents for the current user
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
 
-        const categoriesData = {}; //collecting info of categories form collection
-        documents.forEach(doc => {//grouping categories
-            const categoryName = doc.category;
-            if (!categoriesData[categoryName]) {
-                categoriesData[categoryName] = [];//if category isn't alredy in array, new one is added
+        //fetching max stages for all categories from the 'Play' collection
+        const { documents: puzzleDocuments } = await databases.listDocuments(database_id, collection_progress_id);
+
+        const maxStages = {};
+        puzzleDocuments.forEach(doc => {
+            const categoryName = doc.title; 
+            const stageNumber = parseInt(doc.puzzleId.split('-')[1]);
+            
+            if (!maxStages[categoryName] || stageNumber > maxStages[categoryName]) {
+                maxStages[categoryName] = stageNumber;
             }
-            categoriesData[categoryName].push(doc);
         });
 
-        for (const category in categoriesData) {
-            const puzzles = categoriesData[category]; //listing all stages from category and finding stage with highest number
-            const maxStage = Math.max(...puzzles.map(p => p.stage));
-            const completedDoc = puzzles.find(p => p.stage === maxStage && p.completed); // checking if this stage is the last one and if is completed
-            
-            if (completedDoc) {
-                completedCategories.value[category] = true;
+        progressDocuments.forEach(doc => {
+            const categoryName = doc.category;
+            //parsing string into JS object
+            const stagesData = JSON.parse(doc.stages_data);
+            const maxPuzzleStage = maxStages[categoryName];
+
+            //checking if stagesData[maxPuzzleStage] exists before trying to access .completed
+            if (stagesData[maxPuzzleStage]?.completed === true) {
+                completedCategories.value[categoryName] = true;
             } else {
-                completedCategories.value[category] = false;
+                completedCategories.value[categoryName] = false;
             }
-        }
+        });
         
-        completedLen.value = Object.values(completedCategories.value).filter(Boolean).length; //Object makes this an array of values, only elements with true value stays
+        completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
 
     } catch (err) {
         console.error("Error fetching puzzle progress:", err);

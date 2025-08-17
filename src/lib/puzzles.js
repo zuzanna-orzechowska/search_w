@@ -51,14 +51,14 @@ export const puzzles = [
     {
         title: "vegetables",
         puzzleId: "vegetables-3",
-        searchWord: ["ASPARAGUS", "BEAN", "CHARD", "CHICORY", "FENNEL", "MUSHROOM", "PARSLEY", "PEPPER", "RADICCHIO", "SCALLION"],
+        searchWord: ["ASPARAGUS", "BEAN", "CHARD", "CHICORY", "FENNEL", "MUSHROOM", "PARSLEY", "PEPPER", "SCALLION", "ENDIVE"],
         coin: 10,
         xp: 25
     },
     {
         title: "vegetables",
         puzzleId: "vegetables-4",
-        searchWord: ["ARTICHOKE", "BRUSSELS", "CAULIFLOWER", "ENDIVE", "KOHLRABI", "WATERCRESS", "SEAWEED", "PLANTAIN", "SWEETCORN", "YAM"],
+        searchWord: ["ARTICHOKE", "KOHLRABI", "WATERCRESS", "SEAWEED", "PLANTAIN", "SWEETCORN", "YAM", "RUTABAGA", "TURNERA", "MALANGA"],
         coin: 10,
         xp: 25
     },
