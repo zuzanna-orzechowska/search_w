@@ -5,13 +5,21 @@
                 <div class="text-container">
                     <h2>Play</h2>
                     <p class="bigger">Choose a category</p>
-                    <p class="smaller">0/{{categoryLen}} completed</p>
+                    <p class="smaller">{{ completedLen }} / {{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
                             <img :src="category.image" :alt="category.name">
-                            <button>Play</button>
+
+                            <div class="overlay-txt" v-if="isCategoryCompleted(category.name)"> 
+                                <img src="../assets/completed-text.svg" alt="completed text">
+                            </div>
+
+                            <button v-if="!isCategoryCompleted(category.name)" @click="playCategory(category.name)">Play</button>
+                            <div v-else>
+                                <img src="../assets/tick.svg" alt="tick" class="tick">
+                            </div>
                         </div>
                 </div>
                 </div>
@@ -26,19 +34,83 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import categories from '@/lib/categoriesPlay'
+import categories from '@/lib/categoriesPlay';
+import { ref, onMounted } from 'vue';
+import { databases, account } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 
 const router = useRouter();
 
-
 const categoryLen = categories.length;
+const completedLen = ref(0);
+const completedCategories = ref({}); //here will be storing info about categories that has been completed
 
+const currentUser = ref(null);
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
+
+
+//functions related to database
+function isCategoryCompleted(name) {
+    return !!completedCategories.value[name]; // !! is used, so the value will always be boolean
+}
+
+async function fetchPuzzlesProgress() {
+    try {
+        const user = await account.get();
+        currentUser.value = user;
+
+        //fetching all progress documents for the current user
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
+
+        //fetching max stages for all categories from the 'Play' collection
+        const { documents: puzzleDocuments } = await databases.listDocuments(database_id, collection_progress_id);
+
+        const maxStages = {};
+        puzzleDocuments.forEach(doc => {
+            const categoryName = doc.title; 
+            const stageNumber = parseInt(doc.puzzleId.split('-')[1]);
+            
+            if (!maxStages[categoryName] || stageNumber > maxStages[categoryName]) {
+                maxStages[categoryName] = stageNumber;
+            }
+        });
+
+        progressDocuments.forEach(doc => {
+            const categoryName = doc.category;
+            //parsing string into JS object
+            const stagesData = JSON.parse(doc.stages_data);
+            const maxPuzzleStage = maxStages[categoryName];
+
+            //checking if stagesData[maxPuzzleStage] exists before trying to access .completed
+            if (stagesData[maxPuzzleStage]?.completed === true) {
+                completedCategories.value[categoryName] = true;
+            } else {
+                completedCategories.value[categoryName] = false;
+            }
+        });
+        
+        completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
+
+    } catch (err) {
+        console.error("Error fetching puzzle progress:", err);
+    }
+}
+
+
+//other functions
 function goBack() {
     router.back();
 }
+
+function playCategory(name) {
+    router.push({path: '/ws', query: {category: name}});
+}
+
+onMounted(fetchPuzzlesProgress);
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .background-lines {
     background-image: url("../assets/background-play.png");
     background-repeat: no-repeat;
@@ -74,6 +146,7 @@ function goBack() {
             font-size: 56px;
             font-weight: 500;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
@@ -93,20 +166,44 @@ function goBack() {
 
         .categories-container {
             display: grid;
-            grid-template-columns: repeat(5,1fr);
+            grid-template-columns: repeat(4,1fr);
             gap: 2vw;
             margin-top: 42px;
     
             .category {
+                position: relative;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 1vw;
+
+                .overlay-txt {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 180px;
+                    height: 180px;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 6px;
+                    
+                    img {
+                        border: none;
+                        padding: 0px 12px;
+                    }
+                }
     
                 img {
-                    width: 136px;
+                    width: 180px;
                     border: 2px solid black;
                     border-radius: 6px;
+                }
+
+                .tick {
+                    border: none;
+                    width: 42px;
                 }
     
                 button {
