@@ -104,7 +104,7 @@ function goBack() {
 }
 
 function playCategory(name) {
-    router.push({path: '/ws', query: {category: name}});
+    router.push({path: '/wsplay', query: {category: name}});
 }
 
 onMounted(fetchPuzzlesProgress);

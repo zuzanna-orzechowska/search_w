@@ -11,7 +11,7 @@
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
                             <img :src="category.image" :alt="category.name" class="challenge-img">
-                            <button class="challenge-btn">Play</button>
+                            <button class="challenge-btn" @click="playCategory(category.name)">Play</button>
                         </div>
                 </div>
                 </div>
@@ -32,6 +32,10 @@ const router = useRouter();
 
 
 const categoryLen = categories.length;
+
+function playCategory(name) {
+    router.push({path: '/wschallenge', query: {category: name}});
+}
 
 function goBack() {
     router.back();
