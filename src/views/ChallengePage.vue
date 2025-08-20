@@ -97,7 +97,7 @@ function goBack() {
 
         .categories-container {
             display: grid;
-            grid-template-columns: repeat(5,1fr);
+            grid-template-columns: repeat(4,1fr);
             gap: 2vw;
             margin-top: 42px;
     
@@ -108,8 +108,8 @@ function goBack() {
                 gap: 1vw;
     
                 .challenge-img {
-                    width: 136px;
-                    border: 3px solid #FFBA08;
+                    width: 180px;
+                    border: 4px solid #FFBA08;
                     border-radius: 6px;
                 }
     

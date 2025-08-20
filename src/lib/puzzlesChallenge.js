@@ -40,7 +40,23 @@ export const puzzlesChallenge = [
         searchWord: ["SAND","DUNE","CACTUS","OASIS","MIRAGE","SUN","CAMEL","SCORPION","LIZARD","COYOTE","DUST","HEAT","DRY","SNAKE","ARID","ROCK","EROSION","CANYON","GECKO","VULTURE"],
         coin: 40,
         xp: 100
+    },
+    {
+        title: "ancient",
+        searchWord: ["TEMPLE","PYRAMID","SPHINX","ORACLE","PHARAOH","MUMMY","EMPIRE","RUINS","GLADIATOR","FORUM","TOMB","SCROLL","COLUMN","STATUE","ALTAR","MYTH","LEGEND","RELIC","CITADEL","CRYPT"],
+        coin: 40,
+        xp: 100
+    },
+    {
+        title: "travel",
+        searchWord: ["JOURNEY","TICKET","MAP","SUITCASE","PASSPORT","TRAIN","PLANE","HOTEL","BEACH","CAMP","TOUR","GUIDE","SAFARI","CAR","VOYAGE","ISLAND","CRUISE","ROUTE","TRIP","CITY"],
+        coin: 40,
+        xp: 100
+    },
+    {
+        title: "royalty",
+        searchWord: ["KING","QUEEN","CROWN","PRINCE","PRINCESS","DUKE","DUCHESS","THRONE","CASTLE","SCEPTER","PALACE","COURT","NOBLE","HEIR","ROYAL","REGENT","MONARCH","PAGE","KNIGHT","TIARA"],
+        coin: 40,
+        xp: 100
     }
-
-
 ]
