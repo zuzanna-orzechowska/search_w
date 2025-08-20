@@ -4,7 +4,10 @@ const categories = [{ name: "weather", image: require("@/assets/categoriesChalle
         { name: "instruments", image: require("@/assets/categoriesChallenge/instruments.png") },
         { name: "gemstones", image: require("@/assets/categoriesChallenge/gemstones.png") },
         { name: "sport", image: require("@/assets/categoriesChallenge/sport.png") },
-        { name: "desert", image: require("@/assets/categoriesChallenge/desert.png") }
+        { name: "desert", image: require("@/assets/categoriesChallenge/desert.png") },
+        { name: "ancient", image: require("@/assets/categoriesChallenge/ancient.png") },
+        { name: "travel", image: require("@/assets/categoriesChallenge/travel.png") },
+        { name: "roalty", image: require("@/assets/categoriesChallenge/roalty.png") }
     ]
 
 export default categories;
