@@ -4,7 +4,7 @@
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
                 <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
-                <p class="smaller">Words appear horizontally, vertically and diagonally.</p>
+                <p class="smaller">Words may appear horizontally, vertically and diagonally.</p>
             </div>
             <div class="wrapper-search">
                 <div class="words-list">
@@ -515,12 +515,12 @@ onMounted(async () => {
         }
 
         .bigger{
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 4px;
         }
 
         .smaller {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 64px;
         }
     }
