@@ -495,12 +495,12 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .background-container {
-    background-color: rgb(174, 210, 229);
     width: 100vw;
     height: 100vh;
 }
 
 .container {
+    background-color: rgb(174, 210, 229);
     display: flex;
     align-items: center;
     flex-direction: column;

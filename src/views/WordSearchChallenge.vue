@@ -5,8 +5,8 @@
                 <h2>{{ categoryName }}</h2>
                 <!-- <p class="bigger">Find all given words within time limit to win!</p>
                 <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p> -->
-                <p class="bigger">4:20</p>
-                <p class="smaller">Found 2 / 20</p>
+                <p class="bigger">{{ timeString }}</p>
+                <p class="smaller">Found {{ foundWords.length }} / {{ wordsToFind.length }}</p>
             </div>
             <div class="wrapper-search">
                 <div class="wrapper-words-text">
@@ -44,10 +44,36 @@
 
             <div class="bottom">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
+                <img @click="isChallengePaused = true; stopTimer()" src="../assets/pause-icon.svg" alt="pause icon">
             </div>
 
-            <!-- <div class="puzzle-done" v-if="showPuzzleDone">
-                <h2>Puzzle completed!</h2>
+           <div class="challenge-paused" v-if="isChallengePaused">
+                <h2>Game paused</h2>
+                <div class="paused-txt">
+                    <p>Want to continue?</p>
+                    <div class="btns">
+                        <button @click="isChallengePaused = false; startTimer()" class="continue-btn">Continue</button>
+                    </div>
+                </div>
+                <div class="paused-txt second">
+                    <p>Go back to challenges.</p>
+                    <div class="btns">
+                        <button @click="goBack">Back</button>
+                    </div>
+                    <p class="warning">All progress will be lost!</p>
+                </div>
+           </div>
+
+            <div class="challenge-completed" v-if="isChallengeCompleted">
+                <h2>Good job!</h2>
+                <div class="results">
+                    <div class="stars">
+                        <img src="../assets/full-star.svg" alt="full star">
+                        <img src="../assets/full-star.svg" alt="full star">
+                        <img src="../assets/blank-star.svg" alt="full star">
+                    </div>
+                    <p>Record: <span>{{ timeString }}</span></p>
+                </div>
                 <div class="rewards-txt">
                     <div class="txt-icon">
                         <p>+ 10 coins</p>
@@ -60,24 +86,28 @@
                 </div>
                 <div class="btns">
                     <button @click="goBack">Back</button>
-                    <button class="next-btn" @click="nextStage">Next</button>
+                    <button class="again-btn">Play again</button>
                 </div>
             </div>
 
-            <div class="category-done" v-if="showCategoryDone">
-                <h2>Congratulations!</h2>
-                <p>You've completed all puzzles in this category</p>
-                <img src="../assets/blueFluff.svg" alt="blue fluff">
-                <div class="btns">
-                    <button @click="goBack">Back</button>
+             <div class="before-game" v-if="!isGameStarted">
+                <h2>Ready to play?</h2>
+                <div class="before-txt">
+                    <p>Find all given words within time limit to win.</p>
+                    <p>Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
+                    <div class="btns">
+                        <button @click="goBack">Back</button>
+                        <button class="play-btn" @click="startGame">Play</button>
+                    </div>
                 </div>
-            </div> -->
+           </div>
+
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { databases } from '@/lib/appwrite';
 import { Query } from 'appwrite';
@@ -85,6 +115,13 @@ import { Query } from 'appwrite';
 //global variables
 const route = useRoute();
 const router = useRouter();
+const isChallengePaused = ref(false);
+const isChallengeCompleted = ref(false);
+const isGameStarted = ref(false); //! CHANGE TO FALSE
+const time = ref(0);
+const timeString = ref('00:00');
+const timer = ref(null);
+const canInteract = computed(() => isGameStarted.value && !isChallengePaused.value && !isChallengeCompleted.value);
 
 //variables related to word search 
 const wordsToFind = ref([]);
@@ -223,7 +260,8 @@ function getCellStyle(row, col) {
 
 //functions related to word search - selecting letters
 function startSelection(row, col) {
-     if (!isValidCell(row, col)) return;
+    if (!canInteract.value) return; //if user didn't start a game, can select words
+    if (!isValidCell(row, col)) return;
     isSelecting.value = true; //letter is being selected
     selection.value = [{ row, col }]; //coords of selected letters
     startCell.value = { row, col }; //the same as above (only first letter)
@@ -231,41 +269,43 @@ function startSelection(row, col) {
 }
 
 function extendSelection(row, col) { //after user drags mouse to select more letters
-  if (!isSelecting.value || !startCell.value) return;  //if user already clicked mouse
-  if (!isValidCell(row, col)) return;
+    if (!canInteract.value) return;
+    if (!isSelecting.value || !startCell.value) return;  //if user already clicked mouse
+    if (!isValidCell(row, col)) return;
 
-  //calculating distance between letter
-  const dx = col - startCell.value.col;
-  const dy = row - startCell.value.row;
+    //calculating distance between letter
+    const dx = col - startCell.value.col;
+    const dy = row - startCell.value.row;
 
-  const len = Math.max(Math.abs(dx), Math.abs(dy)) + 1; //how much letters should be selected from the start, +1 because if user is selecting letters from 
-  // (2,2) to (2,5) then its 4 not 3
+    const len = Math.max(Math.abs(dx), Math.abs(dy)) + 1; //how much letters should be selected from the start, +1 because if user is selecting letters from 
+    // (2,2) to (2,5) then its 4 not 3
 
-  let stepX; 
-  if(dx === 0) { //we don't move horizontally
-    stepX = 0 }
-  else {
-    stepX = dx / Math.abs(dx);} // we move in right if dx>0, in left if dx<0 
+    let stepX; 
+    if(dx === 0) { //we don't move horizontally
+        stepX = 0 }
+    else {
+        stepX = dx / Math.abs(dx);} // we move in right if dx>0, in left if dx<0 
 
-  let stepY; 
-  if(dy === 0) { //we don't move vertically
-    stepY = 0 }
-  else {
-    stepY = dy / Math.abs(dy);}
+    let stepY; 
+    if(dy === 0) { //we don't move vertically
+        stepY = 0 }
+    else {
+        stepY = dy / Math.abs(dy);}
 
-  const path = []; //list of selected letter
-  for (let i = 0; i < len; i++) {
-    path.push({ //pushing to list coords of every selected letter
-      row: startCell.value.row + stepY * i,
-      col: startCell.value.col + stepX * i,
-    });
-  }
-  selection.value = path; //selected space
+    const path = []; //list of selected letter
+    for (let i = 0; i < len; i++) {
+        path.push({ //pushing to list coords of every selected letter
+        row: startCell.value.row + stepY * i,
+        col: startCell.value.col + stepX * i,
+        });
+    }
+    selection.value = path; //selected space
 }
 
 function endSelection() { //if user stops clicking mouse
-  if (!isSelecting.value) return; //if user is not selecting anything
-  isSelecting.value = false; //stop selecting
+    if (!canInteract.value) return;
+    if (!isSelecting.value) return; //if user is not selecting anything
+    isSelecting.value = false; //stop selecting
 
 const word = selection.value
   .map(({ row, col }) => {
@@ -288,8 +328,8 @@ const word = selection.value
     // const isCompleted = foundWords.value.length === wordsToFind.value.length;
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
-        // showPuzzleDone.value = true
-        console.log("Somethinng");
+        stopTimer(); //stopping the timer after all of words was found
+        isChallengeCompleted.value = true;
     }
   }
 
@@ -301,6 +341,28 @@ const word = selection.value
 //checking if selecting rows and cols fit in grid array
 function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
+}
+
+
+//functions for handeling time
+function startTimer() {
+    timer.value = setInterval(() => {
+        time.value++;
+        const minutes = Math.floor(time.value / 60);
+        const seconds = time.value % 60;
+        //padStart is a function that adds to given value (here minutes or seconds) string '0' so it's always two digits
+        timeString.value = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timer.value);
+    timer.value = null;
+}
+
+function startGame() {
+    isGameStarted.value = true;
+    startTimer();
 }
 
 //function for icon on bottom
@@ -321,6 +383,7 @@ onMounted( async () => {
 }
 
 .container {
+    background-color: rgb(174, 210, 229);
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -449,9 +512,9 @@ onMounted( async () => {
         }
     }
 
-    .puzzle-done{
+    
+    .challenge-paused, .before-game {
         //display: none;
-        background-color: pink;
         border-radius: 6px;
         width: 540px;
         height: 420px;
@@ -466,101 +529,146 @@ onMounted( async () => {
         background-color: rgba(113, 172, 204,0.6);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-
-        h2{
-            font-size: 54px;
-            font-weight: 500;
-            text-align: center;
-            width: 300px;
-            margin-bottom: 24px;
-        }
-
-        .rewards-txt {
-            display: flex;
-            gap: 64px;
-            font-size: 24px;
-            margin-bottom: 24px;
-
-            .txt-icon {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                
-                img {
-                    width: 48px;
-                    position: relative;
-                    bottom: 8px;
-                }
-            }
-
-        }
-
-        .btns {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            gap: 64px;
-
-            button {
-            font-size: 24px;
-            padding: 1% 12%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-            }
-
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
-
-            .next-btn {
-                background-color: #71ACCC;
-            }
-        }
-
+        gap: 8px;
     }
-
-    .category-done {
-        //display: none;
-        background-color: pink;
-        border-radius: 6px;
-        width: 696px;
-        height: 496px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        background-color: rgba(113, 172, 204,0.6);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
+    
     h2 {
         font-size: 54px;
         font-weight: 500;
         text-align: center;
         margin-bottom: 24px;
     }
+    
+    .paused-txt, .before-txt {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
 
-    p{
-        font-size: 28px;
-        text-align: center;
+        p{
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .warning {
+            font-size: 18px;
+            color: rgb(216, 5, 5);
+        }
+        
+        .btns {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 64px;
+
+            .continue-btn {
+                background-color: #71ACCC;
+            }
+            
+            button {
+                font-size: 24px;
+                padding: 1% 12%;
+                font-weight: 500;
+                background-color: #f9f9f9;
+                border: 2px solid black;
+                border-radius: 6px;
+                cursor: pointer;
+                transform: perspective(1px) translateZ(0);
+                box-shadow: 0 0 1px transparent;
+                transition-duration: 0.3s;
+                transition-property: box-shadow, transform;
+            }
+            
+            button:hover {
+                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+                transform: scale(1.1);
+            }
+            
+            .next-btn, .play-btn {
+                background-color: #71ACCC;
+            }
+        }
     }
 
-    img {
-        margin-top: 24px;
-        width: 200px;
+    .before-txt {
+        p{
+            font-size: 20px;
+        }
+
+        .btns {
+            margin-top: 24px;
+        }
+    }
+
+    .paused-txt.second {
+        margin-top: 32px;
+        margin-bottom: 8px;
+    }
+
+}
+
+.challenge-completed{
+    //display: none;
+    background-color: pink;
+    border-radius: 6px;
+    width: 540px;
+    height: 420px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: rgba(113, 172, 204,0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    h2{
+        font-size: 54px;
+        font-weight: 500;
+        text-align: center;
+        //width: 300px;
+        margin-bottom: 12px;
+    }
+
+    .results {
+        margin-bottom: 24px;
+        text-align: center;
+
+        .stars {
+            img {
+                width: 80px;
+            }
+        }
+
+        p {
+            font-size: 24px;
+
+            span {
+                font-weight: 500;
+            }
+        }
+    }
+
+    .rewards-txt {
+        display: flex;
+        gap: 64px;
+        font-size: 24px;
+        margin-bottom: 24px;
+
+        .txt-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            img {
+                width: 48px;
+                position: relative;
+                bottom: 8px;
+            }
+        }
+
     }
 
     .btns {
@@ -570,27 +678,29 @@ onMounted( async () => {
         gap: 64px;
 
         button {
-            font-size: 24px;
-            padding: 1% 12%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
+        font-size: 24px;
+        padding: 1% 12%;
+        font-weight: 500;
+        background-color: #f9f9f9;
+        border: 2px solid black;
+        border-radius: 6px;
+        cursor: pointer;
+        transform: perspective(1px) translateZ(0);
+        box-shadow: 0 0 1px transparent;
+        transition-duration: 0.3s;
+        transition-property: box-shadow, transform;
         }
 
         button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
+            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+            transform: scale(1.1);
         }
 
-        .next-btn {
-                background-color: #71ACCC;
+        .again-btn {
+            background-color: #71ACCC;
+            padding: 1% 14%;
         }
-        }
+    }
+
 }
 </style>
