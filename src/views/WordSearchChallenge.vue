@@ -105,8 +105,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { databases } from '@/lib/appwrite';
-import { Query } from 'appwrite';
+import { databases, account } from '@/lib/appwrite';
+import { Query, ID } from 'appwrite';
 
 //global variables
 const route = useRoute();
@@ -139,6 +139,7 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_CHALLENGE_ID;
+const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_CHALLENGE_ID;
 
 //variables for dynamic content after completing the category
 //computed is a property that automatically updates whenever its dependencies change
@@ -381,6 +382,7 @@ const word = selection.value
         stopTimer(); //stopping the timer after all of words was found
         isChallengeCompleted.value = true;
         localStorage.removeItem('challenge-progress');
+        saveProgress();
     } else saveGame();
   }
 
@@ -424,6 +426,27 @@ function saveGame() { //saving progress
         grid: grid.value
     };
     localStorage.setItem('challenge-progress', JSON.stringify(state));
+}
+
+async function saveProgress () {
+    try {
+        const user = await account.get();
+        const user_id = user.$id;
+        const challenge_data = {best_time: time.value, stars: starsCount.value};
+
+        const data = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id',user_id),Query.equal('category',category)]);
+
+        if(data.documents.length > 0) {
+            const doc = data.documents[0];
+            if (time.value < doc.challenge_data.best_time) { //if user has better time than before document is updated
+                await databases.updateDocument(database_id, collection_progress_id, doc.$id,{ challenge_data: JSON.stringify(challenge_data) });
+            }
+        } else { //if document doesn't exists then create new one
+            await databases.createDocument(database_id,collection_progress_id,ID.unique(), {'user_id':user_id, 'category': category, 'challenge_data': JSON.stringify(challenge_data)});
+        }
+    } catch(err) {
+        console.log('Error: ', err);
+    }
 }
 
 
