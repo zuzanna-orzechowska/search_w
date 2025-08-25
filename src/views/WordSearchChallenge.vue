@@ -3,8 +3,6 @@
         <div class="container">
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
-                <!-- <p class="bigger">Find all given words within time limit to win!</p>
-                <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p> -->
                 <p class="bigger">{{ timeString }}</p>
                 <p class="smaller">Found {{ foundWords.length }} / {{ wordsToFind.length }}</p>
             </div>
@@ -44,7 +42,7 @@
 
             <div class="bottom">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <img @click="isChallengePaused = true; stopTimer()" src="../assets/pause-icon.svg" alt="pause icon">
+                <img @click="isChallengePaused = true; stopTimer(); saveGame()" src="../assets/pause-icon.svg" alt="pause icon">
             </div>
 
            <div class="challenge-paused" v-if="isChallengePaused">
@@ -117,7 +115,7 @@ const route = useRoute();
 const router = useRouter();
 const isChallengePaused = ref(false);
 const isChallengeCompleted = ref(false);
-const isGameStarted = ref(false); //! CHANGE TO FALSE
+const isGameStarted = ref(false);
 const time = ref(0);
 const timeString = ref('00:00');
 const timer = ref(null);
@@ -156,6 +154,8 @@ async function loadData () {
     if (grid.value.length === 0) generateGrid();
 }
 
+
+//functions related to grid
 function generateGrid() {
     const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
     //Array.from creates new copied Array from array-like object, namely grid
@@ -258,6 +258,7 @@ function getCellStyle(row, col) {
   return style;
 }
 
+
 //functions related to word search - selecting letters
 function startSelection(row, col) {
     if (!canInteract.value) return; //if user didn't start a game, can select words
@@ -330,7 +331,8 @@ const word = selection.value
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         stopTimer(); //stopping the timer after all of words was found
         isChallengeCompleted.value = true;
-    }
+        localStorage.removeItem('challenge-progress');
+    } else saveGame();
   }
 
   selection.value = []; //reseting selection
@@ -341,6 +343,38 @@ const word = selection.value
 //checking if selecting rows and cols fit in grid array
 function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
+}
+
+
+//functions related to localStorage and database
+function loadSavedGame() { //used when user by accident refresh the page - progress won't be lost in that case
+    const savedState = localStorage.getItem('challenge-progress');
+    if (savedState) {
+        const state = JSON.parse(savedState); //parsing to object
+        if (state.category === category) {
+            foundWords.value = state.foundWords;
+            time.value = state.time;
+            isGameStarted.value = state.isGameStarted;
+            wordsColor.value = state.wordsColor;
+            foundWordsData.value = state.foundWordsData;
+            grid.value = state.grid;
+            return true;
+        }
+    }
+    return false;
+}
+
+function saveGame() { //saving progress
+    const state = {
+        category: category,
+        foundWords: foundWords.value,
+        time: time.value,
+        isGameStarted: isGameStarted.value,
+        wordsColor: wordsColor.value,
+        foundWordsData: foundWordsData.value,
+        grid: grid.value
+    };
+    localStorage.setItem('challenge-progress', JSON.stringify(state));
 }
 
 
@@ -367,12 +401,20 @@ function startGame() {
 
 //function for icon on bottom
 function goBack() {
+    localStorage.removeItem('challenge-progress');
     router.back();
 }
 
 onMounted( async () => {
     await loadData();
+    const hasSavedGame = loadSavedGame();
+    if (hasSavedGame) {
+        isGameStarted.value = true;
+        isChallengePaused.value = true;
+    }
+
 })
+
 </script>
 
 <style lang="scss" scoped>

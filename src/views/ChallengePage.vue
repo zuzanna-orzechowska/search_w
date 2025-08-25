@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import categories from '@/lib/categoriesChallenge'
 
@@ -40,6 +41,10 @@ function playCategory(name) {
 function goBack() {
     router.back();
 }
+
+onMounted(() => {
+    localStorage.removeItem('challenge-progress');
+})
 </script>
 
 <style lang="scss" scoped>
