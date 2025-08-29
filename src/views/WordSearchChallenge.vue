@@ -184,7 +184,11 @@ async function loadData () {
     //optimized query to only fetch documents for the specific category
     const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
 
-    wordsToFind.value = data.documents[0].searchWord;
+    //sorting words in A-Z
+    const sortedWords = data.documents[0].searchWord;
+    sortedWords.sort((a, b) => a.localeCompare(b));
+    wordsToFind.value = sortedWords;
+    //splitting words into two halves
     const half = Math.ceil(wordsToFind.value.length/2);
     wordsToFindFirst.value = wordsToFind.value.slice(0,half);
     wordsToFindSecond.value = wordsToFind.value.slice(half);

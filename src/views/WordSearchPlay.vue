@@ -124,7 +124,11 @@ async function loadStage(stage) {
             return;
         }
 
-        wordsToFind.value = stageDoc.searchWord;
+        //sorting words A-Z
+        const sortedWords = stageDoc.searchWord;
+        sortedWords.sort((a, b) => a.localeCompare(b));
+        wordsToFind.value = sortedWords;
+
         currentStage.value = stage;
 
         const stageProgress = progressData[stage];
