@@ -438,8 +438,17 @@ async function saveProgress () {
 
         if(data.documents.length > 0) {
             const doc = data.documents[0];
-            if (time.value < doc.challenge_data.best_time) { //if user has better time than before document is updated
-                await databases.updateDocument(database_id, collection_progress_id, doc.$id,{ challenge_data: JSON.stringify(challenge_data) });
+            const challenge_data_object = JSON.parse(doc.challenge_data); //parsing string array to object so it's possible to update data
+            let shouldUpdate = false;
+            let challenge_data_updated = {...challenge_data_object}; //... means creating copy of given object - creating new object and copying properties and values from copied
+            if (challenge_data.best_time < challenge_data_object.best_time) { //if another try is beeter then update values
+                challenge_data_updated.best_time = challenge_data.best_time;
+                challenge_data_updated.stars = challenge_data.stars;
+                shouldUpdate = true;
+            } 
+
+            if (shouldUpdate) { //if time was better then update the document
+                await databases.updateDocument(database_id, collection_progress_id, doc.$id,{ challenge_data: JSON.stringify(challenge_data_updated) });
             }
         } else { //if document doesn't exists then create new one
             await databases.createDocument(database_id,collection_progress_id,ID.unique(), {'user_id':user_id, 'category': category, 'challenge_data': JSON.stringify(challenge_data)});
