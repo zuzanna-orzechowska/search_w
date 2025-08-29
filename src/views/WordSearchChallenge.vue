@@ -82,7 +82,7 @@
                 </div>
                 <div class="btns">
                     <button @click="goBack">Back</button>
-                    <button class="again-btn">Play again</button>
+                    <button @click="playAgain" class="again-btn">Play again</button>
                 </div>
             </div>
 
@@ -484,6 +484,30 @@ function startGame() {
 function goBack() {
     localStorage.removeItem('challenge-progress');
     router.back();
+}
+
+async function playAgain() {
+    localStorage.removeItem('challenge-progress');
+    resetGame();
+    isGameStarted.value = false;
+    await loadData();
+    //startTimer();
+}
+
+function resetGame() { //reseting all of the variables so user can play again 
+    stopTimer();
+    time.value = 0;
+    timeString.value = '00:00';
+    isChallengeCompleted.value = false;
+    isChallengePaused.value = false;
+    isGameStarted.value = false;
+    foundWords.value = [];
+    foundWordsData.value = [];
+    wordsColor.value = {};
+    selection.value = [];
+    startCell.value = null;
+    selectionColor.value = null;
+    grid.value = [];
 }
 
 onMounted( async () => {
