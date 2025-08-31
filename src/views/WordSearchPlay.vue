@@ -97,6 +97,7 @@ const hintedCell = ref()// {row,col} will be stored here
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
+const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 let currentStage = ref(1);
 let maxStage = ref();
 const showPuzzleDone = ref(false);
@@ -104,6 +105,8 @@ const showCategoryDone = ref(false);
 let currentUser = ref(null); //needed for saving progress for currently logged in user
 let progressDocumentId = null; // storing the ID of the single progress document
 let progressData = {}; // storing the entire stages_data object
+const puzzleXp = ref(0);
+const puzzleCoins = ref(0);
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -123,6 +126,10 @@ async function loadStage(stage) {
             console.log("Stage not found:", stage);
             return;
         }
+
+        //loading xp and coins value from current stage
+        puzzleXp.value = stageDoc.xp;
+        puzzleCoins.value = stageDoc.coin;
 
         //sorting words A-Z
         const sortedWords = stageDoc.searchWord;
@@ -227,6 +234,36 @@ async function saveProgress(completed = false) {
 
     //saving the entire updated stages_data to the single document
     await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { stages_data: JSON.stringify(progressData) });
+}
+
+//saving progress to current user stats
+async function getUserStats(coins, xp) {
+    try {
+        const user = await account.get();
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('userID', user.$id)]);
+
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            const coinsAmmount = doc.coin + coins;
+            const xpAmmount = doc.xp + xp;
+
+            await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
+                coin: coinsAmmount,
+                xp: xpAmmount
+            });
+            //console.log("User stats updated successfully!");
+        } else {
+            //if it's user's first xp and coins
+            await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
+                userID: user.$id,
+                coin: coins,
+                xp: xp
+            });
+            //console.log("New user stats document created successfully!");
+        }
+    } catch (err) {
+        console.error("Error user stats: ", err);
+    }
 }
 
 
@@ -421,6 +458,7 @@ const word = selection.value
     await saveProgress(isCompleted); // <-- saving progress with correct state
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
+        await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
         showPuzzleDone.value = true
     }
   }
