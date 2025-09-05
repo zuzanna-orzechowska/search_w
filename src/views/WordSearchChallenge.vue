@@ -72,11 +72,11 @@
                 </div>
                 <div class="rewards-txt">
                     <div class="txt-icon">
-                        <p>+ 10 coins</p>
+                        <p>+ {{ puzzleCoinsValue }} coins</p>
                         <img src="../assets/coin-icon.svg" alt="coin icon">
                     </div>
                     <div class="txt-icon">
-                        <p>+ 25 exp</p>
+                        <p>+ {{ puzzleXpValue }} exp</p>
                         <img src="../assets/exp-icon.svg" alt="exp icon">
                     </div>
                 </div>
@@ -140,6 +140,11 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_CHALLENGE_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_CHALLENGE_ID;
+const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
+const puzzleXp = ref(0);
+const puzzleCoins = ref(0);
+let puzzleXpValue = 0;
+let puzzleCoinsValue = 0;
 
 //variables for dynamic content after completing the category
 //computed is a property that automatically updates whenever its dependencies change
@@ -183,6 +188,11 @@ const starsArray = computed(() => {
 async function loadData () {
     //optimized query to only fetch documents for the specific category
     const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
+
+    
+    //loading xp and coins value from current stage
+    puzzleXp.value = data.documents[0].xp;
+    puzzleCoins.value = data.documents[0].coin;
 
     //sorting words in A-Z
     const sortedWords = data.documents[0].searchWord;
@@ -357,7 +367,7 @@ function extendSelection(row, col) { //after user drags mouse to select more let
     selection.value = path; //selected space
 }
 
-function endSelection() { //if user stops clicking mouse
+async function endSelection() { //if user stops clicking mouse
     if (!canInteract.value) return;
     if (!isSelecting.value) return; //if user is not selecting anything
     isSelecting.value = false; //stop selecting
@@ -384,6 +394,7 @@ const word = selection.value
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
         stopTimer(); //stopping the timer after all of words was found
+        await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
         isChallengeCompleted.value = true;
         localStorage.removeItem('challenge-progress');
         saveProgress();
@@ -461,6 +472,58 @@ async function saveProgress () {
         console.log('Error: ', err);
     }
 }
+
+//saving progress to current user stats
+async function getUserStats(coins, xp) {
+    try {
+        const user = await account.get();
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
+        //const progressData = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id',user.$id),Query.equal('category',category)]);
+
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            let coinsAmmount = 0;
+            let xpAmmount = 0;
+            if(starsCount.value === 3) {
+                coinsAmmount = doc.coin + coins;
+                xpAmmount = doc.xp + xp;
+
+                puzzleCoinsValue = coins; //for displaying after completeting challenge
+                puzzleXpValue = xp;
+
+            } else if (starsCount.value === 2) {
+                coinsAmmount = doc.coin + Math.floor(coins/2);
+                xpAmmount = doc.xp + Math.floor(xp/2);
+
+                puzzleCoinsValue = Math.floor(coins/2); //for displaying
+                puzzleXpValue = Math.floor(xp/2);
+            } else if (starsCount.value === 1) {
+                coinsAmmount = doc.coin + Math.floor(coins/4);
+                xpAmmount = doc.xp + Math.floor(xp/4);
+
+                puzzleCoinsValue = Math.floor(coins/4); //for displaying
+                puzzleXpValue = Math.floor(coins/4);
+            }
+
+            await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
+                coin: coinsAmmount,
+                xp: xpAmmount
+            });
+            //console.log("User stats updated successfully!");
+        } else {
+            //if it's user's first xp and coins
+            await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
+                user_id: user.$id,
+                coin: coins,
+                xp: xp
+            });
+            //console.log("New user stats document created successfully!");
+        }
+    } catch (err) {
+        console.error("Error user stats: ", err);
+    }
+}
+
 
 
 //functions for handeling time
