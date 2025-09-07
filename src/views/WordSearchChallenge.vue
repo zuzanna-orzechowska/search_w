@@ -1,6 +1,15 @@
 <template>
     <div class="background-container">
         <div class="container">
+            <div class="right-up-wrapper">
+                <div class="coins-display">
+                    <img src="../assets/coin-icon.svg" alt="Coins">
+                    <p>{{ userCoins }}</p>
+                </div>
+                <div class="avatar-wrapper">
+                    <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                </div>
+            </div>
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
                 <p class="bigger">{{ timeString }}</p>
@@ -139,8 +148,12 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_CHALLENGE_ID;
+const collection_user_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_CHALLENGE_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
+const username = ref('');
+const userAvatar = ref('');
+let userCoins = ref(0);
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
 let puzzleXpValue = 0;
@@ -524,7 +537,42 @@ async function getUserStats(coins, xp) {
     }
 }
 
+async function getUserAvatar () {
+    try {
+        const user = await account.get();
+        const userId = user.$id;
+        username.value = user.name;
 
+        //searching user by id to find avatar src
+        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
+        const searchedUser = await databases.listDocuments(database_id,collection_user_id, [Query.equal('id_user',userId)]);
+
+        if(searchedUser.total > 0) { //checking if databse return any document
+            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
+            userAvatar.value = userDocuments.avatar;
+            //console.log("Img src: ",userAvatar.value);
+        }
+    } catch(err) {
+        console.log("Error: ",err);
+    }
+}
+
+async function getUserCoins () {
+    try {
+        const user = await account.get();
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
+
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            userCoins.value = doc.coin;
+            //console.log("User stats updated successfully!");
+        } else {
+            console.log("Couldn't fetch coins");
+        }
+    } catch (err) {
+        console.log("Error in getting coins:",err);
+    }
+}
 
 //functions for handeling time
 function startTimer() {
@@ -585,6 +633,9 @@ onMounted( async () => {
         isChallengePaused.value = true;
     }
 
+    await getUserAvatar();
+    await getUserCoins();
+
 })
 
 </script>
@@ -601,6 +652,45 @@ onMounted( async () => {
     display: flex;
     align-items: center;
     flex-direction: column;
+
+    .right-up-wrapper {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px; 
+
+        .coins-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+            p {
+                font-size: 24px;
+                text-align: center;
+                margin: 0;
+            }
+
+            img {
+                width: 42px;
+                height: 42px;
+            }
+        }
+
+        .avatar-wrapper {
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+    }
 
     .text-container {
         text-align: center;
