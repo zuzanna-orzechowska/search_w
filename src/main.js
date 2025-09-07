@@ -8,7 +8,8 @@ import RegisterUser from './views/RegisterUser.vue'
 import UserPage from './views/UserPage.vue'
 import PlayPage from './views/PlayPage.vue'
 import ChallengePage from './views/ChallengePage.vue'
-import WordSeachPlay from './views/WordSeachPlay.vue'
+import WordSearchPlay from './views/WordSearchPlay.vue'
+import WordSearchChallenge from './views/WordSearchChallenge.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -19,7 +20,8 @@ const router = createRouter ({
         {path: '/user', component: UserPage},
         {path: '/play', component: PlayPage},
         {path: '/challenge', component: ChallengePage},
-        {path: '/ws', component: WordSeachPlay},
+        {path: '/wsplay', component: WordSearchPlay},
+        {path: '/wschallenge', component: WordSearchChallenge},
     ]
 });
 

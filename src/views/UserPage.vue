@@ -79,11 +79,11 @@ function goToChallenge() {
         }
   
         #challenge {
-            background-color: #f9f9f9;
-        }
-
-        #shop {
             background-color: #FFBA08;
+        }
+        
+        #shop {
+            background-color: #f9f9f9;
         }
     }
 }

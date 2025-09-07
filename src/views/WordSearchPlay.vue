@@ -4,7 +4,7 @@
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
                 <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
-                <p class="smaller">Words appear horizontally, vertically and diagonally.</p>
+                <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
             </div>
             <div class="wrapper-search">
                 <div class="words-list">
@@ -39,11 +39,11 @@
                 <h2>Puzzle completed!</h2>
                 <div class="rewards-txt">
                     <div class="txt-icon">
-                        <p>+ 10 coins</p>
+                        <p>+ {{ puzzleCoins }} coins</p>
                         <img src="../assets/coin-icon.svg" alt="coin icon">
                     </div>
                     <div class="txt-icon">
-                        <p>+ 25 exp</p>
+                        <p>+ {{ puzzleXp }} exp</p>
                         <img src="../assets/exp-icon.svg" alt="exp icon">
                     </div>
                 </div>
@@ -97,6 +97,7 @@ const hintedCell = ref()// {row,col} will be stored here
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
+const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 let currentStage = ref(1);
 let maxStage = ref();
 const showPuzzleDone = ref(false);
@@ -104,6 +105,8 @@ const showCategoryDone = ref(false);
 let currentUser = ref(null); //needed for saving progress for currently logged in user
 let progressDocumentId = null; // storing the ID of the single progress document
 let progressData = {}; // storing the entire stages_data object
+const puzzleXp = ref(0);
+const puzzleCoins = ref(0);
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -124,7 +127,15 @@ async function loadStage(stage) {
             return;
         }
 
-        wordsToFind.value = stageDoc.searchWord;
+        //loading xp and coins value from current stage
+        puzzleXp.value = stageDoc.xp;
+        puzzleCoins.value = stageDoc.coin;
+
+        //sorting words A-Z
+        const sortedWords = stageDoc.searchWord;
+        sortedWords.sort((a, b) => a.localeCompare(b));
+        wordsToFind.value = sortedWords;
+
         currentStage.value = stage;
 
         const stageProgress = progressData[stage];
@@ -225,76 +236,121 @@ async function saveProgress(completed = false) {
     await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { stages_data: JSON.stringify(progressData) });
 }
 
+//saving progress to current user stats
+async function getUserStats(coins, xp) {
+    try {
+        const user = await account.get();
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
+
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            const coinsAmmount = doc.coin + coins;
+            const xpAmmount = doc.xp + xp;
+
+            await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
+                coin: coinsAmmount,
+                xp: xpAmmount
+            });
+            //console.log("User stats updated successfully!");
+        } else {
+            //if it's user's first xp and coins
+            await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
+                user_id: user.$id,
+                coin: coins,
+                xp: xp
+            });
+            //console.log("New user stats document created successfully!");
+        }
+    } catch (err) {
+        console.error("Error user stats: ", err);
+    }
+}
+
 
 //function related to word search - creating grid, color
 function generateGrid() {
-    const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
-    //Array.from creates new copied Array from array-like object, namely grid
-    const directions = [{x:1,y:0},{x:0,y:1},{x:1,y:1}] //three directions of words placement - x=1,y=0 is horizontally, x=0,y=0 is vertically, x=1,y=1 is diagonally
+    let allWordsPlaced = false; //flag for checking if all of the words was placed 
 
-    //function that checks if given words will fit into the grid in given place (starting from given x and y and direction)
-    function doesWordFits(word,startX,startY,direction) {
-        //firstly we need to calculate end of the word, using it's length
-        const endX = startX + direction.x * (word.length - 1); //first letter is in starting position that's why word.length-1
-        const endY = startY + direction.y * (word.length - 1);
+    while (!allWordsPlaced) {
+        const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
+        //Array.from creates new copied Array from array-like object, namely grid
+        //8 directions of words placement - horizontally: x=1,y=0 / x=-1,0 (backwards), 
+        //vertically: x=0,y=1 / x=0,y=-1 (backwards), 
+        //diagonally: x=1,y=1 (down-rigth) / x=-1,y=-1 (up-left) /  x=-1,y=1 (down-left) / x=1,y=-1 (down-right)
+        const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
+        
+        const sortedWords = [...wordsToFind.value].sort((a, b) => b.length - a.length); //sorting words in form longest to shortest, so the longest will be placed first
+        let success = true; //if word was successfuly placed
 
-        if(endX >= gridSize || endY >=gridSize) return false;
-
-        //checking if it's a letter coliision - if yes then given letter is shared
-        for (let i = 0; i < word.length; i++) {
-            const x = startX + direction.x * i;
-            const y = startY + direction.y * i;
-            if (temp[y][x] !== '' && temp[y][x] !== word[i]) {
-                return false; 
+        for (const word of sortedWords) {
+            if (!placeWord(word.toUpperCase(), temp, directions, gridSize)) {
+                success = false;
+                break;
             }
         }
 
-        return true;
-    }
-
-    //function that places word in given space and direction
-    function placeWord(word) {
-        const positions = [] //array of possible positions, that word can be placed, needed to have 100% guarantee that the word to find will be in this grid
-
-        //list of all possibles
-        directions.forEach(direction => {
-            for (let y = 0; y < gridSize; y++) {
-                for (let x = 0; x < gridSize; x++) {
-                    positions.push({ x, y, direction }); //push adds object to array
+        if (success) { //if all words was placed then fill rest of the grid with random letters
+            const letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for(let i = 0; i < gridSize; i++) {
+                for(let j = 0; j < gridSize; j++) {
+                    if(temp[j][i] === '') {
+                        temp[j][i] = letter[Math.floor(Math.random()*letter.length)];
+                    }
                 }
             }
-        });
-
-        //sorting array randomly
-        positions.sort(() => Math.random() - 0.5)
-
-        for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
-         //checking if word fits with these parameters
-            if (doesWordFits(word, p.x, p.y, p.direction)) {
-                //placing letter on grid
-                for (let i = 0; i < word.length; i++) {
-                    const xx = p.x + (p.direction.x * i);
-                    const yy = p.y + (p.direction.y * i);
-                    temp[yy][xx] = word[i];
-                }
-                return;
-            }
+            grid.value = temp;
+            allWordsPlaced = true;
         }
     }
+}
 
-    //placing random letter in blank spaces in grid, but fisrtly placing all words to find in grid
-    wordsToFind.value.forEach(word => placeWord(word.toUpperCase()));
+function doesWordFits(word, startX, startY, direction, tempGrid, gridSize) {
+    //firstly we need to calculate end of the word, using it's length
+    const endX = startX + direction.x * (word.length - 1); //first letter is in starting position that's why word.length-1
+    const endY = startY + direction.y * (word.length - 1);
 
-    const letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for(let i = 0; i<gridSize; i++){
-        for(let j = 0; j<gridSize; j++){
-            if(temp[j][i] === '') {
-                temp[j][i] = letter[Math.floor(Math.random()*letter.length)];
-            }
+    if (endX >= gridSize || endY >= gridSize || endX < 0 || endY < 0) return false;
+
+    //checking if it's a letter coliision - if yes then given letter is shared
+    for (let i = 0; i < word.length; i++) {
+        const x = startX + direction.x * i;
+        const y = startY + direction.y * i;
+        //accessing the grid from the passed argument
+        if (tempGrid[y][x] !== '' && tempGrid[y][x] !== word[i]) {
+            return false;
         }
     }
-    grid.value = temp;
+    return true;
+}
 
+//function that places word in given space and direction
+function placeWord(word, tempGrid, directions, gridSize) {
+    const positions = []; //array of possible positions, that word can be placed, needed to have 100% guarantee that the word to find will be in this grid
+
+    //list of all possible positions
+    directions.forEach(direction => {
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                positions.push({ x, y, direction }); //push adds object to array
+            }
+        }
+    });
+
+    positions.sort(() => Math.random() - 0.5); //sorting array randomly
+
+    for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
+    //checking if word fits with these parameters
+        if (doesWordFits(word, p.x, p.y, p.direction, tempGrid, gridSize)) {
+            for (let i = 0; i < word.length; i++) {
+                const xx = p.x + (p.direction.x * i);
+                const yy = p.y + (p.direction.y * i);
+                //updating the grid from the passed argument
+                tempGrid[yy][xx] = word[i];
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 //random selection colors
@@ -402,6 +458,7 @@ const word = selection.value
     await saveProgress(isCompleted); // <-- saving progress with correct state
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
+        await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
         showPuzzleDone.value = true
     }
   }
@@ -416,6 +473,8 @@ function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
 
+
+//functions related to showing hints
 function showHint() {
     // checking words that haven't been found yet
     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
@@ -438,14 +497,15 @@ function showHint() {
                 for (let c = 0; c < gridSize; c++) {
                     //checking all directions from each cell to find the word
                     if (grid.value[r][c].toUpperCase() === randomWord[0]) {
-                        //checking horizontally, vertically, and diagonally
-                        const directions = [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}];
+                        //checking in every direction
+                        const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
                         for (const dir of directions) {
                             let match = true;
                             for (let i = 0; i < randomWord.length; i++) {
                                 const newRow = r + dir.y * i;
                                 const newCol = c + dir.x * i;
-                                if (newRow >= gridSize || newCol >= gridSize || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
+                                //checking negative values
+                                if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
                                     match = false;
                                     break;
                                 }
@@ -495,12 +555,12 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .background-container {
-    background-color: rgb(174, 210, 229);
     width: 100vw;
     height: 100vh;
 }
 
 .container {
+    background-color: rgb(174, 210, 229);
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -515,12 +575,12 @@ onMounted(async () => {
         }
 
         .bigger{
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 4px;
         }
 
         .smaller {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 64px;
         }
     }

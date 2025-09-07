@@ -5,13 +5,30 @@
                 <div class="text-container">
                     <h2>Challenge</h2>
                     <p class="bigger">Take the challenge and test your skills</p>
-                    <p class="smaller">0/{{categoryLen}} completed</p>
+                    <p class="smaller">{{ completedCount }}/{{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">
                     <div class="categories-container">
                         <div class="category" v-for="category in categories" :key="category.name">
                             <img :src="category.image" :alt="category.name" class="challenge-img">
-                            <button class="challenge-btn">Play</button>
+
+                            <div class="overlay-txt" v-if="categoryStarsNumber(category.name)"> 
+                                <img v-if="categoryStarsNumber(category.name) === 3" class="completed-text" src="../assets/completed-text.svg" alt="completed text">
+                                <div class="best-time" v-if="categoryStarsNumber(category.name) < 3">
+                                    Best: {{ formatTime(getBestTime(category.name)) }}
+                                </div>
+                                <div class="stars">
+                                     <template v-for="s in 3" :key="s"> <!--adding not strictly HTML element - logic with stars, so it's better to use template than div, div can mess up styling-->
+                                        <img v-if="s <= categoryStarsNumber(category.name)" src="../assets/full-star.svg" alt="full star">
+                                        <img v-else src="../assets/blank-star.svg" alt="blank star">
+                                     </template>
+                                </div>
+                            </div>
+
+                            <button v-if="!isChallengeCompleted(category.name)" class="challenge-btn" @click="playCategory(category.name)">Play</button>
+                            <div v-else>
+                                <img src="../assets/tick.svg" alt="tick" class="tick">
+                            </div>
                         </div>
                 </div>
                 </div>
@@ -25,17 +42,94 @@
 </template>
 
 <script setup>
+import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { databases, account } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 import categories from '@/lib/categoriesChallenge'
 
 const router = useRouter();
-
-
 const categoryLen = categories.length;
+
+//variables related to databse
+const currentUser = ref(null);
+const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_CHALLENGE_ID;
+const challengesProgress = ref({});
+const completedCount = computed(() => { //computer automatically re-evaluates its value whenever one of its dependencies changes
+    return Object.values(challengesProgress.value).reduce((count, data) => { //Object takes challengesProgress values and returns them as array like [{ best_time: 175, stars: 3 }
+        //reduce iterate thru this array, count is a accumulator and it stars as given 0, data is current data in a loop
+        if (data.stars === 3) {
+            return count + 1; //adding to completed challenges count 
+        }
+        return count; //return unchaned count
+    }, 0);
+});
+
+
+//functions related to databse
+function isChallengeCompleted(name) {
+    return challengesProgress.value[name]?.stars === 3; //if user gained 3 stars then challenge is marked completed 
+}
+
+function categoryStarsNumber(name) {
+    // ?. means checking if the value before it (challengesProgress.value[name]) is not null or undefined
+    return challengesProgress.value[name]?.stars || 0;
+}
+
+function getBestTime(name) {
+    return challengesProgress.value[name]?.best_time;
+}
+
+async function fetchChallengeProgress() {
+    try {
+        const user = await account.get();
+        currentUser.value = user;
+
+        //fetching all progress documents for the current user
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
+
+        const temp = {}; //temporary array for storing info about stars for each category
+        progressDocuments.forEach(doc => {
+            const categoryName = doc.category;
+            const challengeData = JSON.parse(doc.challenge_data); //parsing string array into object to have access to properties - stars
+            temp[categoryName] = challengeData;
+            challengesProgress.value = temp; //storing data in original array
+
+            //console.log(`Category: ${categoryName}, Stars: ${starsNumber}`);
+            
+        });
+
+    } catch (err) {
+        console.error("Error fetching challenge progress:", err);
+    }
+}
+
+function formatTime(seconds) {
+    if (typeof seconds !== 'number' || seconds < 0) {
+        return '00:00';
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+
+    return `${formattedMinutes}:${formattedSeconds}`;
+}
+
+function playCategory(name) {
+    router.push({path: '/wschallenge', query: {category: name}});
+}
 
 function goBack() {
     router.back();
 }
+
+onMounted( async () => {
+    localStorage.removeItem('challenge-progress');
+    fetchChallengeProgress();
+})
 </script>
 
 <style lang="scss" scoped>
@@ -93,19 +187,65 @@ function goBack() {
 
         .categories-container {
             display: grid;
-            grid-template-columns: repeat(5,1fr);
+            grid-template-columns: repeat(4,1fr);
             gap: 2vw;
             margin-top: 42px;
     
             .category {
+                position: relative;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 1vw;
+
+                .overlay-txt {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 180px;
+                    height: 180px;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;
+                    gap: 12px;
+                    border-radius: 6px;
+                    
+                    .best-time {
+                        font-size: 28px;
+                        font-weight: 500;
+                        color: #FFBA08;
+                        text-shadow:
+                            -2px -2px 0 #000,
+                            2px -2px 0 #000,
+                            -2px 2px 0 #000,
+                            2px 2px 0 #000,
+                            -1px -1px 0 #000,
+                            1px -1px 0 #000,
+                            -1px 1px 0 #000,
+                            1px 1px 0 #000;
+                        background-color: rgba(0, 0, 0, 0.4); /* Slightly transparent background for the text */
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        letter-spacing: 1px; 
+                    }
+
+                    .completed-text {
+                        border: none;
+                    }
+
+                    .stars {
+                        
+                        img {
+                            width: 42px;
+                        }
+                    }
+                }
     
                 .challenge-img {
-                    width: 136px;
-                    border: 3px solid #FFBA08;
+                    width: 180px;
+                    border: 4px solid #FFBA08;
                     border-radius: 6px;
                 }
     
