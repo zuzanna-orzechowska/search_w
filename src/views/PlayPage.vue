@@ -5,7 +5,7 @@
                 <div class="text-container">
                     <h2>Play</h2>
                     <p class="bigger">Choose a category</p>
-                    <p class="smaller">{{ completedLen }} / {{categoryLen}} completed</p>
+                    <p class="smaller">{{ completedLen }} / {{ categoryLen }} completed</p>
                 </div>
                 <div class="scroll">
                     <div class="categories-container">
@@ -21,7 +21,7 @@
                                 <img src="../assets/tick.svg" alt="tick" class="tick">
                             </div>
                         </div>
-                </div>
+                    </div>
                 </div>
     
                 <div class="footer">
@@ -43,54 +43,84 @@ const router = useRouter();
 
 const categoryLen = categories.length;
 const completedLen = ref(0);
-const completedCategories = ref({}); //here will be storing info about categories that has been completed
+const completedCategories = ref({}); //stored data to check if given category is completed
 
 const currentUser = ref(null);
 const database_id = process.env.VUE_APP_DATABASE_ID;
+const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
 
 
-//functions related to database
+//checking if given category is completed
 function isCategoryCompleted(name) {
-    return !!completedCategories.value[name]; // !! is used, so the value will always be boolean
+    return !!completedCategories.value[name.toLowerCase()]; //!! means that variable will always be boolean not null or undefined
 }
 
+//fetching puzzles and it's stages with progress
 async function fetchPuzzlesProgress() {
     try {
         const user = await account.get();
         currentUser.value = user;
+        // console.log("Current user:", user);
 
-        //fetching all progress documents for the current user
-        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
+        //listing all documents related with progress in Play puzzles
+        //{ documents: progressDocument} takes the property documents from the returned object and renames it to progressDocuments
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id,[Query.equal('user_id', user.$id)]);
 
-        //fetching max stages for all categories from the 'Play' collection
-        const { documents: puzzleDocuments } = await databases.listDocuments(database_id, collection_progress_id);
+        const { documents: puzzleDocuments } = await databases.listDocuments(database_id,collection_id);
 
+        // console.log("Progress documents:", progressDocuments);
+        // console.log("Puzzle documents:", puzzleDocuments);
+
+        //checking how many stages does puzzle have so it will be easier to mark category as completed
         const maxStages = {};
         puzzleDocuments.forEach(doc => {
-            const categoryName = doc.title; 
-            const stageNumber = parseInt(doc.puzzleId.split('-')[1]);
-            
+            const categoryName = doc.title.toLowerCase().trim(); //normalizing text
+            const stageNumber = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is like 'fruit-1' and we only need number
             if (!maxStages[categoryName] || stageNumber > maxStages[categoryName]) {
                 maxStages[categoryName] = stageNumber;
             }
         });
 
-        progressDocuments.forEach(doc => {
-            const categoryName = doc.category;
-            //parsing string into JS object
-            const stagesData = JSON.parse(doc.stages_data);
-            const maxPuzzleStage = maxStages[categoryName];
+        // console.log(" Max stages per category (from puzzleDocuments):", maxStages);
 
-            //checking if stagesData[maxPuzzleStage] exists before trying to access .completed
-            if (stagesData[maxPuzzleStage]?.completed === true) {
-                completedCategories.value[categoryName] = true;
-            } else {
-                completedCategories.value[categoryName] = false;
-            }
+        //firstly all of the categories are marked as uncompleted
+        categories.forEach(cat => {
+            completedCategories.value[cat.name.toLowerCase().trim()] = false;
         });
-        
+
+        //checking progress
+        progressDocuments.forEach(doc => {
+            const categoryName = doc.category.toLowerCase().trim();
+            const stagesData = JSON.parse(doc.stages_data);
+
+            //if stagesData form Play Puzzles Progress doesn't have maxStages (correct one) then fetch it from puzzleDocuments
+            const maxPuzzleStage = stagesData.maxStage ?? maxStages[categoryName];
+
+            // console.log(`Checking category: ${categoryName}`);
+            // console.log("   stagesData:", stagesData);
+            // console.log("   maxPuzzleStage:", maxPuzzleStage);
+
+            if (!maxPuzzleStage) {
+                // console.warn(` No puzzles for category: ${categoryName}`);
+                return;
+            }
+
+            const lastStageKey = String(maxPuzzleStage);
+            const stage = stagesData[lastStageKey] ?? stagesData[maxPuzzleStage];
+
+            // console.log("   lastStageKey:", lastStageKey);
+            // console.log("   stage data:", stage);
+
+            const isCompleted = stage?.completed === true;
+            // console.log("  isCompleted:", isCompleted);
+
+            completedCategories.value[categoryName] = isCompleted;
+        });
+
         completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
+        // console.log("Completed categories:", completedCategories.value);
+        // console.log("completedLen:", completedLen.value);
 
     } catch (err) {
         console.error("Error fetching puzzle progress:", err);
@@ -98,17 +128,18 @@ async function fetchPuzzlesProgress() {
 }
 
 
-//other functions
+// other functions
 function goBack() {
     router.back();
 }
 
 function playCategory(name) {
-    router.push({path: '/wsplay', query: {category: name}});
+    router.push({ path: '/wsplay', query: { category: name } });
 }
 
 onMounted(fetchPuzzlesProgress);
 </script>
+
 
 <style lang="scss" scoped>
 .background-lines {

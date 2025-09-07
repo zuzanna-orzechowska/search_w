@@ -39,11 +39,11 @@
                 <h2>Puzzle completed!</h2>
                 <div class="rewards-txt">
                     <div class="txt-icon">
-                        <p>+ 10 coins</p>
+                        <p>+ {{ puzzleCoins }} coins</p>
                         <img src="../assets/coin-icon.svg" alt="coin icon">
                     </div>
                     <div class="txt-icon">
-                        <p>+ 25 exp</p>
+                        <p>+ {{ puzzleXp }} exp</p>
                         <img src="../assets/exp-icon.svg" alt="exp icon">
                     </div>
                 </div>
@@ -240,7 +240,7 @@ async function saveProgress(completed = false) {
 async function getUserStats(coins, xp) {
     try {
         const user = await account.get();
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('userID', user.$id)]);
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
 
         if (userStats.total > 0) {
             const doc = userStats.documents[0];
@@ -255,7 +255,7 @@ async function getUserStats(coins, xp) {
         } else {
             //if it's user's first xp and coins
             await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
-                userID: user.$id,
+                user_id: user.$id,
                 coin: coins,
                 xp: xp
             });
@@ -473,6 +473,8 @@ function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
 
+
+//functions related to showing hints
 function showHint() {
     // checking words that haven't been found yet
     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
@@ -495,14 +497,15 @@ function showHint() {
                 for (let c = 0; c < gridSize; c++) {
                     //checking all directions from each cell to find the word
                     if (grid.value[r][c].toUpperCase() === randomWord[0]) {
-                        //checking horizontally, vertically, and diagonally
-                        const directions = [{x: 1, y: 0}, {x: 0, y: 1}, {x: 1, y: 1}];
+                        //checking in every direction
+                        const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
                         for (const dir of directions) {
                             let match = true;
                             for (let i = 0; i < randomWord.length; i++) {
                                 const newRow = r + dir.y * i;
                                 const newCol = c + dir.x * i;
-                                if (newRow >= gridSize || newCol >= gridSize || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
+                                //checking negative values
+                                if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
                                     match = false;
                                     break;
                                 }
