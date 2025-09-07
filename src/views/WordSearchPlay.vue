@@ -71,6 +71,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID } from 'appwrite';
+import { toast } from 'vue3-toastify';
 
 //all variables
 //global variables
@@ -107,6 +108,7 @@ let progressDocumentId = null; // storing the ID of the single progress document
 let progressData = {}; // storing the entire stages_data object
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
+const hintCost = ref(20); //cost of using a hint;
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -266,6 +268,34 @@ async function getUserStats(coins, xp) {
     }
 }
 
+async function hintPayment(amount) {
+    try {
+        if (!currentUser.value) {
+            await getUser();
+        }
+        
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
+        
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            const currentCoins = doc.coin;
+            
+            if (currentCoins >= amount) {
+                const newCoinAmount = currentCoins - amount;
+                await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
+                    coin: newCoinAmount,
+                });
+                return true; // Payment was successful
+            } else if(currentCoins < amount) {
+                toast.error("Not enough coins to buy a hint!");
+            }
+        }
+        return false; // Payment failed (not enough coins or document not found)
+    } catch (err) {
+        console.error("Error processing hint payment:", err);
+        return false;
+    }
+}
 
 //function related to word search - creating grid, color
 function generateGrid() {
@@ -475,7 +505,17 @@ function isValidCell(row, col) {
 
 
 //functions related to showing hints
-function showHint() {
+async function showHint() {
+    // 1. Check if user has enough coins and deduct the cost in a single step
+    const paymentSuccessful = await hintPayment(hintCost.value);
+    
+    // 2. If the payment fails, stop here and do not provide a hint
+    if (!paymentSuccessful) {
+        console.log("Not enough coins to buy a hint!"); //CHANGE TO TOAST
+        // You could add a user-facing notification here
+        return;
+    }
+
     // checking words that haven't been found yet
     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
 
