@@ -10,6 +10,7 @@ import PlayPage from './views/PlayPage.vue'
 import ChallengePage from './views/ChallengePage.vue'
 import WordSearchPlay from './views/WordSearchPlay.vue'
 import WordSearchChallenge from './views/WordSearchChallenge.vue'
+import ShopPage from './views/ShopPage.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -22,6 +23,7 @@ const router = createRouter ({
         {path: '/challenge', component: ChallengePage},
         {path: '/wsplay', component: WordSearchPlay},
         {path: '/wschallenge', component: WordSearchChallenge},
+        {path: '/shop', component: ShopPage},
     ]
 });
 
