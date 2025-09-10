@@ -15,22 +15,16 @@
                             <p>{{ avatar.category }}</p>
                             <div class="images-wrapper">
                                 <div class="image-item" v-for="source in avatar.sources" :key="source">
-                                    <img @click="buyAvatar" :src="source" :alt="avatar.category" class="avatar-img">
-                                    <div class="price-wrapper">
+                                    <img @click="buyAvatar(source,avatar.price)" :src="source" :alt="avatar.category" class="avatar-img" :class="{ 'purchased': isPurchased(source) }">
+                                    <div class="price-wrapper" v-if="!isPurchased(source)">
                                         <p>{{ avatar.price }}</p>
                                         <img src="../assets/coin-icon.svg" alt="coin">
                                     </div>
+                                    <div class="owned-label" v-else>
+                                        <p>Owned</p>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- <div class="overlay-txt" v-if="isCategoryCompleted(category.name)"> 
-                                <img src="../assets/completed-text.svg" alt="completed text">
-                            </div>
-
-                            <button v-if="!isCategoryCompleted(category.name)" @click="playCategory(category.name)">Play</button>
-                            <div v-else>
-                                <img src="../assets/tick.svg" alt="tick" class="tick">
-                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -48,15 +42,19 @@ import { useRouter } from 'vue-router';
 import avatars from '@/lib/shopData';
 import { ref, onMounted } from 'vue';
 import { databases, account } from '@/lib/appwrite';
-import { Query } from 'appwrite';
-// import { toast } from 'vue3-toastify';
+import { Query, ID} from 'appwrite';
+import { toast } from 'vue3-toastify';
 
 const router = useRouter();
 
 let currentUser = ref(null);
 let userCoins = ref(0);
+const userStatsDocId = ref(null); //allows easy updates after buying new avatar
+const userAvatarsDocId = ref(null)
+const purchasedAvatars = ref([]);
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
+const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -69,59 +67,75 @@ async function getUser() { //what user is currenlty logged in
     }
 }
 
-async function getUserCoins () {
+async function getUserData() {
     try {
         const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-
         if (userStats.total > 0) {
             const doc = userStats.documents[0];
+            userStatsDocId.value = doc.$id;
             userCoins.value = doc.coin;
-            //console.log("User stats updated successfully!");
-        } else {
-            console.log("Couldn't fetch coins");
+        }
+
+        const userAvatars = await databases.listDocuments(database_id, collection_user_avatars_id, [Query.equal('user_id', currentUser.value.$id)]);
+        if (userAvatars.total > 0) {
+            const doc = userAvatars.documents[0];
+            userAvatarsDocId.value = doc.$id;
+            purchasedAvatars.value = doc.purchased_avatars || [];
         }
     } catch (err) {
-        console.log("Error in getting coins:",err);
+        console.log("Error in getting user data:", err);
+    }
+}
+
+//functions related to payments
+async function buyAvatar(source, price) {
+    if (isPurchased(source)) {
+        toast.info("You already own this avatar.");
+        return;
+    }
+
+    if (userCoins.value < price) {
+        toast.error("Not enough coins to buy this avatar!");
+        return;
+    }
+
+    try {
+        //deducting coins after buying avatar
+        const newCoinAmount = userCoins.value - price;
+        await databases.updateDocument(database_id, collection_user_stats_id, userStatsDocId.value, {
+            coin: newCoinAmount,
+        });
+
+        const newPurchasedAvatars = [...purchasedAvatars.value, source];
+
+        if (userAvatarsDocId.value) {
+            // if document exists update it
+            await databases.updateDocument(database_id, collection_user_avatars_id, userAvatarsDocId.value, {
+                purchased_avatars: newPurchasedAvatars,
+            });
+        } else {
+            //if document doesn't exist create it
+            const newDoc = await databases.createDocument(database_id, collection_user_avatars_id, ID.unique(), {
+                user_id: currentUser.value.$id,
+                purchased_avatars: newPurchasedAvatars,
+            });
+            //storing the ID of the new document for future updates
+            userAvatarsDocId.value = newDoc.$id; 
+        }
+        userCoins.value = newCoinAmount;
+        purchasedAvatars.value = newPurchasedAvatars;
+
+    } catch (err) {
+        console.error("Error processing avatar payment:", err);
     }
 }
 
 
-//functions related to payments
-// async function avatarPayment(amount) {
-//     try {
-//         if (!currentUser.value) {
-//             await getUser();
-//         }
-        
-//         const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-        
-//         if (userStats.total > 0) {
-//             const doc = userStats.documents[0];
-            
-//             if (userCoins >= amount) {
-//                 const newCoinAmount = userCoins - amount;
-//                 await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
-//                     coin: newCoinAmount,
-//                 });
-//                 return true; //payment was successful
-//             } else if(userCoins < amount) {
-//                 toast.error("Not enough coins to buy an avatar!");
-//             }
-//         }
-//         return false; //payment failed (not enough coins or document not found)
-//     } catch (err) {
-//         console.error("Error processing avatar payment:", err);
-//         return false;
-//     }
-// }
-
-// async function buyAvatar() {
-//      const paymentSuccessful = await avatarPayment(avatar.price);
-    
-// }
-
-
 // other functions
+function isPurchased(source) {
+    return purchasedAvatars.value.includes(source);
+}
+
 function goBack() {
     router.back();
 }
@@ -129,7 +143,7 @@ function goBack() {
 
 onMounted(async () => {
     await getUser();
-    await getUserCoins();
+    await getUserData();
 });
 </script>
 
@@ -229,6 +243,13 @@ onMounted(async () => {
                             cursor: pointer;
                         }
                         
+                        .avatar-img.purchased {
+                            filter: grayscale(100%);
+                            cursor: default;
+                            &:hover {
+                                filter: grayscale(100%);
+                            }
+                        }
 
                         .price-wrapper {
                             display: flex;
@@ -240,6 +261,16 @@ onMounted(async () => {
                             img {
                                 width: 28px;
                                 border: none;
+                            }
+                        }
+
+                        .owned-label {
+                            text-align: center;
+                            margin-top: 4px;
+                            p {
+                                font-size: 20px;
+                                color: #555;
+                                font-style: italic;
                             }
                         }
                     }
