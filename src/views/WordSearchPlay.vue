@@ -1,6 +1,19 @@
 <template>
     <div class="background-container">
         <div class="container">
+            <div class="right-up-wrapper">
+                <div class="coins-display">
+                    <img src="../assets/coin-icon.svg" alt="Coins">
+                    <p>{{ userCoins }}</p>
+                </div>
+                <div class="coins-deducted" v-if="showCoinsDeducted">
+                    <p>-{{ hintCost }}</p>
+                    <img src="../assets/coin-icon.svg" alt="Coin deducted">
+                </div>
+                <div class="avatar-wrapper">
+                    <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                </div>
+            </div>
             <div class="text-container">
                 <h2>{{ categoryName }}</h2>
                 <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
@@ -32,7 +45,12 @@
 
             <div class="bottom">
                 <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <img @click="showHint" src="../assets/hint-icon.svg" alt="hint icon">
+                <div class="hint-wrapper">
+                    <span class="hint-cost-text" v-if="showHintCost">
+                        {{ hintCost }}
+                    </span>
+                    <img @click="showHint" @mouseover="showHintCost = true" @mouseleave="showHintCost = false" src="../assets/hint-icon.svg" alt="hint icon">
+                </div>
             </div>
 
             <div class="puzzle-done" v-if="showPuzzleDone">
@@ -71,6 +89,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID } from 'appwrite';
+import { toast } from 'vue3-toastify';
 
 //all variables
 //global variables
@@ -96,10 +115,14 @@ const hintedCell = ref()// {row,col} will be stored here
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
+const collection_user_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 let currentStage = ref(1);
 let maxStage = ref();
+const username = ref('');
+const userAvatar = ref('');
+let userCoins = ref(0);
 const showPuzzleDone = ref(false);
 const showCategoryDone = ref(false);
 let currentUser = ref(null); //needed for saving progress for currently logged in user
@@ -107,6 +130,10 @@ let progressDocumentId = null; // storing the ID of the single progress document
 let progressData = {}; // storing the entire stages_data object
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
+const hintCost = ref(20); //cost of using a hint;
+const showHintCost = ref(false);
+const showCoinsDeducted = ref(false);
+
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -239,8 +266,8 @@ async function saveProgress(completed = false) {
 //saving progress to current user stats
 async function getUserStats(coins, xp) {
     try {
-        const user = await account.get();
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
+        //const user = await account.get();
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
 
         if (userStats.total > 0) {
             const doc = userStats.documents[0];
@@ -255,7 +282,7 @@ async function getUserStats(coins, xp) {
         } else {
             //if it's user's first xp and coins
             await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
-                user_id: user.$id,
+                user_id: currentUser.value.$id,
                 coin: coins,
                 xp: xp
             });
@@ -266,6 +293,69 @@ async function getUserStats(coins, xp) {
     }
 }
 
+async function getUserAvatar () {
+    try {
+        const userId = currentUser.value.$id;
+        username.value = currentUser.value.name;
+
+        //searching user by id to find avatar src
+        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
+        const searchedUser = await databases.listDocuments(database_id,collection_user_id, [Query.equal('id_user',userId)]);
+
+        if(searchedUser.total > 0) { //checking if databse return any document
+            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
+            userAvatar.value = userDocuments.avatar;
+            //console.log("Img src: ",userAvatar.value);
+        }
+    } catch(err) {
+        console.log("Error: ",err);
+    }
+}
+
+async function getUserCoins () {
+    try {
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
+
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            userCoins.value = doc.coin;
+            //console.log("User stats updated successfully!");
+        } else {
+            console.log("Couldn't fetch coins");
+        }
+    } catch (err) {
+        console.log("Error in getting coins:",err);
+    }
+}
+
+async function hintPayment(amount) {
+    try {
+        if (!currentUser.value) {
+            await getUser();
+        }
+        
+        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
+        
+        if (userStats.total > 0) {
+            const doc = userStats.documents[0];
+            const currentCoins = doc.coin;
+            
+            if (currentCoins >= amount) {
+                const newCoinAmount = currentCoins - amount;
+                await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
+                    coin: newCoinAmount,
+                });
+                return true; //payment was successful
+            } else if(currentCoins < amount) {
+                toast.error("Not enough coins to buy a hint!");
+            }
+        }
+        return false; //payment failed (not enough coins or document not found)
+    } catch (err) {
+        console.error("Error processing hint payment:", err);
+        return false;
+    }
+}
 
 //function related to word search - creating grid, color
 function generateGrid() {
@@ -475,44 +565,102 @@ function isValidCell(row, col) {
 
 
 //functions related to showing hints
-function showHint() {
-    // checking words that haven't been found yet
-    const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
+// async function showHint() {
+//     //checking if user has enough coins
+//     const paymentSuccessful = await hintPayment(hintCost.value);
+    
+//     //if payment fails don't provide hint
+//     if (!paymentSuccessful) {
+//         console.log("Not enough coins to buy a hint!");
+//         return;
+//     }
 
-    if (unfoundWords.length > 0) {
-        //selecting a random unfound word
-        const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+//     // checking words that haven't been found yet
+//     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
 
-        //finding the coordinates of the first letter of that word
-        const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
+//     if (unfoundWords.length > 0) {
+//         //selecting a random unfound word
+//         const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+
+//         //finding the coordinates of the first letter of that word
+//         const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
         
-        if (foundWordData) {
-            //using the first set of coordinates
-            hintedCell.value = foundWordData.coords[0];
-        } else {
-            // if the data isn't loaded yet, you need to find the word on the grid
+//         if (foundWordData) {
+//             //using the first set of coordinates
+//             hintedCell.value = foundWordData.coords[0];
+//         } else {
+//             //finding the coordinates if they aren't in foundWordsData.
+//             for (let r = 0; r < gridSize; r++) {
+//                 for (let c = 0; c < gridSize; c++) {
+//                     //checking all directions from each cell to find the word
+//                     if (grid.value[r][c].toUpperCase() === randomWord[0]) {
+//                         //checking in every direction
+//                         const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
+//                         for (const dir of directions) {
+//                             let match = true;
+//                             for (let i = 0; i < randomWord.length; i++) {
+//                                 const newRow = r + dir.y * i;
+//                                 const newCol = c + dir.x * i;
+//                                 //checking negative values
+//                                 if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
+//                                     match = false;
+//                                     break;
+//                                 }
+//                             }
+//                             if (match) {
+//                                 hintedCell.value = { row: r, col: c };
+//                                 return;
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+async function showHint() {
+    const paymentSuccessful = await hintPayment(hintCost.value);
+    
+    // If payment is successful, show the animation and update coins
+    if (paymentSuccessful) {
+        // Update the user's coins variable immediately
+        userCoins.value -= hintCost.value;
+
+        // Show the animation and hide it after a delay
+        showCoinsDeducted.value = true;
+        setTimeout(() => {
+            showCoinsDeducted.value = false;
+        }, 1500); // Hide after 1.5 seconds
+
+        // Check for unfound words and provide hint
+        const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
+
+        if (unfoundWords.length > 0) {
+            const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+            const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
             
-            //finding the coordinates if they aren't in foundWordsData.
-            for (let r = 0; r < gridSize; r++) {
-                for (let c = 0; c < gridSize; c++) {
-                    //checking all directions from each cell to find the word
-                    if (grid.value[r][c].toUpperCase() === randomWord[0]) {
-                        //checking in every direction
-                        const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
-                        for (const dir of directions) {
-                            let match = true;
-                            for (let i = 0; i < randomWord.length; i++) {
-                                const newRow = r + dir.y * i;
-                                const newCol = c + dir.x * i;
-                                //checking negative values
-                                if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
-                                    match = false;
-                                    break;
+            if (foundWordData) {
+                hintedCell.value = foundWordData.coords[0];
+            } else {
+                for (let r = 0; r < gridSize; r++) {
+                    for (let c = 0; c < gridSize; c++) {
+                        if (grid.value[r][c].toUpperCase() === randomWord[0]) {
+                            const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
+                            for (const dir of directions) {
+                                let match = true;
+                                for (let i = 0; i < randomWord.length; i++) {
+                                    const newRow = r + dir.y * i;
+                                    const newCol = c + dir.x * i;
+                                    if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
+                                        match = false;
+                                        break;
+                                    }
                                 }
-                            }
-                            if (match) {
-                                hintedCell.value = { row: r, col: c };
-                                return;
+                                if (match) {
+                                    hintedCell.value = { row: r, col: c };
+                                    return;
+                                }
                             }
                         }
                     }
@@ -521,7 +669,6 @@ function showHint() {
         }
     }
 }
-
 
 //functions for icons on bottom
 async function nextStage() {
@@ -549,6 +696,8 @@ function goBack() {
 onMounted(async () => {
    await getUser();
    await loadData();
+   await getUserAvatar();
+   await getUserCoins();
 });
 
 </script>
@@ -564,6 +713,59 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     flex-direction: column;
+    position: relative;
+
+    .right-up-wrapper {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px; 
+
+        .coins-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+            p {
+                font-size: 24px;
+                text-align: center;
+                margin: 0;
+            }
+
+            img {
+                width: 42px;
+                height: 42px;
+            }
+        }
+
+        .coins-deducted {
+
+            p{
+                font-size: 18px;
+            }
+
+            img{
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .avatar-wrapper {
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+    }
+
 
     .text-container {
         text-align: center;

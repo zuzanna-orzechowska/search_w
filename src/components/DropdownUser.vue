@@ -5,9 +5,9 @@
             <img :src="avatar" alt="User avatar">
         </div>
         <div class="dropdown-section-left">
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="goToProfile">
                 <img src="../assets/profile-icon.svg" alt="Profile icon">
-                <p>Profile</p>
+                <p >Profile</p>
             </div>
             <div class="dropdown-option">
                 <img src="../assets/achievements-icon.svg" alt="Achievements icon">
@@ -41,16 +41,18 @@ const avatar = ref('');
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_ID;
 
-onMounted(async () => {
+//functions
+async function getUserAvatar () {
+
     try {
         const user = await account.get();
         const userId = user.$id;
         username.value = user.name;
-
+    
         //searching user by id to find avatar src
         //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
         const searchedUser = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
-
+    
         if(searchedUser.total > 0) { //checking if databse return any document
             const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
             avatar.value = userDocuments.avatar;
@@ -59,7 +61,7 @@ onMounted(async () => {
     } catch(err) {
         console.log("Error: ",err);
     }
-})
+}
 
 async function signOut() {
     try {
@@ -70,6 +72,16 @@ async function signOut() {
          console.error('Logout error:', err);
     }
 }
+
+function goToProfile() {
+    router.push('/profile');
+}
+
+
+onMounted(async () => {
+    await getUserAvatar();
+})
+
 </script>
 
 <style lang="scss">
@@ -126,6 +138,7 @@ async function signOut() {
             gap: 12px;
             border-bottom: 1px solid black;
             padding-bottom: 8px;
+            cursor: pointer;
 
             img {
                 width: 30px;

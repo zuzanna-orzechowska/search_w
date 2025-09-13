@@ -7,7 +7,7 @@
          <div class="btns">
              <button type="button" id="play" @click="goToPlay">Play</button>
              <button type="button" id="challenge" @click="goToChallenge">Challenge</button>
-             <button type="button" id="shop">Shop</button>
+             <button type="button" id="shop" @click="goToShop">Shop</button>
          </div>
      </div>
 </template>
@@ -23,6 +23,10 @@ function goToPlay () {
 
 function goToChallenge() {
     router.push('/challenge');
+}
+
+function goToShop() {
+    router.push('/shop');
 }
 </script>
 
