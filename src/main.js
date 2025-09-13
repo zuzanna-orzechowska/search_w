@@ -12,6 +12,7 @@ import WordSearchPlay from './views/WordSearchPlay.vue'
 import WordSearchChallenge from './views/WordSearchChallenge.vue'
 import ShopPage from './views/ShopPage.vue'
 import UserProfile from './views/UserProfile.vue'
+import RandomPuzzle from './views/RandomPuzzle.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -26,6 +27,7 @@ const router = createRouter ({
         {path: '/wschallenge', component: WordSearchChallenge},
         {path: '/shop', component: ShopPage},
         {path: '/profile', component: UserProfile},
+        {path: '/random', component: RandomPuzzle},
     ]
 });
 

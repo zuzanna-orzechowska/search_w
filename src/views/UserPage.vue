@@ -13,6 +13,7 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -28,6 +29,10 @@ function goToChallenge() {
 function goToShop() {
     router.push('/shop');
 }
+
+onMounted (() => {
+    localStorage.removeItem('guestProgress');
+})
 </script>
 
 <style lang="scss">
