@@ -107,6 +107,7 @@ const usernameInput = ref(null);
 const emailInput = ref(null);
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_ID;
+const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 
 //functions 
 function chooseAvatar(imgSrc) {
@@ -191,6 +192,13 @@ async function register() {
             email : email.value,
             avatar : selectedAvatar.value
         });
+
+        //storing initial avatar in database
+        await databases.createDocument(database_id, collection_user_avatars_id, ID.unique(), {
+            user_id: newUserId,
+            initial_avatar: selectedAvatar.value,
+        });
+
         //console.log('Zarejestrowano użytkownika:', await account.get());
         router.push('/login');
     } catch (err) {
@@ -202,6 +210,7 @@ function toogleState() {
         hidPassword.value = !hidPassword.value;
 }
 </script>
+
 <style lang="scss">
 .lines-top-bottom {
   position: absolute;

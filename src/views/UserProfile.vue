@@ -22,6 +22,16 @@
                             <p class="xp-to-next">{{ xpToNextLevel }} xp to next level</p>
                         </div>
                     </div>
+                    <div class="avatars-container">
+                        <h2>Avatars</h2>
+                        <div class="images">
+                            <img v-for="(av,ind) in userAvatars" :key="ind" :src="av" :class="{ 'selected-avatar': av === avatar }" @click="selectAvatar(av)">
+                        </div>
+
+                    </div>
+                    <div class="achievements-container">
+                        <h2>Achievements</h2>
+                    </div>
                 </div>
     
                 <div class="footer">
@@ -54,9 +64,12 @@ const userStatsDocId = ref(null);
 const userDocId = ref(null);
 const isEditingUsername = ref(false);
 const newUsername = ref('');
+const userAvatars = ref([]);
+const initialAvatar = ref('');
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
+const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 
 //computed properties for progress bar
 const nextLevelXp = computed(() => {
@@ -99,17 +112,20 @@ async function getUserData () {
         const userId = currentUser.value.$id;
         const userData = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
         const userDataProgress = await databases.listDocuments(database_id,collection_user_stats_id,[Query.equal('user_id',userId)]);
+        const userPurchasedAvatars = await databases.listDocuments(database_id,collection_user_avatars_id,[Query.equal('user_id', currentUser.value.$id)]);
         
         if(userData.total > 0) { //checking if databse return any document
             const userDocs = userData.documents[0]; //given value from first document is assigned to userDocs variable, so we can get avatar value from it
             userDocId.value = userDocs.$id;
             avatar.value = userDocs.avatar;
             username.value = userDocs.username;
+            userAvatars.value.push(userDocs.avatar);
+            //console.log("avatars: ",userAvatars.value)
             //console.log("Img src: ",avatar.value);
-            console.log("Username: ", username.value);
+            //console.log("Username: ", username.value);
         }
 
-        if(userDataProgress.total > 0) { //checking if databse return any document
+        if(userDataProgress.total > 0) { //checking if database return any document
             const userDocsProgress = userDataProgress.documents[0]; //given value from first document is assigned to userDocsProgress variable, so we can get avatar value from it
             title.value = userDocsProgress.title;
             level.value = userDocsProgress.level;
@@ -117,10 +133,37 @@ async function getUserData () {
             xp.value = userDocsProgress.xp;
             await levelUpSystem();
         }
+
+        const allAvatars = new Set();
+        
+        //adding the current user's active avatar to the list
+        if (avatar.value) {
+            allAvatars.add(avatar.value);
+        }
+
+        if (userPurchasedAvatars.total > 0) {
+            const userAvatarsData = userPurchasedAvatars.documents[0];
+
+            // getting initial avatar from database and adding it to allAvatars so it won't disappear
+            initialAvatar.value = userAvatarsData.initial_avatar;
+            if (initialAvatar.value) {
+                allAvatars.add(initialAvatar.value);
+            }
+
+            //getting the purchased avatars array and add them to allAvatars / checking for null
+            if (userAvatarsData.purchased_avatars && Array.isArray(userAvatarsData.purchased_avatars)) {
+                userAvatarsData.purchased_avatars.forEach(av => allAvatars.add(av));
+            }
+        }
+        
+        //converting back to an array and assigning it to the reactive variable
+        userAvatars.value = Array.from(allAvatars);
+
     } catch(err) {
         console.log("Error: ",err);
     }
 }
+
 
 async function levelUpSystem() { //function that checks user level and update data in database properly
     //sorting levels in descending order to find the highest level the user qualifies for
@@ -182,6 +225,26 @@ async function saveUsername() { //saving username to database
     } catch (err) {
         console.error("Error updating username:", err);
         toast.error("Failed to update username.");
+    }
+}
+
+async function selectAvatar(newAvatarSource) {
+    if (newAvatarSource === avatar.value) return;
+
+    try {
+        await databases.updateDocument(
+            database_id,
+            collection_id,
+            userDocId.value,
+            {
+                avatar: newAvatarSource,
+            }
+        );
+        avatar.value = newAvatarSource;
+        toast.success("Avatar updated successfully!");
+    } catch (err) {
+        console.error("Error updating avatar:", err);
+        toast.error("Failed to update avatar.");
     }
 }
 
@@ -303,6 +366,29 @@ onMounted(async () => {
             .xp-to-next {
                 font-size: 16px;
                 margin-top: 8px;
+            }
+        }
+
+        .avatars-container {
+            .images {
+                display: flex;
+                gap: 12px;
+
+                img {
+                    width: 164px;
+                    height: 164px;
+                    border: 2px solid black;
+                    border-radius: 50%;
+                }
+
+                img:hover {
+                    cursor: pointer;
+                }
+
+                .selected-avatar {
+                    border: 4px solid #4ade80;
+                    box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+                }
             }
         }
     }
