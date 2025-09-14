@@ -59,9 +59,9 @@
             <div class="otherRegister">
                 <p>or</p>
                 <div class="linksRegister">
-                    <img src="../assets/google-icon.svg" alt="Google icon">
+                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
+                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
             </div>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
@@ -72,6 +72,7 @@
 
 <script setup>
 import { account, databases, ID} from '../lib/appwrite'
+// import { OAuthProvider } from 'appwrite';
 import { Query } from 'appwrite';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -110,6 +111,16 @@ const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 
 //functions 
+// function loginWithGoogle() {
+//     try { // fisrt link - redirect here on success, second link - redirect on failure 
+//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
+//     } catch (err) {
+//         console.log('Error with google login:', err);
+        
+//     }
+// }
+
+//functions
 function chooseAvatar(imgSrc) {
     //pop() returns the element it removed
     //const imgName = imgSrc.split('/').pop();
