@@ -13,6 +13,9 @@ import WordSearchChallenge from './views/WordSearchChallenge.vue'
 import ShopPage from './views/ShopPage.vue'
 import UserProfile from './views/UserProfile.vue'
 import RandomPuzzle from './views/RandomPuzzle.vue'
+import ContactForm from './views/ContactForm.vue'
+import PrivacyPolicy from './views/PrivacyPolicy.vue'
+import TermsOfUse from './views/TermsOfUse.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -28,6 +31,9 @@ const router = createRouter ({
         {path: '/shop', component: ShopPage},
         {path: '/profile', component: UserProfile},
         {path: '/random', component: RandomPuzzle},
+        {path: '/contact', component: ContactForm},
+        {path: '/privacy', component: PrivacyPolicy},
+        {path: '/terms', component: TermsOfUse},
     ]
 });
 

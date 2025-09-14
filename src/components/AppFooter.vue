@@ -1,12 +1,11 @@
 <template>
   <footer class="footer">
     <div class="links">
-      <a href="">Privacy Policy</a>
-      <a href="">Contact</a>
-      <a href="">Terms of Use</a>
+      <router-link to="/privacy">Privacy Policy</router-link>
+      <router-link to="/contact">Contact</router-link>
+      <router-link to="/terms">Terms of Use</router-link>
     </div>
     <div class="author">
-
       <p>Created with 💙 by <a href="https://github.com/zuzanna-orzechowska">Zuza</a></p>
     </div>
   </footer>
@@ -38,6 +37,11 @@
     a {
       text-decoration: none;
       color: black;
+      transition: color .35 ease;
+    }
+
+    a:hover {
+      color: #0077b6;
     }
 
   }
