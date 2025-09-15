@@ -16,6 +16,7 @@ import RandomPuzzle from './views/RandomPuzzle.vue'
 import ContactForm from './views/ContactForm.vue'
 import PrivacyPolicy from './views/PrivacyPolicy.vue'
 import TermsOfUse from './views/TermsOfUse.vue'
+import AchievementsPage from './views/AchievementsPage.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -34,6 +35,7 @@ const router = createRouter ({
         {path: '/contact', component: ContactForm},
         {path: '/privacy', component: PrivacyPolicy},
         {path: '/terms', component: TermsOfUse},
+        {path: '/achievements', component: AchievementsPage},
     ]
 });
 
