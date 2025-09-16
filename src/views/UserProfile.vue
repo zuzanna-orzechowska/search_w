@@ -31,6 +31,17 @@
                     </div>
                     <div class="achievements-container">
                         <h2>Achievements</h2>
+                        <div v-if="userAchievements.length > 0" class="images">
+                            <div class="image-item" v-for="(achiev,ind) in displayedAchievements" :key="ind">
+                                <img :src="achiev.image">
+                                <div class="hover-overlay">
+                                    <p class="description">{{ achiev.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <p>No achievements yet, checkout <router-link to="/achievements">Achievements</router-link> and conquer the world of words!</p>
+                        </div>
                     </div>
                 </div>
     
@@ -49,6 +60,7 @@ import { databases, account } from '@/lib/appwrite';
 import { Query} from 'appwrite';
 import { levelData } from '@/lib/levelsData';
 import { toast } from 'vue3-toastify';
+import achievements from '@/lib/achievements';
 
 const router = useRouter();
 
@@ -60,6 +72,7 @@ let title = ref('');
 let level = ref(0);
 let coins = ref(0);
 let xp = ref(0);
+let userAchievements = ref([]); 
 const userStatsDocId = ref(null);
 const userDocId = ref(null);
 const isEditingUsername = ref(false);
@@ -70,6 +83,7 @@ const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
+const collection_user_achievements_id = process.env.VUE_APP_COLLECTION_USER_ACHIEVEMENTS_ID;
 
 //computed properties for progress bar
 const nextLevelXp = computed(() => {
@@ -94,6 +108,13 @@ const progressBarWidth = computed(() => {
     return isNaN(percentage) ? '0%' : `${percentage}%`;
 });
 
+const displayedAchievements = computed(() => {
+    //mapping the array of achievement names from Appwrite to the full achievement objects
+    return userAchievements.value.map(achievName => {
+        return achievements.find(item => item.name === achievName);
+    }).filter(Boolean); // .filter(Boolean) removes any undefined results
+});
+
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -112,7 +133,8 @@ async function getUserData () {
         const userId = currentUser.value.$id;
         const userData = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
         const userDataProgress = await databases.listDocuments(database_id,collection_user_stats_id,[Query.equal('user_id',userId)]);
-        const userPurchasedAvatars = await databases.listDocuments(database_id,collection_user_avatars_id,[Query.equal('user_id', currentUser.value.$id)]);
+        const userPurchasedAvatars = await databases.listDocuments(database_id,collection_user_avatars_id,[Query.equal('user_id', userId)]);
+        const userAchievementsData = await databases.listDocuments(database_id,collection_user_achievements_id,[Query.equal('user_id', userId)]);
         
         if(userData.total > 0) { //checking if databse return any document
             const userDocs = userData.documents[0]; //given value from first document is assigned to userDocs variable, so we can get avatar value from it
@@ -155,9 +177,18 @@ async function getUserData () {
                 userAvatarsData.purchased_avatars.forEach(av => allAvatars.add(av));
             }
         }
+
+        const allAchievements = new Set(); //Set element is similar to array but it doesn't allow duplicates
+        if(userAchievementsData.total > 0) {
+            const userDocsAchievements = userAchievementsData.documents[0]; 
+            if (userDocsAchievements.achievements && Array.isArray(userDocsAchievements.achievements)) {
+                userDocsAchievements.achievements.forEach(achiev => allAchievements.add(achiev));
+            }
+        }
         
         //converting back to an array and assigning it to the reactive variable
         userAvatars.value = Array.from(allAvatars);
+        userAchievements.value = Array.from(allAchievements);
 
     } catch(err) {
         console.log("Error: ",err);
@@ -388,6 +419,54 @@ onMounted(async () => {
                 .selected-avatar {
                     border: 4px solid #4ade80;
                     box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+                }
+            }
+        }
+
+        .achievements-container {
+            .images {
+                display: flex;
+                gap: 12px;
+                position: relative;
+
+                .image-item {
+                    position: relative;
+
+                    img {
+                        width: 180px;
+                        height: 180px;
+                        border: 2px solid black;
+                        border-radius: 6px;
+                    }
+
+                    .hover-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 180px;
+                        height: 180px;
+                        background-color: rgba(0, 0, 0, 0.6);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 6px;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                        text-align: center;
+                        padding: 10px;
+                    }
+
+                    .description {
+                        color: #fff;
+                        font-size: 16px;
+                        font-weight: bold;
+                    }
+
+                    &:hover {
+                        .hover-overlay {
+                            opacity: 1;
+                        }
+                    }
                 }
             }
         }

@@ -10,14 +10,10 @@
                     <div class="achievements-container">
                         <div class="images-wrapper">
                             <div class="image-item" v-for="achievement in achievements" :key="achievement.image">
-                                <img :src="achievement.image" :alt="achievement.alt" class="achievement-img">
-                                <!-- <div class="price-wrapper" v-if="!isPurchased(source)">
-                                    <p>{{ avatar.price }}</p>
-                                    <img src="../assets/coin-icon.svg" alt="coin">
+                                <img :src="achievement.image" :alt="achievement.alt" class="achievement-img" :class="{'grayscale-img': !unlockedAchievements.includes(achievement.name)}">
+                                <div class="hover-overlay">
+                                    <p class="description">{{ achievement.description }}</p>
                                 </div>
-                                <div class="owned-label" v-else>
-                                    <p>Owned</p>
-                                </div> -->
                             </div>
                         </div>
                         
@@ -38,20 +34,16 @@ import achievements from '@/lib/achievements';
 import { ref, onMounted } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query} from 'appwrite';
-// import { toast } from 'vue3-toastify';
 
 const router = useRouter();
 
 let currentUser = ref(null);
-let userCoins = ref(0);
+let unlockedAchievements = ref([]); 
 const achievements_amount = achievements.length;
 let achievements_count = ref(0);
-const userStatsDocId = ref(null); //allows easy updates after buying new avatar
-const userAvatarsDocId = ref(null)
-const purchasedAvatars = ref([]);
+const userAchievementsDocId = ref(null);
 const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
-const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
+const collection_user_achievements_id = process.env.VUE_APP_COLLECTION_USER_ACHIEVEMENTS_ID;
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -66,18 +58,12 @@ async function getUser() { //what user is currenlty logged in
 
 async function getUserData() {
     try {
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-        if (userStats.total > 0) {
-            const doc = userStats.documents[0];
-            userStatsDocId.value = doc.$id;
-            userCoins.value = doc.coin;
-        }
-
-        const userAvatars = await databases.listDocuments(database_id, collection_user_avatars_id, [Query.equal('user_id', currentUser.value.$id)]);
-        if (userAvatars.total > 0) {
-            const doc = userAvatars.documents[0];
-            userAvatarsDocId.value = doc.$id;
-            purchasedAvatars.value = doc.purchased_avatars || [];
+        const userAchievements = await databases.listDocuments(database_id, collection_user_achievements_id, [Query.equal('user_id', currentUser.value.$id)]);
+        if (userAchievements.total > 0) {
+            const doc = userAchievements.documents[0];
+            unlockedAchievements.value = doc.achievements;
+            userAchievementsDocId.value = doc.$id;
+            achievements_count.value = unlockedAchievements.value.length;
         }
     } catch (err) {
         console.log("Error in getting user data:", err);
@@ -155,106 +141,58 @@ onMounted(async () => {
         
             .images-wrapper {
                 display: grid;
-                grid-template-columns: repeat(6, 1fr);
+                grid-template-columns: repeat(4, 1fr);
                 gap: 12px;
 
                 .image-item {
                     display: flex;
                     flex-direction: column;
+                    cursor: pointer;
+                    position: relative;
 
                     .achievement-img {
-                        width: 164px;
-                        height: 164px;
+                        width: 200px;
+                        height: 200px;
                         border: 2px solid black;
                         border-radius: 6px;
-                        filter: grayscale(1); //!HERE WILL CHANGEWHEN USER GET
-                        // transition: filter 0.5s ease;
+                        filter: grayscale(0);
                     }
 
-                    // .achievement-img:hover {
-                    //     filter: brightness(60%);
-                    //     cursor: pointer;
-                    // }
-                    
-                    // .achievement-img.purchased {
-                    //     filter: grayscale(100%);
-                    //     cursor: default;
-                    //     &:hover {
-                    //         filter: grayscale(100%);
-                    //     }
-                    // }
+                    .grayscale-img {
+                        filter: grayscale(1);
+                    }
 
-                    .price-wrapper {
+                    .hover-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 200px;
+                        height: 200px;
+                        background-color: rgba(0, 0, 0, 0.6);
                         display: flex;
-                        justify-content: center;
                         align-items: center;
-                        gap: 4px;
-                        margin-top: 4px;
-
-                        img {
-                            width: 28px;
-                            border: none;
-                        }
-                    }
-
-                    .owned-label {
+                        justify-content: center;
+                        border-radius: 6px;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
                         text-align: center;
-                        margin-top: 4px;
-                        p {
-                            font-size: 20px;
-                            color: #555;
-                            font-style: italic;
+                    }
+
+                    .description {
+                        color: #fff;
+                        font-size: 16px;
+                        font-weight: bold;
+                    }
+
+                    //& means parent element, so longer version will be image-item:hover
+                    &:hover {
+                        .hover-overlay {
+                            opacity: 1;
                         }
                     }
                 }
             }
-            .overlay-txt {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 180px;
-                height: 180px;
-                background: rgba(0,0,0,0.5);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 6px;
-                
-                img {
-                    border: none;
-                    padding: 0px 12px;
-                }
-            }
-
-            img {
-                width: 180px;
-                border: 2px solid black;
-                border-radius: 6px;
-            }
-
-            .tick {
-                border: none;
-                width: 42px;
-            }
-
-            button {
-                font-size: 20px;
-                padding: 1% 6%;
-                font-weight: 500;
-                background-color: #2A8DC1;
-                border: 2px solid black;
-                border-radius: 12px;
-                cursor: pointer;
-                transform: perspective(1px) translateZ(0);
-                box-shadow: 0 0 1px transparent;
-                transition-duration: 0.3s;
-                transition-property: box-shadow, transform;
-            }
-
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
+           
         }
     }
 
