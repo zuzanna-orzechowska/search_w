@@ -56,46 +56,51 @@ export const levelData = [
     },
     {
         number: 11,
-        xpNeeded: 4400,
+        xpNeeded: 4350,
         title: 'Vocabulary Voyager'
     },
     {
         number: 12,
-        xpNeeded: 5050,
+        xpNeeded: 4950,
         title: 'Syntax Samurai'
     },
     {
         number: 13,
-        xpNeeded: 5700,
+        xpNeeded: 5550,
         title: 'Lexicon Lord'
     },
     {
         number: 14,
-        xpNeeded: 6300,
+        xpNeeded: 6150,
         title: 'Verbal Virtuoso'
     },
     {
         number: 15,
-        xpNeeded: 6850,
+        xpNeeded: 6600,
         title: 'The Pun-isher'
     },
     {
         number: 16,
-        xpNeeded: 7300,
+        xpNeeded: 7000,
         title: 'The Great Wordsby'
     },
     {
         number: 17,
-        xpNeeded: 7500,
+        xpNeeded: 7300,
         title: 'Linguistic Luminary'
     },
     {
         number: 18,
-        xpNeeded: 7600,
+        xpNeeded: 7500,
         title: 'Cosmic Word Weaver'
     },
     {
         number: 19,
+        xpNeeded: 7600,
+        title: 'The Final Frontier'
+    },
+    {
+        number: 20,
         xpNeeded: 7650,
         title: 'The Word God'
     }

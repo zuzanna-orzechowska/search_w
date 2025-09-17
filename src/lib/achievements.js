@@ -77,6 +77,24 @@ const achievements = [
         alt : "challenge3_achievement",
         description: "Beat every single Challenge"
     },
+    {
+        name: "fashion_forward",
+        image: require("@/assets/achievements/avatars1.png"),
+        alt : "avatars1_achievement",
+        description: "Collect your first 3 avatars to begin your style journey"
+    },
+    {
+        name: "wardrobe_warrior",
+        image: require("@/assets/achievements/avatars2.png"),
+        alt : "avatars2_achievement",
+        description: "Build a solid collection of 10 avatars"
+    },
+    {
+        name: "master_of_disguise",
+        image: require("@/assets/achievements/avatars3.png"),
+        alt : "avatars3_achievement",
+        description: "Amass a vast collection of 30 avatars"
+    },
     
 ]
 export default achievements;

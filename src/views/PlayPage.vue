@@ -38,6 +38,7 @@ import categories from '@/lib/categoriesPlay';
 import { ref, onMounted } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
+import { handleAchievements } from '@/lib/achievementsHandler';
 
 const router = useRouter();
 
@@ -94,26 +95,17 @@ async function fetchPuzzlesProgress() {
             const categoryName = doc.category.toLowerCase().trim();
             const stagesData = JSON.parse(doc.stages_data);
 
-            //if stagesData form Play Puzzles Progress doesn't have maxStages (correct one) then fetch it from puzzleDocuments
-            const maxPuzzleStage = stagesData.maxStage ?? maxStages[categoryName];
+            //getting the total number of stages for the category
+            const totalStages = maxStages[categoryName]; 
 
-            // console.log(`Checking category: ${categoryName}`);
-            // console.log("   stagesData:", stagesData);
-            // console.log("   maxPuzzleStage:", maxPuzzleStage);
-
-            if (!maxPuzzleStage) {
-                // console.warn(` No puzzles for category: ${categoryName}`);
+            if (!totalStages) {
                 return;
             }
+            
+            //checking if the final stage has been completed in the user's progress
+            const finalStageProgress = stagesData[totalStages];
 
-            const lastStageKey = String(maxPuzzleStage);
-            const stage = stagesData[lastStageKey] ?? stagesData[maxPuzzleStage];
-
-            // console.log("   lastStageKey:", lastStageKey);
-            // console.log("   stage data:", stage);
-
-            const isCompleted = stage?.completed === true;
-            // console.log("  isCompleted:", isCompleted);
+            const isCompleted = finalStageProgress?.completed === true;
 
             completedCategories.value[categoryName] = isCompleted;
         });
@@ -121,6 +113,7 @@ async function fetchPuzzlesProgress() {
         completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
         // console.log("Completed categories:", completedCategories.value);
         // console.log("completedLen:", completedLen.value);
+        await handleAchievements({ completedCategoriesCount: completedLen.value });
 
     } catch (err) {
         console.error("Error fetching puzzle progress:", err);

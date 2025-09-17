@@ -109,6 +109,7 @@ const emailInput = ref(null);
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
+const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 
 //functions 
 // function loginWithGoogle() {
@@ -209,6 +210,9 @@ async function register() {
             user_id: newUserId,
             initial_avatar: selectedAvatar.value,
         });
+
+        //creating document for user stats
+        await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {user_id: newUserId});
 
         //console.log('Zarejestrowano użytkownika:', await account.get());
         router.push('/login');

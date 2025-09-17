@@ -12,7 +12,7 @@
                 <div class="scroll">
                     <div class="avatars-container">
                         <div class="avatar-category" v-for="avatar in avatars" :key="avatar.category">
-                            <p>{{ avatar.category }}</p>
+                            <p>{{ avatar.category }} <span>{{ avatarsPerCategory(avatar.sources) }} / {{ avatar.sources.length }}</span></p>
                             <div class="images-wrapper">
                                 <div class="image-item" v-for="source in avatar.sources" :key="source">
                                     <img @click="buyAvatar(source,avatar.price)" :src="source" :alt="avatar.category" class="avatar-img" :class="{ 'purchased': isPurchased(source) }">
@@ -40,11 +40,11 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import avatars from '@/lib/shopData';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID} from 'appwrite';
 import { toast } from 'vue3-toastify';
-
+import { handleAchievements } from '@/lib/achievementsHandler';
 const router = useRouter();
 
 let currentUser = ref(null);
@@ -55,6 +55,13 @@ const purchasedAvatars = ref([]);
 const database_id = process.env.VUE_APP_DATABASE_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
+
+//computed properties
+const avatarsPerCategory = computed(() => (sources) => {
+    //using a filter to check how many sources from the category are included in the user's purchasedAvatars list.
+    const owned = sources.filter(source => purchasedAvatars.value.includes(source));
+    return owned.length;
+});
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -124,6 +131,9 @@ async function buyAvatar(source, price) {
         }
         userCoins.value = newCoinAmount;
         purchasedAvatars.value = newPurchasedAvatars;
+
+        const totalPurchasedAvatars = newPurchasedAvatars.length;
+        await handleAchievements({ avatarsPurchased: totalPurchasedAvatars });
 
     } catch (err) {
         console.error("Error processing avatar payment:", err);
