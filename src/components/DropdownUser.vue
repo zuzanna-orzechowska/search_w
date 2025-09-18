@@ -15,7 +15,7 @@
             </div>
             <div class="dropdown-option">
                 <img src="../assets/settings-icon.svg" alt="Settings icon">
-                <p>Settings</p>
+                <router-link to="/settings">Settings</router-link>
             </div>
             <div class="dropdown-option">
                 <img src="../assets/help-icon.svg" alt="Help icon">

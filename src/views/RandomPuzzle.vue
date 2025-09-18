@@ -321,7 +321,7 @@ function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
 
-
+//*HERE CHANGE
 //other functions
 async function showHint() {
     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
@@ -342,6 +342,7 @@ async function showHint() {
                             for (let i = 0; i < randomWord.length; i++) {
                                 const newRow = r + dir.y * i;
                                 const newCol = c + dir.x * i;
+                                console.log({newRow, newCol})
                                 if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
                                     match = false;
                                     break;
@@ -357,6 +358,8 @@ async function showHint() {
             }
         }
     }
+
+    console.log(unfoundWords, 'no words to show hint')
 }
 
 function onCategoryComplete() {
