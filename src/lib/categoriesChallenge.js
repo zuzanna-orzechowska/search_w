@@ -1,4 +1,4 @@
-const categories = [{ name: "weather", image: require("@/assets/categoriesChallenge/weather.png") },
+const challenges = [{ name: "weather", image: require("@/assets/categoriesChallenge/weather.png") },
         { name: "mythical", image: require("@/assets/categoriesChallenge/mythical.png") },
         { name: "underwater", image: require("@/assets/categoriesChallenge/underwater.png") },
         { name: "instruments", image: require("@/assets/categoriesChallenge/instruments.png") },
@@ -10,4 +10,4 @@ const categories = [{ name: "weather", image: require("@/assets/categoriesChalle
         { name: "roalty", image: require("@/assets/categoriesChallenge/roalty.png") }
     ]
 
-export default categories;
+export default challenges;

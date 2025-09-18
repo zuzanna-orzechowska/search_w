@@ -11,11 +11,11 @@
             </div>
             <div class="dropdown-option">
                 <img src="../assets/achievements-icon.svg" alt="Achievements icon">
-                <p>Achievements</p>
+                <router-link to="/achievements">Achievements</router-link>
             </div>
             <div class="dropdown-option">
                 <img src="../assets/settings-icon.svg" alt="Settings icon">
-                <p>Settings</p>
+                <router-link to="/settings">Settings</router-link>
             </div>
             <div class="dropdown-option">
                 <img src="../assets/help-icon.svg" alt="Help icon">
@@ -144,8 +144,13 @@ onMounted(async () => {
                 width: 30px;
             }
 
-            p {
+            p,a {
                 font-size: 18px;
+            }
+
+            a{
+                text-decoration: none;
+                color: black;
             }
             
         }

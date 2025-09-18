@@ -6,7 +6,7 @@
          </div>
          <div class="btns">
              <button type="button" id="sign-in" @click="toLogin">Sign in</button>
-             <button type="button" id="random">Random</button>
+             <button type="button" id="random" @click="randomCategory">Random</button>
          </div>
      </div>
 </template>
@@ -14,8 +14,12 @@
 <script setup>
 import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
+import categories from '@/lib/categoriesPlay';
+import { onMounted, ref } from 'vue';
+import { toast } from 'vue3-toastify';
 
 const router = useRouter();
+const completedCategories = ref(0);
 
 const toLogin = async () => {
     try {
@@ -28,9 +32,26 @@ const toLogin = async () => {
     }
 }
 
+function randomCategory() {
+    if (completedCategories.value >= 3) {
+        toast.error("You've completed 3 puzzles. Please sign in to save your progress and unlock more!");
+        return;
+    }
+    const ind = Math.floor(Math.random() * categories.length);
+    const randomCategory = categories[ind];
+    router.push({path: '/random', query: {category: randomCategory.name}})
+}
+
+onMounted(() => {
+    const savedProgress = localStorage.getItem('guestProgress');
+    if (savedProgress) {
+        completedCategories.value = parseInt(savedProgress);
+    }
+});
+
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .wrapper {
     #logo-text {
         width: 420px;

@@ -47,6 +47,7 @@ import { useRouter } from 'vue-router';
 import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import categories from '@/lib/categoriesChallenge'
+import { handleAchievements } from '@/lib/achievementsHandler';
 
 const router = useRouter();
 const categoryLen = categories.length;
@@ -99,6 +100,8 @@ async function fetchChallengeProgress() {
             //console.log(`Category: ${categoryName}, Stars: ${starsNumber}`);
             
         });
+
+        await handleAchievements({ completedChallengesCount: completedCount.value });
 
     } catch (err) {
         console.error("Error fetching challenge progress:", err);

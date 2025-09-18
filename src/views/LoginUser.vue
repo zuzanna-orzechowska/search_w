@@ -29,9 +29,9 @@
             <div class="otherRegister">
                 <p>or</p>
                 <div class="linksRegister">
-                    <img src="../assets/google-icon.svg" alt="Google icon">
+                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
+                     <img src="../assets/google-icon.svg" alt="Google icon">
                     <img src="../assets/apple-icon.svg" alt="Apple icon">
-                    <img src="../assets/microsoft-icon.svg" alt="Microsoft icon">
                 </div>
             </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
@@ -41,6 +41,7 @@
 
 <script setup>
 import { account} from '@/lib/appwrite';
+// import { OAuthProvider } from '@/lib/appwrite';
 import { toast } from 'vue3-toastify';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -54,6 +55,15 @@ let rememberMe = ref(false);
 const router = useRouter();
     
 //functions
+// function loginWithGoogle() {
+//     try { // fisrt link - redirect here on success, second link - redirect on failure 
+//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
+//     } catch (err) {
+//         console.log('Error with google login:', err);
+        
+//     }
+// }
+
 async function login() {
     try {
         await account.createEmailPasswordSession(userLogin.value,password.value);

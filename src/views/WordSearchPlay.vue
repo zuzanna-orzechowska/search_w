@@ -90,6 +90,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID } from 'appwrite';
 import { toast } from 'vue3-toastify';
+import { levelData } from '@/lib/levelsData';
+import { handleAchievements } from '@/lib/achievementsHandler';
 
 //all variables
 //global variables
@@ -229,7 +231,7 @@ async function loadProgressDocument() {
         const doc = progressDocs.documents[0];
         progressDocumentId = doc.$id;
         progressData = JSON.parse(doc.stages_data);
-        currentStage.value = progressData.maxStage || 1; //loading the highest stage reached
+        currentStage.value = progressData.userMaxStageReached || 1; //loading the highest stage reached
     } else {
         //if document does not exist, create it
         const newDoc = await databases.createDocument(
@@ -257,41 +259,57 @@ async function saveProgress(completed = false) {
     };
     
     //updating the max stage if the current stage is higher
-    progressData.maxStage = Math.max(progressData.maxStage || 0, currentStage.value);
+    progressData.userMaxStageReached = Math.max(progressData.userMaxStageReached || 0, currentStage.value);
 
     //saving the entire updated stages_data to the single document
     await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { stages_data: JSON.stringify(progressData) });
 }
 
-//saving progress to current user stats
-async function getUserStats(coins, xp) {
+async function processPuzzleCompletion(coinsGained, xpGained) {
     try {
-        //const user = await account.get();
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
+        const userStatsDocs = await databases.listDocuments(database_id,collection_user_stats_id,[Query.equal('user_id', currentUser.value.$id)]);
 
-        if (userStats.total > 0) {
-            const doc = userStats.documents[0];
-            const coinsAmmount = doc.coin + coins;
-            const xpAmmount = doc.xp + xp;
+        if (userStatsDocs.total > 0) {
+            const doc = userStatsDocs.documents[0];
+            const currentCoins = doc.coin;
+            const currentXp = doc.xp;
+            let currentLevel = doc.level;
+            let currentTitle = doc.title;
+            const userStatsDocId = doc.$id;
 
-            await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
-                coin: coinsAmmount,
-                xp: xpAmmount
-            });
-            //console.log("User stats updated successfully!");
+            //updating local values with new gains
+            const newCoins = currentCoins + coinsGained;
+            const newXp = currentXp + xpGained;
+
+            //checking for level up
+            const sortedLevels = [...levelData].sort((a, b) => b.xpNeeded - a.xpNeeded);
+            const newLevelData = sortedLevels.find(l => l.xpNeeded <= newXp);
+
+            if (newLevelData && newLevelData.number > currentLevel) {
+                currentLevel = newLevelData.number;
+                currentTitle = newLevelData.title;
+                toast.success(`You've leveled up to level ${currentLevel}!`);
+            }
+
+            //updating the database with the new stats
+            await databases.updateDocument(database_id,collection_user_stats_id,userStatsDocId,{ coin: newCoins, xp: newXp, level: currentLevel, title: currentTitle });
+            
+            //passing the updated stats to the achievement checker
+            await handleAchievements({ coins: newCoins, level: currentLevel });
+
+            userCoins.value = newCoins;
+
         } else {
-            //if it's user's first xp and coins
-            await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {
-                user_id: currentUser.value.$id,
-                coin: coins,
-                xp: xp
-            });
-            //console.log("New user stats document created successfully!");
+            //if user gains rewards for the first time
+            await databases.createDocument(database_id,collection_user_stats_id,ID.unique(),{user_id: currentUser.value.$id,coin: coinsGained,xp: xpGained});
+            userCoins.value = coinsGained;
+            await handleAchievements({ coins: coinsGained, level: 1 });
         }
     } catch (err) {
-        console.error("Error user stats: ", err);
+        console.error("Error processing puzzle completion:", err);
     }
 }
+
 
 async function getUserAvatar () {
     try {
@@ -548,7 +566,8 @@ const word = selection.value
     await saveProgress(isCompleted); // <-- saving progress with correct state
 
     if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
-        await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
+        // await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
+        await processPuzzleCompletion(puzzleCoins.value, puzzleXp.value);
         showPuzzleDone.value = true
     }
   }
@@ -562,62 +581,6 @@ const word = selection.value
 function isValidCell(row, col) {
   return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
 }
-
-
-//functions related to showing hints
-// async function showHint() {
-//     //checking if user has enough coins
-//     const paymentSuccessful = await hintPayment(hintCost.value);
-    
-//     //if payment fails don't provide hint
-//     if (!paymentSuccessful) {
-//         console.log("Not enough coins to buy a hint!");
-//         return;
-//     }
-
-//     // checking words that haven't been found yet
-//     const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
-
-//     if (unfoundWords.length > 0) {
-//         //selecting a random unfound word
-//         const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
-
-//         //finding the coordinates of the first letter of that word
-//         const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
-        
-//         if (foundWordData) {
-//             //using the first set of coordinates
-//             hintedCell.value = foundWordData.coords[0];
-//         } else {
-//             //finding the coordinates if they aren't in foundWordsData.
-//             for (let r = 0; r < gridSize; r++) {
-//                 for (let c = 0; c < gridSize; c++) {
-//                     //checking all directions from each cell to find the word
-//                     if (grid.value[r][c].toUpperCase() === randomWord[0]) {
-//                         //checking in every direction
-//                         const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
-//                         for (const dir of directions) {
-//                             let match = true;
-//                             for (let i = 0; i < randomWord.length; i++) {
-//                                 const newRow = r + dir.y * i;
-//                                 const newCol = c + dir.x * i;
-//                                 //checking negative values
-//                                 if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
-//                                     match = false;
-//                                     break;
-//                                 }
-//                             }
-//                             if (match) {
-//                                 hintedCell.value = { row: r, col: c };
-//                                 return;
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
 
 async function showHint() {
     const paymentSuccessful = await hintPayment(hintCost.value);
