@@ -99,6 +99,7 @@ const route = useRoute();
 const router = useRouter();
 
 //variables related to word search 
+const allWordsData = ref([]);
 const wordsToFind = ref([]);
 const grid = ref([]); //blank array
 const gridSize = 12;
@@ -182,6 +183,7 @@ async function loadStage(stage) {
             wordsColor.value = {};
             grid.value = [];
             showPuzzleDone.value = false;
+            allWordsData.value = [];
         }
 
         if (grid.value.length === 0) generateGrid();
@@ -449,12 +451,15 @@ function placeWord(word, tempGrid, directions, gridSize) {
     for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
     //checking if word fits with these parameters
         if (doesWordFits(word, p.x, p.y, p.direction, tempGrid, gridSize)) {
+            const coords = [];
             for (let i = 0; i < word.length; i++) {
                 const xx = p.x + (p.direction.x * i);
                 const yy = p.y + (p.direction.y * i);
                 //updating the grid from the passed argument
                 tempGrid[yy][xx] = word[i];
+                coords.push({ row: yy, col: xx });
             }
+            allWordsData.value.push({ word: word, coords: coords });
             return true;
         }
     }
@@ -470,26 +475,28 @@ function randomColor() {
 }
 
 function getCellStyle(row, col) {
-  let style = {}; //variable that stores active style for cell
+  let style = {};
 
-  //checking if the current cell is part of an active selection
-  const isSelected = selection.value?.some(c => c.row === row && c.col === col); // ? ensures the code doesn't throw an error if the value is null or undefined
+  // Check if the current cell is part of an active selection
+  const isSelected = selection.value?.some(c => c.row === row && c.col === col);
   if (isSelected) {
-    style = { ...style, backgroundColor: selectionColor.value, color: 'white' }; //updating style, ...style copies all existing properties from the object
+    style = { ...style, backgroundColor: selectionColor.value, color: 'white' };
   }
 
-  //checking if the cell is part of a found word
-  for (const item of foundWordsData.value || []) {
-    const isFound = item.coords?.some(c => c.row === row && c.col === col);
-    if (isFound) {
-      style = { ...style, backgroundColor: wordsColor.value[item.word], color: 'white' };
+  // Check if the cell is part of a found word
+  const isFound = foundWordsData.value?.some(item => item.coords?.some(c => c.row === row && c.col === col));
+  if (isFound) {
+    // If the cell is found, apply its specific color
+    const foundItem = foundWordsData.value.find(item => item.coords?.some(c => c.row === row && c.col === col));
+    if (foundItem) {
+      style = { ...style, backgroundColor: wordsColor.value[foundItem.word], color: 'white' };
     }
   }
 
-  //checking if the current cell is the hinted cell -  only applied if the cell is not part of a found word and is not being selected
+  // Check if the current cell is the hinted cell
+  // This is the correct way to apply the hint without interfering with found words
   const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
-  const isWordFound = foundWords.value.includes(wordsToFind.value.find(word => word.charAt(0) === grid.value[row][col]));
-  if (isHinted && !isWordFound && !isSelected) {
+  if (isHinted && !isFound && !isSelected) {
     style = { ...style, border: '2px solid red' };
   }
 
@@ -584,51 +591,25 @@ function isValidCell(row, col) {
 
 async function showHint() {
     const paymentSuccessful = await hintPayment(hintCost.value);
-    
-    // If payment is successful, show the animation and update coins
     if (paymentSuccessful) {
-        // Update the user's coins variable immediately
+        //updating the user's coins variable immediately
         userCoins.value -= hintCost.value;
 
-        // Show the animation and hide it after a delay
+        //showing the animation and hiding it after a delay
         showCoinsDeducted.value = true;
         setTimeout(() => {
             showCoinsDeducted.value = false;
-        }, 1500); // Hide after 1.5 seconds
-
-        // Check for unfound words and provide hint
-        const unfoundWords = wordsToFind.value.filter(word => !foundWords.value.includes(word));
+        }, 1500);
+        const unfoundWords = allWordsData.value.filter(wordData => !foundWords.value.includes(wordData.word));
 
         if (unfoundWords.length > 0) {
-            const randomWord = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
-            const foundWordData = foundWordsData.value.find(item => item.word === randomWord);
-            
-            if (foundWordData) {
-                hintedCell.value = foundWordData.coords[0];
-            } else {
-                for (let r = 0; r < gridSize; r++) {
-                    for (let c = 0; c < gridSize; c++) {
-                        if (grid.value[r][c].toUpperCase() === randomWord[0]) {
-                            const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
-                            for (const dir of directions) {
-                                let match = true;
-                                for (let i = 0; i < randomWord.length; i++) {
-                                    const newRow = r + dir.y * i;
-                                    const newCol = c + dir.x * i;
-                                    if (newRow >= gridSize || newRow < 0 || newCol >= gridSize || newCol < 0 || grid.value[newRow][newCol].toUpperCase() !== randomWord[i].toUpperCase()) {
-                                        match = false;
-                                        break;
-                                    }
-                                }
-                                if (match) {
-                                    hintedCell.value = { row: r, col: c };
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            const randomWordData = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
+            const firstLetterCoords = randomWordData.coords[0];
+            hintedCell.value = firstLetterCoords;
+            // console.log(`Hinting for word: ${randomWordData.word}`);
+        } else {
+            // console.log('No words left to show a hint for.');
+            unfoundWords.value = [];
         }
     }
 }

@@ -33,8 +33,8 @@ const toLogin = async () => {
 }
 
 function randomCategory() {
-    if (completedCategories.value >= 3) {
-        toast.error("You've completed 3 puzzles. Please sign in to save your progress and unlock more!");
+    if (completedCategories.value === 1) {
+        toast.error("You've completed random puzzle. Please sign in to save your progress and unlock more!");
         return;
     }
     const ind = Math.floor(Math.random() * categories.length);
