@@ -88,6 +88,42 @@ async function changePassword() {
     }
 }
 
+async function deleteAccount() {
+    try {
+        const user = await account.get(); // upewnij się, że user jest zalogowany
+
+        const res = await fetch(
+            `https://cloud.appwrite.io/v1/functions/${process.env.VUE_APP_APPWRITE_FUNCTION_ID}/executions`, 
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Appwrite-Project": process.env.VUE_APP_APPWRITE_PROJECT_ID,
+                    "X-Appwrite-Key": process.env.VUE_APP_APPWRITE_API_KEY,
+                },
+                body: JSON.stringify({ userId: user.$id }),
+                // credentials: "include", // <-- WAŻNE dla Execute as user
+            }
+        );
+
+        const data = await res.json();
+        const result = data.response ? JSON.parse(data.response) : { success: false, message: data.message || "Unknown error" };
+
+        if (result.success) {
+            toast.success("Your account has been deleted.");
+            await account.deleteSession("current"); // wylogowanie
+            router.push("/"); 
+        } else {
+            toast.error("Failed to delete account: " + (result.message || "Unknown error"));
+        }
+    } catch (err) {
+        console.error("Delete account failed:", err);
+        toast.error("Delete account failed: " + err.message);
+    }
+}
+
+
+
 async function getUser() {
     try {
         currentUser.value = await account.get();
