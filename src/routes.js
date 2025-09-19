@@ -15,6 +15,8 @@ import PrivacyPolicy from './views/PrivacyPolicy.vue'
 import TermsOfUse from './views/TermsOfUse.vue'
 import AchievementsPage from './views/AchievementsPage.vue'
 import SettingsPage from './views/SettingsPage.vue'
+import NotFound from './views/NotFound.vue'
+import HelpPage from './views/HelpPage.vue'
 
 const router = createRouter ({
     history: createWebHistory(),
@@ -35,6 +37,8 @@ const router = createRouter ({
         {path: '/terms', component: TermsOfUse},
         {path: '/achievements', component: AchievementsPage},
         {path: '/settings', component: SettingsPage},
+        {path: '/:pathMatch(.*)*', component: NotFound},
+        {path: '/help', component: HelpPage},
     ]
 });
 

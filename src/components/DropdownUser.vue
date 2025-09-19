@@ -19,7 +19,7 @@
             </div>
             <div class="dropdown-option">
                 <img src="../assets/help-icon.svg" alt="Help icon">
-                <p>Help</p>
+                <router-link to="/help">Help</router-link>
             </div>
             <div @click="signOut" class="dropdown-option last">
                 <img src="../assets/sign-out-icon.svg" alt="Sign out icon">
