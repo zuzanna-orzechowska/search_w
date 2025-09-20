@@ -24,7 +24,6 @@
 <script setup>
 import AppFooter from '@/components/AppFooter.vue';
 import DropdownGuest from '@/components/DropdownGuest.vue';
-import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
 import categories from '@/lib/categoriesPlay';
 import { onMounted, ref } from 'vue';
@@ -38,15 +37,8 @@ const toggleVisibility = () => {
   dropdownActive.value = !dropdownActive.value;
 }
 
-const toLogin = async () => {
-    try {
-        const user = await account.get();
-        console.log('User exists:', user);
-        router.push('/');
-    } catch(err) {
-        console.log('No session, redirecting to login');
-        router.push('/login');
-    }
+const toLogin = () => {
+    router.push('/login');
 }
 
 function randomCategory() {
