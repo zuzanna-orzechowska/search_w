@@ -30,39 +30,25 @@
 </template>
 
 <script setup>
-import { account, databases } from '@/lib/appwrite';
-import { ref, onMounted } from 'vue';
-import { Query } from 'appwrite';
+import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
+import { defineProps } from 'vue';
 
 const router = useRouter();
-const username = ref('');
-const avatar = ref('');
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_ID;
+
+//props
+defineProps({
+  username: {
+    type: String,
+    required: true
+  },
+  avatar: {
+    type: String,
+    required: true
+  }
+});
 
 //functions
-async function getUserAvatar () {
-
-    try {
-        const user = await account.get();
-        const userId = user.$id;
-        username.value = user.name;
-    
-        //searching user by id to find avatar src
-        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
-        const searchedUser = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
-    
-        if(searchedUser.total > 0) { //checking if databse return any document
-            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
-            avatar.value = userDocuments.avatar;
-            //console.log("Img src: ",avatar.value);
-        }
-    } catch(err) {
-        console.log("Error: ",err);
-    }
-}
-
 async function signOut() {
     try {
          await account.deleteSession('current');
@@ -76,12 +62,6 @@ async function signOut() {
 function goToProfile() {
     router.push('/profile');
 }
-
-
-onMounted(async () => {
-    await getUserAvatar();
-})
-
 </script>
 
 <style lang="scss">

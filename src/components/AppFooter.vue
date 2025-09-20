@@ -18,7 +18,9 @@
 .footer {
   bottom: 0;
   height: auto;
-  position: static;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   background-color: #AED2E5;
   padding: 16px 0;
   display: flex;
