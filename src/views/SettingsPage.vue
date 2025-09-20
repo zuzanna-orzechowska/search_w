@@ -25,10 +25,12 @@
                     
                     <button v-else @click="isEditingPassword = true">Change</button>
                 </div>
-                <div class="setting danger">
+                <div class="setting">
                     <h1>Delete account</h1>
                     <p>Your account will be permanently deleted from SearchW.</p>
-                    <button @click="deleteAccount">Delete</button>
+                    <p>If you wish to delete your account, please inform the administrator.
+                        <a :href="mailToLink">Click here to send an email.</a>
+                    </p>
                 </div>
             </div>
 
@@ -44,7 +46,7 @@
 
 <script setup>
 import { account } from '@/lib/appwrite';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useRouter } from 'vue-router';
 
@@ -57,6 +59,13 @@ const newPassword = ref('');
 const hidPassword = ref(true);
 const passwordError = ref(false);
 
+const adminEmail = process.env.VUE_APP_EMAIL_ADMIN;
+const subject = "Account Deletion Request";
+const body = "Hello Administrator,%0A%0AI would like to request the deletion of my account.%0A%0AUsername:%20[Your Username]%0AEmail:%20[Your Email]%0A%0AThank you.";
+
+const mailToLink = computed(() => {
+  return `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+});
 
 function toggleState() {
     hidPassword.value = !hidPassword.value;
@@ -85,40 +94,6 @@ async function changePassword() {
     } catch (err) {
         console.error("Failed to change password:", err);
         toast.error("Failed to change password: " + err.message);
-    }
-}
-
-async function deleteAccount() {
-    try {
-        const user = await account.get(); // upewnij się, że user jest zalogowany
-
-        const res = await fetch(
-            `https://cloud.appwrite.io/v1/functions/${process.env.VUE_APP_APPWRITE_FUNCTION_ID}/executions`, 
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Appwrite-Project": process.env.VUE_APP_APPWRITE_PROJECT_ID,
-                    "X-Appwrite-Key": process.env.VUE_APP_APPWRITE_API_KEY,
-                },
-                body: JSON.stringify({ userId: user.$id }),
-                // credentials: "include", // <-- WAŻNE dla Execute as user
-            }
-        );
-
-        const data = await res.json();
-        const result = data.response ? JSON.parse(data.response) : { success: false, message: data.message || "Unknown error" };
-
-        if (result.success) {
-            toast.success("Your account has been deleted.");
-            await account.deleteSession("current"); // wylogowanie
-            router.push("/"); 
-        } else {
-            toast.error("Failed to delete account: " + (result.message || "Unknown error"));
-        }
-    } catch (err) {
-        console.error("Delete account failed:", err);
-        toast.error("Delete account failed: " + err.message);
     }
 }
 

@@ -19,6 +19,8 @@ import AchievementsPage from './views/AchievementsPage.vue'
 import SettingsPage from './views/SettingsPage.vue'
 import NotFound from './views/NotFound.vue'
 import HelpPage from './views/HelpPage.vue'
+import VerifyEmail from './views/VerifyEmail.vue'
+import CheckEmail from './views/CheckEmail.vue'
 
 //meta: { requiresAuth: true } - only logged in user can access those
 const router = createRouter ({
@@ -42,6 +44,8 @@ const router = createRouter ({
         {path: '/settings', component: SettingsPage, meta: { requiresAuth: true }},
         {path: '/:pathMatch(.*)*', component: NotFound},
         {path: '/help', component: HelpPage, meta: { requiresAuth: true }},
+        {path: '/verify', component: VerifyEmail},
+        {path: '/check', component: CheckEmail}
     ]
 });
 

@@ -188,10 +188,11 @@ async function register() {
 
         const newUserId = ID.unique();
         await account.create(newUserId, email.value, password.value, username.value);
-        
-        //login user after creating an account
-        //await account.createEmailPasswordSession(email, password);
-        //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
+        //login user so link can be send
+        await account.createEmailPasswordSession(email.value, password.value);
+        //sending verification link
+        await account.createVerification(`${window.location.origin}/verify`);
+        // await account.createVerification('https://localhost:8080/verify-account');
 
         //checking if user selected an avatar - if not then the deafult one will be send to database
         if (!selectedAvatar.value) {
@@ -215,7 +216,8 @@ async function register() {
         await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {user_id: newUserId});
 
         //console.log('Zarejestrowano użytkownika:', await account.get());
-        router.push('/login');
+        // router.push('/login');
+        router.push('/check');
     } catch (err) {
         console.log('Error : ', err);
     }
@@ -224,6 +226,8 @@ async function register() {
 function toogleState() {
         hidPassword.value = !hidPassword.value;
 }
+
+console.log(window.location.origin)
 </script>
 
 <style lang="scss">
