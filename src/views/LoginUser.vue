@@ -26,14 +26,6 @@
                 </div>
                 <button type="submit" class="userButton">Login</button>
             </form>
-            <div class="otherRegister">
-                <p>or</p>
-                <div class="linksRegister">
-                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
-                     <img src="../assets/google-icon.svg" alt="Google icon">
-                    <img src="../assets/apple-icon.svg" alt="Apple icon">
-                </div>
-            </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
         </div>
     </main>
@@ -41,7 +33,6 @@
 
 <script setup>
 import { account} from '@/lib/appwrite';
-// import { OAuthProvider } from '@/lib/appwrite';
 import { toast } from 'vue3-toastify';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -53,16 +44,6 @@ let hidPassword = ref(true);
 let rememberMe = ref(false);
 
 const router = useRouter();
-    
-//functions
-// function loginWithGoogle() {
-//     try { // fisrt link - redirect here on success, second link - redirect on failure 
-//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
-//     } catch (err) {
-//         console.log('Error with google login:', err);
-        
-//     }
-// }
 
 async function login() {
     try {
@@ -72,9 +53,6 @@ async function login() {
         if (!rememberMe.value) {
             await account.deleteSession('current');
         } 
-
-        // const user = account.get();
-        // console.log('Zalogowano jako ',user);
     } catch(err) {
         console.log('Error: ',err);
         if (err.code === 401) {
@@ -108,8 +86,6 @@ main {
     .wrapper-login {
         width: 600px;
         background-color: rgba(174, 210, 229,0.5);
-        //backdrop-filter: blur(20px); ???
-        //-webkit-backdrop-filter: blur(100px);
         height: 700px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
@@ -127,7 +103,6 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            //background-color: aqua;
             gap: 22px;
 
             .icon{
@@ -151,7 +126,6 @@ main {
 
             input[type="email"]::placeholder, input[type="password"]::placeholder, input[type="text"]::placeholder {
                 color: #f9f9f9d1;
-                //padding-left: 30px;
                 font-weight: 300px;
             }
 
@@ -289,5 +263,17 @@ main {
             }
         }
     }
+}
+
+@media (min-width: 990px) {
+
+}
+
+@media (min-width: 760px) {
+
+}
+
+@media (min-width: 570px) {
+
 }
 </style>

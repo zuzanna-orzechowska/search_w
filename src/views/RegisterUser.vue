@@ -47,23 +47,15 @@
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
                         <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredTerms">
-                        Accept <router-link> Privacy Policy</router-link><span>*</span>
+                        Accept <router-link to="/privacy"> Privacy Policy</router-link><span>*</span>
                     </label>
                     <label for="accTermsofUse">
                         <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" v-model="requiredTerms">
-                        Accept <router-link> Terms of Use</router-link><span>*</span>
+                        Accept <router-link to="/terms"> Terms of Use</router-link><span>*</span>
                     </label>
                 </div>
                 <button type="submit" class="userButton" >Register</button>
             </form>
-            <div class="otherRegister">
-                <p>or</p>
-                <div class="linksRegister">
-                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
-                     <img src="../assets/google-icon.svg" alt="Google icon">
-                    <img src="../assets/apple-icon.svg" alt="Apple icon">
-                </div>
-            </div>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
             <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom">
         </div>
@@ -72,7 +64,7 @@
 
 <script setup>
 import { account, databases, ID} from '../lib/appwrite'
-// import { OAuthProvider } from 'appwrite';
+
 import { Query } from 'appwrite';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -111,20 +103,8 @@ const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 
-//functions 
-// function loginWithGoogle() {
-//     try { // fisrt link - redirect here on success, second link - redirect on failure 
-//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
-//     } catch (err) {
-//         console.log('Error with google login:', err);
-        
-//     }
-// }
-
 //functions
 function chooseAvatar(imgSrc) {
-    //pop() returns the element it removed
-    //const imgName = imgSrc.split('/').pop();
     selectedAvatar.value = imgSrc; //this will be send to database as a name for proper avatar!
     avatars.value = false;
 }
@@ -192,7 +172,6 @@ async function register() {
         await account.createEmailPasswordSession(email.value, password.value);
         //sending verification link
         await account.createVerification(`${window.location.origin}/verify`);
-        // await account.createVerification('https://localhost:8080/verify-account');
 
         //checking if user selected an avatar - if not then the deafult one will be send to database
         if (!selectedAvatar.value) {
@@ -214,9 +193,6 @@ async function register() {
 
         //creating document for user stats
         await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {user_id: newUserId});
-
-        //console.log('Zarejestrowano użytkownika:', await account.get());
-        // router.push('/login');
         router.push('/check');
     } catch (err) {
         console.log('Error : ', err);
@@ -226,17 +202,14 @@ async function register() {
 function toogleState() {
         hidPassword.value = !hidPassword.value;
 }
-
-console.log(window.location.origin)
 </script>
 
 <style lang="scss">
 .lines-top-bottom {
   position: absolute;
-  //bottom: 12px;
   top: -44px;
   left: -164px;
-  height: 110%;
+  height: 112%;
   object-fit: contain;
   z-index: 1;
   pointer-events: none;
@@ -254,7 +227,7 @@ main {
         position: relative;
         width: 600px;
         background-color: rgba(174, 210, 229,0.5);
-        height: 820px;
+        height: 736px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
         z-index: 0;
@@ -273,7 +246,6 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            //background-color: aqua;
             gap: 22px;
 
             .error {
@@ -369,7 +341,6 @@ main {
 
             input[type="text"]::placeholder, input[type="password"]::placeholder, input[type="email"]::placeholder {
                 color: #f9f9f9d1;
-                //padding-left: 30px;
                 font-weight: 300px;
             }
 
@@ -457,47 +428,6 @@ main {
             }
         }
 
-        .otherRegister {
-           p {
-            text-align: center;
-            overflow: hidden;
-            margin-top: 32px;
-           }
-
-           p:before, p:after {
-            background-color: #000;
-            content: "";
-            display: inline-block;
-            height: 2px;
-            position: relative;
-            vertical-align: middle;
-            width: 20%;
-           }
-
-           p:before {
-            right: 0.5em;
-            margin-left: -50%;
-        }
-
-            p:after {
-            left: 0.5em;
-            margin-right: -50%;
-        }
-
-            .linksRegister {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 36px;
-                margin-top: 24px;
-
-                img {
-                    width: 40px;
-                    cursor: pointer;
-                }
-            }
-        }
-
         #sign-in-p {
             text-align: center;
             margin-top: 32px;
@@ -508,5 +438,17 @@ main {
             color: #000;
           }
     }
+}
+
+@media (min-width: 990px) {
+
+}
+
+@media (min-width: 760px) {
+
+}
+
+@media (min-width: 570px) {
+
 }
 </style>
