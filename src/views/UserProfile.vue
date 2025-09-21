@@ -249,6 +249,7 @@ async function saveUsername() { //saving username to database
     }
 
     try {
+        await account.updateName(newUsername.value);
         await databases.updateDocument(database_id,collection_id,userDocId.value,{username: newUsername.value});
         username.value = newUsername.value;
         toast.success("Username updated successfully!");

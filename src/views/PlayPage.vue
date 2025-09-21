@@ -23,10 +23,9 @@
                         </div>
                     </div>
                 </div>
-    
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+                
+                <ButtonFooter />
+                
             </div>
         </div>
     </div>
@@ -39,6 +38,7 @@ import { ref, onMounted } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import { handleAchievements } from '@/lib/achievementsHandler';
+import ButtonFooter from '@/components/ButtonFooter.vue';
 
 const router = useRouter();
 
@@ -103,7 +103,7 @@ async function fetchPuzzlesProgress() {
             }
             
             //checking if the final stage has been completed in the user's progress
-            const finalStageProgress = stagesData[totalStages];
+            const finalStageProgress = stagesData[String(totalStages)];
 
             const isCompleted = finalStageProgress?.completed === true;
 
@@ -111,8 +111,6 @@ async function fetchPuzzlesProgress() {
         });
 
         completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
-        // console.log("Completed categories:", completedCategories.value);
-        // console.log("completedLen:", completedLen.value);
         await handleAchievements({ completedCategoriesCount: completedLen.value });
 
     } catch (err) {
@@ -122,10 +120,6 @@ async function fetchPuzzlesProgress() {
 
 
 // other functions
-function goBack() {
-    router.back();
-}
-
 function playCategory(name) {
     router.push({ path: '/wsplay', query: { category: name } });
 }
@@ -253,32 +247,6 @@ onMounted(fetchPuzzlesProgress);
     }
 
 
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
-        }
-    }
 }
 
 </style>

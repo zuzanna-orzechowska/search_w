@@ -33,9 +33,7 @@
                 </div>
                 </div>
     
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+                <ButtonFooter />
             </div>
         </div>
     </div>
@@ -48,6 +46,7 @@ import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import categories from '@/lib/categoriesChallenge'
 import { handleAchievements } from '@/lib/achievementsHandler';
+import ButtonFooter from '@/components/ButtonFooter.vue';
 
 const router = useRouter();
 const categoryLen = categories.length;
@@ -123,10 +122,6 @@ function formatTime(seconds) {
 
 function playCategory(name) {
     router.push({path: '/wschallenge', query: {category: name}});
-}
-
-function goBack() {
-    router.back();
 }
 
 onMounted( async () => {
@@ -271,34 +266,6 @@ onMounted( async () => {
                     transform: scale(1.1);
                 }
             }
-        }
-    }
-
-
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
         }
     }
 }

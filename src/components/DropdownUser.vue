@@ -5,21 +5,21 @@
             <img :src="avatar" alt="User avatar">
         </div>
         <div class="dropdown-section-left">
-            <div class="dropdown-option" @click="goToProfile">
+            <div class="dropdown-option" @click="router.push('/profile')">
                 <img src="../assets/profile-icon.svg" alt="Profile icon">
-                <p >Profile</p>
+                <p>Profile</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/achievements')">
                 <img src="../assets/achievements-icon.svg" alt="Achievements icon">
-                <router-link to="/achievements">Achievements</router-link>
+                <p>Achievements</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/settings')">
                 <img src="../assets/settings-icon.svg" alt="Settings icon">
-                <router-link to="/settings">Settings</router-link>
+                <p>Settings</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/help')">
                 <img src="../assets/help-icon.svg" alt="Help icon">
-                <router-link to="/help">Help</router-link>
+                <p>Help</p>
             </div>
             <div @click="signOut" class="dropdown-option last">
                 <img src="../assets/sign-out-icon.svg" alt="Sign out icon">
@@ -57,10 +57,6 @@ async function signOut() {
      } catch (err) {
          console.error('Logout error:', err);
     }
-}
-
-function goToProfile() {
-    router.push('/profile');
 }
 </script>
 
@@ -124,15 +120,9 @@ function goToProfile() {
                 width: 30px;
             }
 
-            p,a {
+            p{
                 font-size: 18px;
-            }
-
-            a{
-                text-decoration: none;
-                color: black;
-            }
-            
+            }            
         }
 
         .dropdown-option.last {
