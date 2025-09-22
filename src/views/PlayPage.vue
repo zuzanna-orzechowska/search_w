@@ -100,7 +100,8 @@ async function fetchPuzzlesProgress() {
             }
             
             const userMaxStage = stagesData.userMaxStageReached;
-            const isCompleted = userMaxStage === totalStages;
+            const finalStageData = stagesData[userMaxStage];
+            const isCompleted = userMaxStage === totalStages && finalStageData.completed === true;
 
             completedCategories.value[categoryName] = isCompleted;
         });

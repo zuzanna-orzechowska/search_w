@@ -34,7 +34,7 @@
                         mousedown - mouse is clicked, .prevent prevents default behavior like selecting text, mouseover when clicked mouse is being drag across letter
                         mouseup when user stops clicking mouse
                         .some checks if at least one element in the array passes the test-->
-                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell" 
+                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell"
                         :style="getCellStyle(indRow, indCell)"
                         @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
                         {{ cell }}
@@ -497,13 +497,14 @@ function getCellStyle(row, col) {
   // This is the correct way to apply the hint without interfering with found words
   const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
   if (isHinted && !isFound && !isSelected) {
-    style = { ...style, border: '2px solid red' };
+    style = { ...style, border: '2px solid red'};
   }
 
   return style;
 }
 
-//functions related to word search - selecting letters
+// functions related to word search - selecting letters
+
 function startSelection(row, col) {
      if (!isValidCell(row, col)) return;
     isSelecting.value = true; //letter is being selected
@@ -650,6 +651,7 @@ onMounted(async () => {
 .background-container {
     width: 100vw;
     height: 100vh;
+    background-color: rgb(174, 210, 229);
 }
 
 .container {
@@ -687,14 +689,40 @@ onMounted(async () => {
         }
 
         .coins-deducted {
-
-            p{
-                font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Use the same gap as the display for consistency */
+            position: absolute; /* Position it absolutely within the wrapper */
+            top: 50%; /* Start in the middle vertically */
+            left: 50%; /* Start in the middle horizontally */
+            transform: translate(-50%, -50%); /* Center the element */
+            opacity: 0; /* Hide it initially */
+            
+            // Add the animation
+            animation: deduct-animation 2s forwards;
+            
+            p {
+                font-size: 24px; /* Match the display font size for a smooth transition */
+                font-weight: 500;
+                color: #e74c3c; /* A nice red color for a negative value */
+                margin: 0;
             }
+            
+            img {
+                width: 42px; /* Match the display icon size */
+                height: 42px;
+            }
+        }
 
-            img{
-                width: 36px;
-                height: 36px;
+        @keyframes deduct-animation {
+            0% {
+                transform: translate(-50%, -50%); /* Start centered */
+                opacity: 1; /* Fully visible at the start of the animation */
+            }
+            100% {
+                transform: translate(-50%, -150%); /* Fly up */
+                opacity: 0; /* Fade out completely */
             }
         }
 
@@ -718,6 +746,7 @@ onMounted(async () => {
         h2{
             font-size: 56px;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
@@ -727,7 +756,7 @@ onMounted(async () => {
 
         .smaller {
             font-size: 28px;
-            margin-bottom: 64px;
+            margin-bottom: 32px;
         }
     }
 
@@ -772,6 +801,10 @@ onMounted(async () => {
             .row {
                 display: flex;
                 // gap: 2px;
+
+                .hinted-cell {
+                    border: 2px solid red !important; // Use !important to override inline styles if necessary
+                }
     
                 .cell {
                     background: #f9f9f9;
@@ -800,7 +833,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 64px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
@@ -813,11 +846,50 @@ onMounted(async () => {
             cursor: pointer;
             margin-top: 0;
         }
+
+        .hint-wrapper {
+            position: relative;
+            
+            .hint-cost-text {
+                position: absolute;
+                bottom: 100%; /* Position it just above the icon */
+                left: 50%;
+                transform: translateX(-50%);
+                white-space: nowrap; /* Prevents the text from wrapping */
+                background-color: #f9f9f9;
+                color: #333;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: bold;
+                opacity: 0; /* Initially hidden */
+                visibility: hidden; /* Also hidden from screen readers and pointer events */
+                transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+                z-index: 10;
+                
+                // Use a pseudo-element for a small triangle pointer
+                &::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    bottom: -5px;
+                    transform: translateX(-50%);
+                    border-left: 5px solid transparent;
+                    border-right: 5px solid transparent;
+                    border-top: 5px solid #f9f9f9;
+                }
+            }
+            
+            // Show the hint cost when hovering over the wrapper
+            &:hover .hint-cost-text {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(-5px); /* Add a subtle lift effect */
+            }
+        }
     }
 
     .puzzle-done{
-        //display: none;
-        background-color: pink;
         border-radius: 6px;
         width: 540px;
         height: 420px;
@@ -839,6 +911,7 @@ onMounted(async () => {
             text-align: center;
             width: 300px;
             margin-bottom: 24px;
+            margin-top: 12px;
         }
 
         .rewards-txt {
@@ -917,6 +990,7 @@ onMounted(async () => {
         font-weight: 500;
         text-align: center;
         margin-bottom: 24px;
+        margin-top: 12px;
     }
 
     p{

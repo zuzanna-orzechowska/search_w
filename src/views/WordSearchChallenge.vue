@@ -699,6 +699,7 @@ onMounted( async () => {
         h2{
             font-size: 56px;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
@@ -709,7 +710,7 @@ onMounted( async () => {
 
         .smaller {
             font-size: 28px;
-            margin-bottom: 32px;
+            margin-bottom: 16px;
         }
     }
 
@@ -801,7 +802,7 @@ onMounted( async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 32px;
+        margin-top: 16px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
@@ -841,6 +842,7 @@ onMounted( async () => {
         font-weight: 500;
         text-align: center;
         margin-bottom: 24px;
+        margin-top: 12px;
     }
     
     .paused-txt, .before-txt {
@@ -934,6 +936,7 @@ onMounted( async () => {
         text-align: center;
         //width: 300px;
         margin-bottom: 12px;
+        margin-top: 12px;
     }
 
     .results {

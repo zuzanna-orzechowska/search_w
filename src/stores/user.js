@@ -54,7 +54,7 @@ export const useUserStore = defineStore('user', {
           this.userStatsDocId = stats.$id;
           this.title = stats.title;
           this.level = stats.level;
-          this.coins = stats.coins;
+          this.coins = stats.coin;
           this.xp = stats.xp;
           await this.levelUpSystem(database_id, collection_user_stats_id);
         }

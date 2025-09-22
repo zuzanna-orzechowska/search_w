@@ -172,6 +172,7 @@ onMounted( async () => {
             font-size: 56px;
             font-weight: 500;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
