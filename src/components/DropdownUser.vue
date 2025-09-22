@@ -1,8 +1,8 @@
 <template>
     <div class="dropdown-content long">
         <div class="dropdown-section">
-            <p>Welcome {{username}}</p>
-            <img :src="avatar" alt="User avatar">
+            <p>Welcome {{userStore.username}}</p>
+            <img :src="userStore.avatar" alt="User avatar">
         </div>
         <div class="dropdown-section-left">
             <div class="dropdown-option" @click="router.push('/profile')">
@@ -32,21 +32,10 @@
 <script setup>
 import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
-import { defineProps } from 'vue';
+import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
-
-//props
-defineProps({
-  username: {
-    type: String,
-    required: true
-  },
-  avatar: {
-    type: String,
-    required: true
-  }
-});
+const userStore = useUserStore();
 
 //functions
 async function signOut() {

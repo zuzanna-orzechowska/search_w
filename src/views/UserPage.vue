@@ -4,7 +4,7 @@
             <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
           <span class="material-symbols-outlined" @click="toggleVisibility">account_circle</span>
           <!--is dynamically loads given component if the requirement is met-->
-          <component v-if="dropdownActive" :is="DropdownUser" :username="username" :avatar="avatar"/>
+          <component v-if="dropdownActive" :is="DropdownUser" :username="userStore.username" :avatar="userStore.avatar"/>
         </div>
         <div class="content">
             <img src="../assets/logo_text.png" alt="SearchW" id="logo-text">
@@ -26,52 +26,26 @@ import AppFooter from '@/components/AppFooter.vue';
 import DropdownUser from '@/components/DropdownUser.vue';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { account, databases, Query} from '@/lib/appwrite';
+import { useUserStore } from '@/stores/user';
+import { database_id, collection_id, collection_user_stats_id, collection_user_avatars_id, collection_user_achievements_id } from '@/lib/constants';
 
 const router = useRouter();
-const username = ref('');
-const avatar = ref('');
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_ID;
+const userStore = useUserStore();
 const dropdownActive = ref(false);
-
-async function fetchUserData() { //fetching user data so with usage of props it will be given to DropdownUser
-    try {
-        const user = await account.get();
-        const userId = user.$id;
-        username.value = user.name;
-    
-        const searchedUser = await databases.listDocuments(database_id, collection_id, [Query.equal('id_user', userId)]);
-    
-        if (searchedUser.total > 0) {
-          const userDocuments = searchedUser.documents[0];
-          avatar.value = userDocuments.avatar;
-        }
-    } catch(err) {
-        console.error("Error fetching user data:", err);
-    }
-}
 
 const toggleVisibility = () => {
   dropdownActive.value = !dropdownActive.value;
 }
 
-function goToPlay () {
-    router.push('/play');
-}
+function goToPlay() { router.push('/play'); }
+function goToChallenge() { router.push('/challenge'); }
+function goToShop() { router.push('/shop'); }
 
-function goToChallenge() {
-    router.push('/challenge');
-}
-
-function goToShop() {
-    router.push('/shop');
-}
-
-onMounted (async () => {
-    localStorage.removeItem('guestProgress');
-    fetchUserData();
-})
+onMounted(async () => {
+  localStorage.removeItem('guestProgress');
+  await userStore.fetchUser();
+  await userStore.fetchUserData(database_id,collection_id,collection_user_stats_id,collection_user_avatars_id,collection_user_achievements_id);
+});
 </script>
 
 <style lang="scss" scoped>

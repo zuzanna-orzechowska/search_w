@@ -54,249 +54,81 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ref, onMounted, computed } from 'vue';
-import { databases, account } from '@/lib/appwrite';
-import { Query} from 'appwrite';
+import { useUserStore } from '@/stores/user';
 import { levelData } from '@/lib/levelsData';
-import { toast } from 'vue3-toastify';
 import achievements from '@/lib/achievements';
+import { database_id, collection_id, collection_user_stats_id, collection_user_avatars_id, collection_user_achievements_id } from '@/lib/constants';
 
 const router = useRouter();
+const userStore = useUserStore();
 
-//variables related to databse
-let currentUser = ref(null);
-let avatar = ref('');
-let username = ref('');
-let title = ref('');
-let level = ref(0);
-let coins = ref(0);
-let xp = ref(0);
-let userAchievements = ref([]); 
-const userStatsDocId = ref(null);
-const userDocId = ref(null);
+
+// reactive local state
 const isEditingUsername = ref(false);
 const newUsername = ref('');
-const userAvatars = ref([]);
-const initialAvatar = ref('');
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_ID;
-const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
-const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
-const collection_user_achievements_id = process.env.VUE_APP_COLLECTION_USER_ACHIEVEMENTS_ID;
 
-//computed properties for progress bar
+// computed properties mapped from store
+const avatar = computed(() => userStore.avatar);
+const username = computed(() => userStore.username);
+const title = computed(() => userStore.title);
+const level = computed(() => userStore.level);
+const xp = computed(() => userStore.xp);
+const userAchievements = computed(() => userStore.userAchievements);
+const userAvatars = computed(() => userStore.userAvatars);
+
+// progress bar calculations
 const nextLevelXp = computed(() => {
-    const nextLevel = levelData.find(levelObj => levelObj.number === level.value + 1); //finding object from levelData that matches next level that user can achievie
-    return nextLevel ? nextLevel.xpNeeded : 0; //if user has enough xp for next level then retirning it, if no then returnig 0
+  const nextLevel = levelData.find(l => l.number === level.value + 1);
+  return nextLevel ? nextLevel.xpNeeded : 0;
 });
-
 const currentLevelXpNeeded = computed(() => {
-    const currentLevel = levelData.find(levelObj => levelObj.number === level.value);
-    return currentLevel ? currentLevel.xpNeeded : 0;
+  const currentLevel = levelData.find(l => l.number === level.value);
+  return currentLevel ? currentLevel.xpNeeded : 0;
 });
-
 const xpToNextLevel = computed(() => {
-    const remainingXp = nextLevelXp.value - xp.value;
-    return remainingXp > 0 ? remainingXp : 0;
+  const remainingXp = nextLevelXp.value - xp.value;
+  return remainingXp > 0 ? remainingXp : 0;
 });
-
 const progressBarWidth = computed(() => {
-    const progress = xp.value - currentLevelXpNeeded.value;
-    const totalNeeded = nextLevelXp.value - currentLevelXpNeeded.value;
-    const percentage = (progress / totalNeeded) * 100; //percentages is needed for styling
-    return isNaN(percentage) ? '0%' : `${percentage}%`;
+  const progress = xp.value - currentLevelXpNeeded.value;
+  const totalNeeded = nextLevelXp.value - currentLevelXpNeeded.value;
+  const percentage = (progress / totalNeeded) * 100;
+  return isNaN(percentage) ? '0%' : `${percentage}%`;
 });
 
+// displayed achievements mapped to full objects
 const displayedAchievements = computed(() => {
-    //mapping the array of achievement names from Appwrite to the full achievement objects
-    return userAchievements.value.map(achievName => {
-        return achievements.find(item => item.name === achievName);
-    }).filter(Boolean); // .filter(Boolean) removes any undefined results
+  return userAchievements.value
+    .map(name => achievements.find(a => a.name === name))
+    .filter(Boolean);
 });
 
-
-//functions related to database
-async function getUser() { //what user is currenlty logged in
-    try {
-        const user = await account.get(); //getting info from session
-        currentUser.value = user;
-        return user;
-    } catch (err) {
-        console.log("Error: ",err);
-    }
-}
-
-async function getUserData () {
-
-    try {
-        const userId = currentUser.value.$id;
-        const userData = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
-        const userDataProgress = await databases.listDocuments(database_id,collection_user_stats_id,[Query.equal('user_id',userId)]);
-        const userPurchasedAvatars = await databases.listDocuments(database_id,collection_user_avatars_id,[Query.equal('user_id', userId)]);
-        const userAchievementsData = await databases.listDocuments(database_id,collection_user_achievements_id,[Query.equal('user_id', userId)]);
-        
-        if(userData.total > 0) { //checking if databse return any document
-            const userDocs = userData.documents[0]; //given value from first document is assigned to userDocs variable, so we can get avatar value from it
-            userDocId.value = userDocs.$id;
-            avatar.value = userDocs.avatar;
-            username.value = userDocs.username;
-            userAvatars.value.push(userDocs.avatar);
-            //console.log("avatars: ",userAvatars.value)
-            //console.log("Img src: ",avatar.value);
-            //console.log("Username: ", username.value);
-        }
-
-        if(userDataProgress.total > 0) { //checking if database return any document
-            const userDocsProgress = userDataProgress.documents[0]; //given value from first document is assigned to userDocsProgress variable, so we can get avatar value from it
-            title.value = userDocsProgress.title;
-            level.value = userDocsProgress.level;
-            coins.value = userDocsProgress.coins;
-            xp.value = userDocsProgress.xp;
-            await levelUpSystem();
-        }
-
-        const allAvatars = new Set();
-        
-        //adding the current user's active avatar to the list
-        if (avatar.value) {
-            allAvatars.add(avatar.value);
-        }
-
-        if (userPurchasedAvatars.total > 0) {
-            const userAvatarsData = userPurchasedAvatars.documents[0];
-
-            // getting initial avatar from database and adding it to allAvatars so it won't disappear
-            initialAvatar.value = userAvatarsData.initial_avatar;
-            if (initialAvatar.value) {
-                allAvatars.add(initialAvatar.value);
-            }
-
-            //getting the purchased avatars array and add them to allAvatars / checking for null
-            if (userAvatarsData.purchased_avatars && Array.isArray(userAvatarsData.purchased_avatars)) {
-                userAvatarsData.purchased_avatars.forEach(av => allAvatars.add(av));
-            }
-        }
-
-        const allAchievements = new Set(); //Set element is similar to array but it doesn't allow duplicates
-        if(userAchievementsData.total > 0) {
-            const userDocsAchievements = userAchievementsData.documents[0]; 
-            if (userDocsAchievements.achievements && Array.isArray(userDocsAchievements.achievements)) {
-                userDocsAchievements.achievements.forEach(achiev => allAchievements.add(achiev));
-            }
-        }
-        
-        //converting back to an array and assigning it to the reactive variable
-        userAvatars.value = Array.from(allAvatars);
-        userAchievements.value = Array.from(allAchievements);
-
-    } catch(err) {
-        console.log("Error: ",err);
-    }
-}
-
-
-async function levelUpSystem() { //function that checks user level and update data in database properly
-    //sorting levels in descending order to find the highest level the user qualifies for
-    const sortedLevels = [...levelData].sort((a, b) => b.xpNeeded - a.xpNeeded); //... means every object from array
-    
-    //finding the highest level the user qualifies for based on their XP
-    const newLevelData = sortedLevels.find(l => l.xpNeeded <= xp.value);
-    
-    //checking if a level up occurred and the document ID is available
-    if (newLevelData && newLevelData.number > level.value && userStatsDocId.value) {
-        const newLevel = newLevelData.number;
-        const newTitle = newLevelData.title;
-
-        try {
-            //updating the database with the new level and title
-            await databases.updateDocument(database_id,collection_user_stats_id,userStatsDocId.value,{level: newLevel,title: newTitle,});
-            level.value = newLevel;
-            title.value = newTitle;
-            //!TOAST LATER???
-            //console.log(`Congratulations! You've leveled up to level ${newLevel} and earned the title '${newTitle}'.`);
-        } catch (err) {
-            console.error("Error updating user stats document:", err);
-        }
-    }
-}
-
-async function uniqueUsername(username) { //checking if new username is still unique
-    try {
-        const checkUsername = await databases.listDocuments(database_id, collection_id, [Query.equal('username', username)]);
-        return checkUsername.total === 0;
-    } catch (err) {
-        console.log("Error checking unique username: ", err);
-        return false;
-    }
-}
-
-async function saveUsername() { //saving username to database
-    if (!isEditingUsername.value) return;
-
-    if (newUsername.value === username.value) {
-        toast.info("Username is already the same.");
-        isEditingUsername.value = false;
-        return;
-    }
-    
-    const isUsernameUnique = await uniqueUsername(newUsername.value);
-    
-    if (!isUsernameUnique) {
-        toast.error("This username is already in use.");
-        newUsername.value = username.value;
-        return;
-    }
-
-    try {
-        await account.updateName(newUsername.value);
-        await databases.updateDocument(database_id,collection_id,userDocId.value,{username: newUsername.value});
-        username.value = newUsername.value;
-        toast.success("Username updated successfully!");
-        isEditingUsername.value = false;
-    } catch (err) {
-        console.error("Error updating username:", err);
-        toast.error("Failed to update username.");
-    }
-}
-
-async function selectAvatar(newAvatarSource) {
-    if (newAvatarSource === avatar.value) return;
-
-    try {
-        await databases.updateDocument(
-            database_id,
-            collection_id,
-            userDocId.value,
-            {
-                avatar: newAvatarSource,
-            }
-        );
-        avatar.value = newAvatarSource;
-        toast.success("Avatar updated successfully!");
-    } catch (err) {
-        console.error("Error updating avatar:", err);
-        toast.error("Failed to update avatar.");
-    }
-}
-
-
-//other functions
+// functions
 function goBack() {
-    router.back();
+  router.back();
 }
 
 function toggleEditMode() {
-    isEditingUsername.value = !isEditingUsername.value;
-    if (isEditingUsername.value) {
-        newUsername.value = username.value;
-    }
+  isEditingUsername.value = !isEditingUsername.value;
+  if (isEditingUsername.value) newUsername.value = username.value;
 }
 
+async function saveUsername() {
+  if (!isEditingUsername.value) return;
+  await userStore.saveUsername(newUsername.value);
+  isEditingUsername.value = false;
+}
 
+async function selectAvatar(av) {
+  await userStore.selectAvatar(av);
+}
+
+// initialize user data on mounted - if user refresh page
 onMounted(async () => {
-    await getUser();
-    await getUserData();
+  await userStore.fetchUser();
+  await userStore.fetchUserData(database_id,collection_id,collection_user_stats_id,collection_user_avatars_id,collection_user_achievements_id);
 });
 </script>
 
