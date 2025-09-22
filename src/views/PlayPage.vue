@@ -54,7 +54,7 @@ const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
 
 //checking if given category is completed
 function isCategoryCompleted(name) {
-    return !!completedCategories.value[name.toLowerCase()]; //!! means that variable will always be boolean not null or undefined
+    return !!completedCategories.value[name.toLowerCase().trim()]; //!! means that variable will always be boolean not null or undefined
 }
 
 //fetching puzzles and it's stages with progress
@@ -62,50 +62,45 @@ async function fetchPuzzlesProgress() {
     try {
         const user = await account.get();
         currentUser.value = user;
-        // console.log("Current user:", user);
 
-        //listing all documents related with progress in Play puzzles
-        //{ documents: progressDocument} takes the property documents from the returned object and renames it to progressDocuments
-        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id,[Query.equal('user_id', user.$id)]);
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
 
-        const { documents: puzzleDocuments } = await databases.listDocuments(database_id,collection_id);
+        //pagination for fetch all of the documents - Appwrite only fetch 100 document but in collection is a lot more
+        let puzzleDocuments = [];
+        let offset = 0;
+        let response;
+        const limit = 100;
 
-        // console.log("Progress documents:", progressDocuments);
-        // console.log("Puzzle documents:", puzzleDocuments);
+        do {
+            response = await databases.listDocuments(database_id, collection_id, [Query.limit(limit),Query.offset(offset)]);
+            puzzleDocuments = puzzleDocuments.concat(response.documents);
+            offset += limit;
+        } while (response.documents.length === limit);
 
-        //checking how many stages does puzzle have so it will be easier to mark category as completed
         const maxStages = {};
         puzzleDocuments.forEach(doc => {
-            const categoryName = doc.title.toLowerCase().trim(); //normalizing text
-            const stageNumber = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is like 'fruit-1' and we only need number
+            const categoryName = doc.title.toLowerCase().trim();
+            const stageNumber = parseInt(doc.puzzleId.split('-')[1]);
             if (!maxStages[categoryName] || stageNumber > maxStages[categoryName]) {
                 maxStages[categoryName] = stageNumber;
             }
         });
 
-        // console.log(" Max stages per category (from puzzleDocuments):", maxStages);
-
-        //firstly all of the categories are marked as uncompleted
         categories.forEach(cat => {
             completedCategories.value[cat.name.toLowerCase().trim()] = false;
         });
 
-        //checking progress
         progressDocuments.forEach(doc => {
             const categoryName = doc.category.toLowerCase().trim();
             const stagesData = JSON.parse(doc.stages_data);
-
-            //getting the total number of stages for the category
             const totalStages = maxStages[categoryName]; 
 
             if (!totalStages) {
                 return;
             }
             
-            //checking if the final stage has been completed in the user's progress
-            const finalStageProgress = stagesData[String(totalStages)];
-
-            const isCompleted = finalStageProgress?.completed === true;
+            const userMaxStage = stagesData.userMaxStageReached;
+            const isCompleted = userMaxStage === totalStages;
 
             completedCategories.value[categoryName] = isCompleted;
         });
@@ -117,7 +112,6 @@ async function fetchPuzzlesProgress() {
         console.error("Error fetching puzzle progress:", err);
     }
 }
-
 
 // other functions
 function playCategory(name) {

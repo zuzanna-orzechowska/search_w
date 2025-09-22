@@ -80,26 +80,32 @@ function categoryStarsNumber(name) {
 function getBestTime(name) {
     return challengesProgress.value[name]?.best_time;
 }
-
 async function fetchChallengeProgress() {
     try {
         const user = await account.get();
         currentUser.value = user;
 
-        //fetching all progress documents for the current user
-        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
+        //pagination
+        let progressDocuments = [];
+        let offset = 0;
+        const limit = 100;
+        let response;
 
-        const temp = {}; //temporary array for storing info about stars for each category
+        do {
+            response = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id),Query.limit(limit),Query.offset(offset)]);
+            progressDocuments = progressDocuments.concat(response.documents);
+            offset += limit;
+        } while (response.documents.length === limit);
+
+        const temp = {};
         progressDocuments.forEach(doc => {
             const categoryName = doc.category;
-            const challengeData = JSON.parse(doc.challenge_data); //parsing string array into object to have access to properties - stars
+            const challengeData = JSON.parse(doc.challenge_data);
             temp[categoryName] = challengeData;
-            challengesProgress.value = temp; //storing data in original array
-
-            //console.log(`Category: ${categoryName}, Stars: ${starsNumber}`);
-            
         });
 
+        challengesProgress.value = temp;
+        
         await handleAchievements({ completedChallengesCount: completedCount.value });
 
     } catch (err) {
