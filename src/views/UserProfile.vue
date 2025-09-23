@@ -5,16 +5,16 @@
                 <h2>Profile</h2>
                 <div class="scroll">
                     <div class="user-data">
-                        <img :src="avatar" alt="User avatar">
+                        <img :src="avatar" alt="User avatar" class="avatar-img">
                         <div class="username-wrapper">
                             <h4 v-if="!isEditingUsername">{{ username }}</h4>
                             <!--keyup.enter means if user clicks Enter on keyboard, new username will be saved to database-->
                             <input v-else type="text" v-model="newUsername" @keyup.enter="saveUsername" class="username-input">
                             <img src="../assets/edit-icon.svg" alt="Edit" @click="toggleEditMode">
-                            <button v-if="isEditingUsername" @click="saveUsername" class="save-button">Save</button>
+                            <img v-if="isEditingUsername" @click="saveUsername" src="../assets/tick.svg" alt="tick">
                         </div>
-                        <p>{{ title }}</p>
-                        <p>Level {{ level }}</p>
+                        <p class="title">{{ title }}</p>
+                        <p>Level <span>{{ level }}</span></p>
                         <div class="progress-container">
                             <div class="progress-bar">
                                 <div class="progress-fill" :style="{ width: progressBarWidth }"></div>
@@ -23,14 +23,14 @@
                         </div>
                     </div>
                     <div class="avatars-container">
-                        <h2>Avatars</h2>
+                        <h4>Avatars</h4>
                         <div class="images">
                             <img v-for="(av,ind) in userAvatars" :key="ind" :src="av" :class="{ 'selected-avatar': av === avatar }" @click="selectAvatar(av)">
                         </div>
 
                     </div>
                     <div class="achievements-container">
-                        <h2>Achievements</h2>
+                        <h4>Achievements</h4>
                         <div v-if="userAchievements.length > 0" class="images">
                             <div class="image-item" v-for="(achiev,ind) in displayedAchievements" :key="ind">
                                 <img :src="achiev.image">
@@ -45,9 +45,7 @@
                     </div>
                 </div>
     
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+               <ButtonFooter />
             </div>
         </div>
     </div>
@@ -55,13 +53,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { levelData } from '@/lib/levelsData';
 import achievements from '@/lib/achievements';
+import ButtonFooter from '@/components/ButtonFooter.vue';
 import { database_id, collection_id, collection_user_stats_id, collection_user_avatars_id, collection_user_achievements_id } from '@/lib/constants';
 
-const router = useRouter();
 const userStore = useUserStore();
 
 
@@ -106,10 +103,6 @@ const displayedAchievements = computed(() => {
 });
 
 // functions
-function goBack() {
-  router.back();
-}
-
 function toggleEditMode() {
   isEditingUsername.value = !isEditingUsername.value;
   if (isEditingUsername.value) newUsername.value = username.value;
@@ -164,10 +157,10 @@ onMounted(async () => {
 
     
     h2 {
-        font-size: 36px;
-        font-weight: 500;
+        font-size: 56px;
         margin-bottom: 4px;
         margin-top: 12px;
+        font-weight: 500;
     }
 
     .scroll {
@@ -180,11 +173,13 @@ onMounted(async () => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
+            gap: 12px;
             margin: 20px 40px;
         
-            img {
+            .avatar-img {
                 width: 142px;
+                border: 2px solid black;
+                border-radius: 50%;
             }
 
             .username-wrapper {
@@ -193,7 +188,8 @@ onMounted(async () => {
                 justify-content: center;
 
                 h4{
-                    font-size: 20px;
+                    font-size: 28px;
+                    font-weight: 550;
                 }
 
                 img {
@@ -205,35 +201,59 @@ onMounted(async () => {
                 }
             }
 
+            p {
+                font-size: 24px;
+            }
+
+            .title {
+                font-style: italic;
+                font-size: 20px;
+            }
+
+            span {
+                font-weight: 500;
+                font-size: 24px;
+            }
+
             .progress-container {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 width: 80%;
-                margin-top: 20px;
+                margin-top: 12px;
             }
 
             .progress-bar {
                 width: 100%;
                 height: 10px;
-                background-color: #d1d1d1;
+                background-color: #AED2E5;
                 border-radius: 5px;
                 overflow: hidden;
             }
 
             .progress-fill {
                 height: 100%;
-                background-color: #8c8c8c;
+                background-color: #0077B6;
                 transition: width 0.5s ease-in-out;
             }
 
             .xp-to-next {
                 font-size: 16px;
                 margin-top: 8px;
+                color: #595858;
             }
         }
 
         .avatars-container {
+            margin-top: 42px;
+            margin-bottom: 42px;
+
+            h4{
+                font-size: 24px;
+                font-weight: 500;
+                margin-bottom: 24px;
+            }
+
             .images {
                 display: flex;
                 gap: 12px;
@@ -257,6 +277,12 @@ onMounted(async () => {
         }
 
         .achievements-container {
+            h4{
+                font-size: 24px;
+                font-weight: 500;
+                margin-bottom: 24px;
+            }
+
             .images {
                 display: flex;
                 gap: 12px;

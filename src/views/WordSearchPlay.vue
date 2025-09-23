@@ -11,7 +11,12 @@
                     <img src="../assets/coin-icon.svg" alt="Coin deducted">
                 </div>
                 <div class="avatar-wrapper">
-                    <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                    <div class="dropdown" v-click-outside="() => {dropdownActive = false}">
+                        <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
+                        <img @click="toggleVisibility" :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                        <!--is dynamically loads given component if the requirement is met-->
+                        <component v-if="dropdownActive" :is="DropdownUser" />
+                    </div>
                 </div>
             </div>
             <div class="text-container">
@@ -92,11 +97,13 @@ import { Query, ID } from 'appwrite';
 import { toast } from 'vue3-toastify';
 import { levelData } from '@/lib/levelsData';
 import { handleAchievements } from '@/lib/achievementsHandler';
+import DropdownUser from '@/components/DropdownUser.vue';
 
 //all variables
 //global variables
 const route = useRoute();
 const router = useRouter();
+const dropdownActive = ref(false);
 
 //variables related to word search 
 const allWordsData = ref([]);
@@ -636,6 +643,9 @@ function goBack() {
     router.back();
 }
 
+const toggleVisibility = () => {
+  dropdownActive.value = !dropdownActive.value;
+}
 
 // loading before mounting component
 onMounted(async () => {
@@ -679,7 +689,7 @@ onMounted(async () => {
             p {
                 font-size: 24px;
                 text-align: center;
-                margin: 0;
+                margin-top: 24px;
             }
 
             img {

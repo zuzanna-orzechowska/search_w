@@ -349,6 +349,7 @@ onMounted(async () => {
 .background-container {
     width: 100vw;
     height: 100vh;
+    background-color: rgb(174, 210, 229);
 }
 
 .container {
@@ -365,11 +366,12 @@ onMounted(async () => {
         h2{
             font-size: 56px;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
-        .bigger{
-            font-size: 32px;
-            margin-bottom: 4px;
+        .smaller {
+            font-size: 28px;
+            margin-bottom: 64px;
         }
     }
 

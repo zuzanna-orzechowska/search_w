@@ -106,6 +106,10 @@ export const useUserStore = defineStore('user', {
           toast.error("This username is already in use.");
           return;
         }
+        if (newUsername.length > 21) {
+          toast.info("Username can't be longer than 21 characters!");
+          return;
+        }
         await account.updateName(newUsername);
         await databases.updateDocument(process.env.VUE_APP_DATABASE_ID, process.env.VUE_APP_COLLECTION_ID, this.userDocId, { username: newUsername });
         this.username = newUsername;

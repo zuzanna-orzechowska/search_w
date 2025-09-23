@@ -7,7 +7,12 @@
                     <p>{{ userCoins }}</p>
                 </div>
                 <div class="avatar-wrapper">
-                    <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                    <div class="dropdown" v-click-outside="() => {dropdownActive = false}">
+                        <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
+                        <img @click="toggleVisibility" :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                        <!--is dynamically loads given component if the requirement is met-->
+                        <component v-if="dropdownActive" :is="DropdownUser" />
+                    </div>
                 </div>
             </div>
             <div class="text-container">
@@ -116,6 +121,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID } from 'appwrite';
+import DropdownUser from '@/components/DropdownUser.vue';
 
 //global variables
 const route = useRoute();
@@ -127,6 +133,7 @@ const time = ref(0);
 const timeString = ref('00:00');
 const timer = ref(null);
 const canInteract = computed(() => isGameStarted.value && !isChallengePaused.value && !isChallengeCompleted.value);
+const dropdownActive = ref(false);
 
 //variables related to word search 
 const wordsToFind = ref([]);
@@ -595,6 +602,10 @@ function startGame() {
     startTimer();
 }
 
+const toggleVisibility = () => {
+  dropdownActive.value = !dropdownActive.value;
+}
+
 //function for icon on bottom
 function goBack() {
     localStorage.removeItem('challenge-progress');
@@ -652,6 +663,7 @@ onMounted( async () => {
     display: flex;
     align-items: center;
     flex-direction: column;
+    position: relative;
 
     .right-up-wrapper {
         position: absolute;
@@ -671,7 +683,6 @@ onMounted( async () => {
             p {
                 font-size: 24px;
                 text-align: center;
-                margin: 0;
             }
 
             img {

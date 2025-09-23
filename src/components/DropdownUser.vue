@@ -60,7 +60,7 @@ async function signOut() {
       flex-direction: column;
       align-items: center;
       gap: 12px;
-
+      height: 444px;
       position: absolute;
       width: 300px;
       z-index: 1;
@@ -87,6 +87,7 @@ async function signOut() {
         img {
             width: 80px;
             padding: 8px 0px;
+            border-radius: 50%;
         }
 
       }
