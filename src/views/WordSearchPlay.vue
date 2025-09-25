@@ -702,37 +702,35 @@ onMounted(async () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px; /* Use the same gap as the display for consistency */
-            position: absolute; /* Position it absolutely within the wrapper */
-            top: 50%; /* Start in the middle vertically */
-            left: 50%; /* Start in the middle horizontally */
-            transform: translate(-50%, -50%); /* Center the element */
-            opacity: 0; /* Hide it initially */
-            
-            // Add the animation
+            gap: 8px; 
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            opacity: 0;
             animation: deduct-animation 2s forwards;
             
             p {
-                font-size: 24px; /* Match the display font size for a smooth transition */
+                font-size: 24px;
                 font-weight: 500;
-                color: #e74c3c; /* A nice red color for a negative value */
+                color: #e74c3c;
                 margin: 0;
             }
             
             img {
-                width: 42px; /* Match the display icon size */
+                width: 42px;
                 height: 42px;
             }
         }
 
         @keyframes deduct-animation {
             0% {
-                transform: translate(-50%, -50%); /* Start centered */
-                opacity: 1; /* Fully visible at the start of the animation */
+                transform: translate(-50%, -50%);
+                opacity: 1;
             }
             100% {
-                transform: translate(-50%, -150%); /* Fly up */
-                opacity: 0; /* Fade out completely */
+                transform: translate(-50%, -150%);
+                opacity: 0; 
             }
         }
 
@@ -773,7 +771,6 @@ onMounted(async () => {
     .wrapper-search {
         display: flex;
         justify-content: center;
-        //align-items: center;
         gap: 96px;
 
         .words-list {
@@ -806,14 +803,12 @@ onMounted(async () => {
             display: flex;
             flex-direction: column;
             border: 4px solid #57A4CD;
-            // gap: 2px;
     
             .row {
                 display: flex;
-                // gap: 2px;
 
                 .hinted-cell {
-                    border: 2px solid red !important; // Use !important to override inline styles if necessary
+                    border: 2px solid red !important;
                 }
     
                 .cell {
@@ -823,7 +818,6 @@ onMounted(async () => {
                     text-align: center;
                     line-height: 44px;
                     font-weight: 400;
-                    //border: 2px solid #ccc;
                     font-size: 28px;
                     cursor: pointer;
                 }
@@ -862,22 +856,21 @@ onMounted(async () => {
             
             .hint-cost-text {
                 position: absolute;
-                bottom: 100%; /* Position it just above the icon */
+                bottom: 100%;
                 left: 50%;
                 transform: translateX(-50%);
-                white-space: nowrap; /* Prevents the text from wrapping */
+                white-space: nowrap;
                 background-color: #f9f9f9;
                 color: #333;
                 padding: 4px 8px;
                 border-radius: 4px;
                 font-size: 16px;
                 font-weight: bold;
-                opacity: 0; /* Initially hidden */
-                visibility: hidden; /* Also hidden from screen readers and pointer events */
+                opacity: 0; 
+                visibility: hidden;
                 transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
                 z-index: 10;
                 
-                // Use a pseudo-element for a small triangle pointer
                 &::after {
                     content: '';
                     position: absolute;
@@ -890,11 +883,10 @@ onMounted(async () => {
                 }
             }
             
-            // Show the hint cost when hovering over the wrapper
             &:hover .hint-cost-text {
                 opacity: 1;
                 visibility: visible;
-                transform: translateX(-50%) translateY(-5px); /* Add a subtle lift effect */
+                transform: translateX(-50%) translateY(-5px);
             }
         }
     }

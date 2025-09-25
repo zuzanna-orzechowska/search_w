@@ -24,14 +24,13 @@ const toRegister = async () => {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .dropdown-content {
       display: flex;
       justify-content: center;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
-
+      gap: 42px;
       position: absolute;
       width: 300px;
       height: 304px;
@@ -52,6 +51,7 @@ const toRegister = async () => {
         p { 
           text-align: center;
           width: 224px;
+          font-size: 20px;
         }
   
         .dropdown-btn {

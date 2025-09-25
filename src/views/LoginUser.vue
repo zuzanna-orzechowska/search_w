@@ -1,5 +1,4 @@
 <template>
-    <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom-login">
     <main>
         <div class="wrapper-login">
             <h2>Login</h2>
@@ -22,7 +21,7 @@
                         <input type="checkbox" name="Remember-me" id="rememberLogin" v-model="rememberMe">
                         Remember me
                     </label>
-                    <label for="">Forgot password?</label>
+                    <label @click.prevent="router.push('/forgot')">Forgot password?</label>
                 </div>
                 <button type="submit" class="userButton">Login</button>
             </form>
@@ -67,35 +66,29 @@ function toggleState() {
 </script>
 
 <style lang="scss">
-.lines-top-bottom-login {
-  position: absolute;
-  height: 90%;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
-}
-
 main {
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     background-color: #f9f9f9;
+    width: 100%;
     
     .wrapper-login {
-        width: 600px;
+        width: 40%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         background-color: rgba(174, 210, 229,0.5);
-        height: 700px;
+        height: 524px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        z-index: 0;
 
         h2 {
             font-size: 64px;
             text-align: center;
-            margin-top: 116px;
-            margin-bottom: 44px;
+            margin: 32px 0px;
             font-weight: 450;
         }
 
@@ -103,7 +96,7 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 22px;
+            gap: 1rem;
 
             .icon{
                 position: relative;
@@ -114,7 +107,7 @@ main {
 
             input[type="email"], input[type="password"], input[type="text"] {
                 width: 364px;
-                font-size: 24px;
+                font-size: 1.1rem;
                 background-color: #6AAED3;
                 border: none;
                 border-radius: 16px;
@@ -197,6 +190,7 @@ main {
                 font-size: 24px;
                 padding: 1% 6%;
                 font-weight: 500;
+                color: white;
                 background-color: #2A8DC1;
                 border: 2px solid black;
                 border-radius: 6px;
@@ -221,6 +215,7 @@ main {
 
           a {
             color: #000;
+            font-weight: 500;
           }
 
           .otherRegister {

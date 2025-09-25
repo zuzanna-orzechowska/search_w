@@ -75,7 +75,7 @@ onMounted(() => {
     position: relative;
     padding: 20px;
     box-sizing: border-box;
-    gap: 20px;
+ 
 
     .dropdown {
         position: absolute;
@@ -96,10 +96,10 @@ onMounted(() => {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 20px;
+        gap: 12px;
 
         #logo-text {
-            width: 420px;
+            width: 444px;
             margin-left: 52px;
         }
       
@@ -109,7 +109,8 @@ onMounted(() => {
             margin-left: 52px;
     
             q {
-                font-size: 20px;
+                font-size: 18px;
+                font-style: italic;
             }
         }
       

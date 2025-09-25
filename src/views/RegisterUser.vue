@@ -57,7 +57,6 @@
                 <button type="submit" class="userButton" >Register</button>
             </form>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
-            <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom">
         </div>
     </main>
 </template>
@@ -205,40 +204,30 @@ function toogleState() {
 </script>
 
 <style lang="scss">
-.lines-top-bottom {
-  position: absolute;
-  top: -44px;
-  left: -164px;
-  height: 112%;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
-}
-
 main {
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     background-color: #f9f9f9;
+    width: 100%;
     
     .wrapper-register {
+        width: 40%;
         position: relative;
-        width: 600px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         background-color: rgba(174, 210, 229,0.5);
-        height: 736px;
+        height: 680px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        z-index: 0;
 
         h2 {
-            position: relative;
-            z-index: 10;
-            font-size: 64px;
+           font-size: 64px;
             text-align: center;
-            margin-top: 52px;
-            margin-bottom: 22px;
+            margin: 16px 0px;
             font-weight: 450;
         }
 
@@ -246,7 +235,7 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 22px;
+            gap: 1rem;
 
             .error {
                 display: none;
@@ -282,9 +271,9 @@ main {
 
                 .container-avatars {
                     width: 700px;
-                    background-color: #6AAED3;
+                    background-color: #79AED3;
                     position: absolute;
-                    bottom: 216px;
+                    bottom: 116px;
                     z-index: 1;
                     display: flex;
                     align-items: center;
@@ -329,7 +318,7 @@ main {
 
             input[type="text"], input[type="password"], input[type="email"] {
                 width: 364px;
-                font-size: 24px;
+                font-size: 1.1rem;
                 background-color: #6AAED3;
                 border: none;
                 border-radius: 16px;
@@ -411,6 +400,7 @@ main {
                 margin-top: 22px;
                 font-size: 24px;
                 padding: 1% 6%;
+                color: white;
                 font-weight: 500;
                 background-color: #2A8DC1;
                 border: 2px solid black;
@@ -431,11 +421,12 @@ main {
         #sign-in-p {
             text-align: center;
             margin-top: 32px;
-
+            font-size: 1.1rem;
           }
 
           a {
             color: #000;
+            font-weight: 500;
           }
     }
 }

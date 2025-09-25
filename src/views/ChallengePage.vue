@@ -4,7 +4,7 @@
             <div class="wrapper">
                 <div class="text-container">
                     <h2>Challenge</h2>
-                    <p class="bigger">Take the challenge and test your skills</p>
+                    <p class="bigger">Take the challenge and test your skills, scroll to show more.</p>
                     <p class="smaller">{{ completedCount }}/{{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">

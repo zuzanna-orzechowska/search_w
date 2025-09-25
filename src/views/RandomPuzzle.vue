@@ -358,6 +358,7 @@ onMounted(async () => {
     align-items: center;
     flex-direction: column;
     position: relative;
+    overflow-y: scroll;
 
     .text-container {
         text-align: center;
@@ -366,12 +367,11 @@ onMounted(async () => {
         h2{
             font-size: 56px;
             margin-bottom: 4px;
-            margin-top: 12px;
         }
 
         .smaller {
             font-size: 28px;
-            margin-bottom: 64px;
+            margin-bottom: 32px;
         }
     }
 
@@ -411,11 +411,9 @@ onMounted(async () => {
             display: flex;
             flex-direction: column;
             border: 4px solid #57A4CD;
-            // gap: 2px;
     
             .row {
                 display: flex;
-                // gap: 2px;
     
                 .cell {
                     background: #f9f9f9;
@@ -424,7 +422,6 @@ onMounted(async () => {
                     text-align: center;
                     line-height: 44px;
                     font-weight: 400;
-                    //border: 2px solid #ccc;
                     font-size: 28px;
                     cursor: pointer;
                 }
@@ -444,7 +441,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 64px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;

@@ -4,7 +4,7 @@
             <div class="wrapper">
                 <div class="text-container">
                     <h2>Play</h2>
-                    <p class="bigger">Choose a category</p>
+                    <p class="bigger">Choose a category, scroll to show more.</p>
                     <p class="smaller">{{ completedLen }} / {{ categoryLen }} completed</p>
                 </div>
                 <div class="scroll">
@@ -174,7 +174,7 @@ onMounted(fetchPuzzlesProgress);
 
     .scroll {
         flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
+        overflow-y: scroll; //enable vertical scroll
         padding-bottom: 100px;
 
         .categories-container {

@@ -21,6 +21,8 @@ import NotFound from './views/NotFound.vue'
 import HelpPage from './views/HelpPage.vue'
 import VerifyEmail from './views/VerifyEmail.vue'
 import CheckEmail from './views/CheckEmail.vue'
+import ResetPassword from './views/ResetPassword.vue'
+import ForgotPassword from './views/ForgotPassword.vue'
 
 //meta: { requiresAuth: true } - only logged in user can access those
 const router = createRouter ({
@@ -45,7 +47,10 @@ const router = createRouter ({
         {path: '/:pathMatch(.*)*', component: NotFound},
         {path: '/help', component: HelpPage, meta: { requiresAuth: true }},
         {path: '/verify', component: VerifyEmail},
-        {path: '/check', component: CheckEmail}
+        {path: '/check', component: CheckEmail},
+        {path: '/forgot', component: ForgotPassword},
+        {path: '/reset', component: ResetPassword}
+
     ]
 });
 
