@@ -195,5 +195,75 @@ main {
             text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.3);
         }
     }
+
+    @media (max-width: 600px) {
+        main {
+            align-items: flex-start;
+            padding: 30px 0;
+            min-height: auto; 
+        }
+
+        .wrapper-login {
+            width: 90%; 
+            max-width: 400px;
+            height: auto; 
+            padding: 30px 20px 40px 20px; 
+            box-sizing: border-box;
+            box-shadow: 2px 2px 8px 2px rgba(0,0,0,0.2);
+
+            h2 {
+                font-size: 40px; 
+                margin: 0 0 10px 0; 
+            }
+            
+            p {
+                margin-bottom: 0.5em;
+                font-size: 14px;
+            }
+
+            form {
+                width: 100%; 
+                gap: 0.8rem;
+
+                .icon{
+                    left: 12px;
+                    top: 32px;
+                    width: 24px;
+                }
+
+                input[type="email"], input[type="password"], input[type="text"] {
+                    width: 100%;
+                    font-size: 1rem;
+                    padding: 16px 0 16px 48px;
+                }
+                
+                .password-wrapper {
+                    .toggleBtn {
+                        width: 50px; 
+                        top: 12px;
+                        img {
+                            width: 26px;
+                        }
+                    }
+                }
+                
+                .userButton {
+                    margin-top: 20px;
+                    font-size: 20px;
+                    padding: 4px 12px;
+                }
+
+                .userButton:hover {
+                    box-shadow: none;
+                    transform: none;
+                }
+            }
+
+            a {
+                padding-top: 15px;
+                font-size: 14px;
+            }
+        }
+    }
 }
 </style>

@@ -102,5 +102,18 @@
       color: #00537f;
     }
   }
+
+  @media (max-width: 600px) {
+    .links {
+      font-size: 18px;
+    }
+
+    .author {
+
+      a{
+        font-size: 18px;
+      }
+    }
+  }
 }
 </style>

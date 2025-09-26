@@ -217,58 +217,80 @@ main {
             color: #000;
             font-weight: 500;
           }
+    }
 
-          .otherRegister {
-           p {
-            text-align: center;
-            overflow: hidden;
-           }
-
-           p:before, p:after {
-            background-color: #000;
-            content: "";
-            display: inline-block;
-            height: 2px;
-            position: relative;
-            vertical-align: middle;
-            width: 20%;
-           }
-
-           p:before {
-            right: 0.5em;
-            margin-left: -50%;
+    @media (max-width: 600px) {
+        main {
+            align-items: flex-start;
+            padding: 30px 0;
+            min-height: auto;
         }
 
-            p:after {
-            left: 0.5em;
-            margin-right: -50%;
-        }
+        .wrapper-login {
+            width: 90%; 
+            max-width: 400px;
+            height: auto;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            box-shadow: 2px 2px 8px 2px rgba(0,0,0,0.2);
 
-            .linksRegister {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 36px;
-                margin-top: 24px;
+            h2 {
+                font-size: 48px;
+                margin: 20px 0; 
+            }
 
-                img {
-                    width: 40px;
-                    cursor: pointer;
+            form {
+                width: 100%;
+                gap: 0.8rem;
+
+                .icon {
+                    left: 12px;
+                    top: 32px;
+                    width: 24px;
+                }
+
+                input[type="email"], input[type="password"], input[type="text"] {
+                    width: 100%;
+                    font-size: 1rem;
+                    padding: 16px 0 16px 48px; 
+                }
+                
+                .password-wrapper {
+                    .toggleBtn {
+                        width: 50px; 
+                        top: 12px;
+
+                        img {
+                            width: 26px;
+                        }
+                    }
+                }
+
+                .bottom-form-txt {
+                    width: 100%;
+                    font-size: 14px;
+                    margin-top: 8px;
+                }
+                
+                .userButton {
+                    margin-top: 15px;
+                    font-size: 20px;
+                    padding: 4px 12px;
+                }
+                
+                .userButton:hover {
+                    box-shadow: none;
+                    transform: none;
                 }
             }
+            
+            p {
+                margin-top: 20px;
+                font-size: 14px;
+            }
+            
         }
     }
 }
 
-@media (min-width: 990px) {
-
-}
-
-@media (min-width: 760px) {
-
-}
-
-@media (min-width: 570px) {
-
-}
 </style>

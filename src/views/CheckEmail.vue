@@ -37,4 +37,14 @@ h2 {
 img {
   width: 150px;
 }
+
+@media (max-width: 600px) {
+  .content {
+    width: 80%;
+  }
+
+  h2{
+    font-size: 20px;
+  }
+}
 </style>

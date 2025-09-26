@@ -429,17 +429,120 @@ main {
             font-weight: 500;
           }
     }
-}
 
-@media (min-width: 990px) {
+    @media (max-width: 600px) {
+        main {
+            align-items: flex-start;
+            padding: 30px 0;
+            min-height: auto; 
+        }
 
-}
+        .wrapper-register {
+            width: 90%;
+            max-width: 400px;
+            height: auto;
+            padding: 30px 20px 40px 20px;
+            box-sizing: border-box;
+            box-shadow: 2px 2px 8px 2px rgba(0,0,0,0.2); 
 
-@media (min-width: 760px) {
+            h2 {
+                font-size: 40px; 
+                margin: 10px 0 20px 0; 
+            }
 
-}
+            form {
+                width: 100%;
+                gap: 0.6rem;
 
-@media (min-width: 570px) {
+                .wrapper-avatars {
+                    margin-bottom: 10px;
 
+                    .avatar-icon {
+                        width: 80px;
+                    }
+
+                    .container-avatars {
+                        width: 95vw;
+                        max-width: 350px;
+                        bottom: 164px;
+                        padding: 15px 10px;
+                        gap: 15px;
+
+                        p {
+                            font-size: 18px;
+                        }
+
+                        .images {
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 12px;
+
+                            img {
+                                width: 70px;
+                                height: 70px;
+                            }
+                            img:hover {
+                                transform: none; 
+                            }
+                        }
+                    }
+                }
+                
+                .icon {
+                    left: 12px;
+                    top: 32px; 
+                    width: 24px;
+                }
+                
+                input[type="text"], input[type="password"], input[type="email"] {
+                    width: 100%;
+                    font-size: 1rem;
+                    padding: 16px 0 16px 48px;
+                }
+                
+                .error {
+                    left: 20px;
+                }
+                .error.errPass {
+                    width: 100%;
+                    padding-right: 10px;
+                    box-sizing: border-box;
+                }
+                
+                .password-wrapper {
+                    .toggleBtn {
+                        top: 12px;
+                        width: 50px; 
+                        img {
+                            width: 26px;
+                        }
+                    }
+                }
+
+                .bottom-form-txt {
+                    width: 100%;
+                    align-items: flex-start;
+                    gap: 8px;
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+                
+                .userButton {
+                    margin-top: 15px;
+                    font-size: 20px;
+                    padding: 4px 12px;
+                }
+
+                .userButton:hover {
+                    box-shadow: none;
+                    transform: none;
+                }
+            }
+
+            #sign-in-p {
+                margin-top: 25px;
+                font-size: 14px;
+            }
+        }
+    }
 }
 </style>

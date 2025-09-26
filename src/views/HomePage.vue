@@ -152,5 +152,55 @@ onMounted(() => {
         }
     }
 
+    @media (max-width: 600px) {
+            padding: 10px;
+    
+            .dropdown {
+                right: 20px;
+                top: 10px;
+    
+                .material-symbols-outlined {
+                    font-size: 64px;
+                    margin-top: 10px;
+                }
+            }
+    
+            .content {
+                gap: 8px;
+    
+                #logo-text {
+                    width: 96vw;
+                    max-width: 372px;
+                    margin-left: 0;
+                }
+              
+                .q-wrapper {
+                    width: 90vw;
+                    margin-left: 0;
+            
+                    q {
+                        font-size: 20px;
+                    }
+                }
+              
+                .btns {
+                    margin-top: 20px;
+                    margin-left: 0;
+                    gap: 16px;
+    
+                    button{
+                        font-size: 20px;
+                        padding: 4px 0;
+                        width: 110px; 
+                    }
+    
+                    button:hover {
+                        box-shadow: none;
+                        transform: none;
+                    }
+                }
+            }
+    }
 }
+
 </style>

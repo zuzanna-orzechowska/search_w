@@ -37,4 +37,10 @@ onMounted(async () => {
   display: grid;
   place-items: center;
 }
+
+@media (max-width: 600px) {
+  h2 {
+    font-size: 54px;
+  }
+}
 </style>
