@@ -245,8 +245,7 @@ onMounted(async () => {
         }
 
         .avatars-container {
-            margin-top: 42px;
-            margin-bottom: 42px;
+            margin: 42px 40px;
 
             h4{
                 font-size: 24px;
@@ -255,8 +254,9 @@ onMounted(async () => {
             }
 
             .images {
-                display: flex;
-                gap: 12px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
 
                 img {
                     width: 164px;
@@ -277,6 +277,8 @@ onMounted(async () => {
         }
 
         .achievements-container {
+            margin: 42px 40px;
+
             h4{
                 font-size: 24px;
                 font-weight: 500;
@@ -284,9 +286,9 @@ onMounted(async () => {
             }
 
             .images {
-                display: flex;
-                gap: 12px;
-                position: relative;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
 
                 .image-item {
                     position: relative;

@@ -207,15 +207,15 @@ onMounted(async () => {
 
     .scroll {
         flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
+        overflow-y: scroll; //enable vertical scroll
         padding-bottom: 100px;
         width: 100%;
 
         .avatars-container {
             display: flex;
             flex-direction: column;
-            gap: 40px;
-            margin: 0 40px;
+            gap: 52px;
+            margin: 20px 40px;
         
             .avatar-category {
                position: relative;
@@ -223,10 +223,15 @@ onMounted(async () => {
                 flex-direction: column;
                 gap: 16px;
 
+                p {
+                    font-size: 1.3rem;
+                    font-weight: 450;
+                }
+
                 .images-wrapper {
                     display: grid;
-                    grid-template-columns: repeat(6, 1fr);
-                    gap: 12px;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
 
                     .image-item {
                         display: flex;

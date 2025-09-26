@@ -97,8 +97,6 @@ async function changePassword() {
     }
 }
 
-
-
 async function getUser() {
     try {
         currentUser.value = await account.get();
@@ -121,8 +119,8 @@ onMounted(async () => {
     background-color: rgb(174, 210, 229);
     width: 100vw;
     height: 100vh;
-    display: flex;               /* enable flexbox */
-    justify-content: center;     /* horizontal center */
+    display: flex;
+    justify-content: center;
     align-items: center;
 }
 
@@ -220,6 +218,7 @@ onMounted(async () => {
                 width: 80px;
                 padding: 2px 4px;
                 font-weight: 500;
+                margin-top: 12px;
                 background-color: #f9f9f9;
                 border: 2px solid black;
                 border-radius: 6px;
@@ -240,7 +239,7 @@ onMounted(async () => {
     h2{
         font-size: 56px;
         font-weight: 500;
-        margin-bottom: 64px;
+        margin-bottom: 16px;
         margin-top: 12px;
     }
 
@@ -249,7 +248,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 64px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;

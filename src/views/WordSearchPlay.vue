@@ -662,6 +662,7 @@ onMounted(async () => {
     width: 100vw;
     height: 100vh;
     background-color: rgb(174, 210, 229);
+    overflow-y: scroll;
 }
 
 .container {
@@ -749,12 +750,11 @@ onMounted(async () => {
 
     .text-container {
         text-align: center;
-        margin-top: 12px;
+        margin-top: 4px;
 
         h2{
             font-size: 56px;
-            margin-bottom: 4px;
-            margin-top: 12px;
+            margin: 0px;
         }
 
         .bigger{
@@ -763,8 +763,8 @@ onMounted(async () => {
         }
 
         .smaller {
-            font-size: 28px;
-            margin-bottom: 32px;
+            font-size: 20px;
+            margin-bottom: 16px;
         }
     }
 
@@ -837,7 +837,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 32px;
+        margin-top: 16px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
