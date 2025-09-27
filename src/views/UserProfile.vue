@@ -255,8 +255,8 @@ onMounted(async () => {
 
             .images {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 16px;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
 
                 img {
                     width: 164px;
@@ -287,7 +287,7 @@ onMounted(async () => {
 
             .images {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(5, 1fr);
                 gap: 16px;
 
                 .image-item {
@@ -358,6 +358,149 @@ onMounted(async () => {
         button:hover {
             box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
             transform: scale(1.1);
+        }
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        
+        .wrapper {
+            width: 95vw; 
+            height: 95vh;
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        h2 {
+            font-size: 40px;
+            margin-top: 20px;
+        }
+
+        .scroll {
+            padding-bottom: 80px;
+
+            .user-data {
+                margin: 20px 10px;
+                gap: 8px;
+            
+                .avatar-img {
+                    width: 100px;
+                }
+
+                .username-wrapper {
+                    gap: 6px;
+
+                    h4 {
+                        font-size: 24px;
+                    }
+
+                    .username-input {
+                        font-size: 24px;
+                    }
+
+                    img {
+                        width: 20px;
+                    }
+                }
+
+                p {
+                    font-size: 20px;
+                }
+
+                .title {
+                    font-size: 16px;
+                }
+
+                span {
+                    font-size: 20px;
+                }
+
+                .progress-container {
+                    width: 90%;
+                    margin-top: 8px;
+                }
+
+                .xp-to-next {
+                    font-size: 14px;
+                }
+            }
+
+            .avatars-container {
+                margin: 30px 10px;
+
+                h4 {
+                    font-size: 20px;
+                    margin-bottom: 16px;
+                }
+
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 10px;
+
+                    img {
+                        width: 90px;
+                        height: 90px;
+                        border-width: 1px;
+                    }
+
+                    .selected-avatar {
+                        border-width: 3px;
+                    }
+                }
+            }
+
+            .achievements-container {
+                margin: 30px 10px;
+
+                h4 {
+                    font-size: 20px;
+                    margin-bottom: 16px;
+                }
+
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 12px;
+
+                    .image-item {
+
+                        img {
+                            width: 110px;
+                            height: 110px;
+                        }
+                        
+                        .hover-overlay {
+                            width: 100%;
+                            height: 100%;
+                            max-width: 160px;
+                            max-height: 160px;
+                            padding: 5px;
+                        }
+
+                        .description {
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .avatars-container {
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+
+            .achievements-container {
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
         }
     }
 }

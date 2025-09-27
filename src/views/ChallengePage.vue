@@ -277,4 +277,86 @@ onMounted( async () => {
     }
 }
 
+@media (max-width: 600px) {
+    .container {
+        min-height: 100vh;
+        
+        .wrapper {
+            width: 90vw; 
+            height: 95vh;
+            box-shadow: none;
+        }
+
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            .bigger{
+                font-size: 20px; 
+            }
+
+            .smaller {
+                font-size: 18px;
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px; 
+            
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 5vw; 
+                margin-top: 30px;
+        
+                .category {
+                    gap: 3vw;
+                    
+                    .overlay-txt {
+                        width: 140px;
+                        height: 140px;
+                        gap: 8px;
+
+                        .completed-text {
+                            width: 124px;
+                        }   
+
+                        .best-time {
+                            font-size: 20px; 
+                        }
+
+                        .stars {
+                            img {
+                                width: 30px;
+                            }
+                        }
+                    }
+        
+                    .challenge-img {
+                        width: 140px; 
+                        border-width: 3px;
+                    }
+        
+                    .challenge-btn {
+                        font-size: 18px; 
+                        padding: 3% 8%;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .categories-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    }
+}
 </style>

@@ -263,4 +263,90 @@ onMounted(async () => {
         }
     }
 }
+
+@media (max-width: 600px) {
+    .background-container {
+        padding-top: 20px;
+    }
+
+    .container {
+        width: 95%;
+        
+        h2 {
+            font-size: 40px;
+            margin-bottom: 24px;
+        }
+
+        .settings-wrapper {
+            width: 100%;
+            gap: 40px;
+            padding: 0 10px;
+
+            .setting {
+                gap: 8px;
+
+                a {
+                    width: auto;
+                }
+
+                h1 {
+                    font-size: 1.5rem;
+                }
+
+                p {
+                    font-size: 0.95rem;
+                }
+
+                form {
+                    width: 100%;
+                    padding-right: 10px;
+
+                    .icon {
+                        left: 12px;
+                        top: 36px;
+                        width: 24px;
+                    }
+        
+                    input[type="text"], input[type="password"]{
+                        width: 100%;
+                        font-size: 16px;
+                        height: 28px;
+                        padding: 20px 0 20px 48px;
+                    }
+
+                    .password-wrapper {
+                        margin: 0px;
+        
+                        input {
+                            padding-right: 50px;
+                        }
+        
+                        .toggleBtn {
+                            width: 50px;
+        
+                            img {
+                                width: 28px;
+                            }
+                        }
+                    }
+                }
+                button {
+                    font-size: 18px;
+                    width: 100px;
+                    padding: 4px 8px;
+                    margin-top: 16px;
+                }
+            }
+        }
+
+        .bottom{
+            width: 200px;
+            margin-top: 40px;
+            
+            img{
+                width: 36px;
+            }
+        }
+    }
+}
 </style>

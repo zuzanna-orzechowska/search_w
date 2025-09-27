@@ -33,6 +33,7 @@
         </div>
     </main>
 </template>
+
 <script setup>
 </script>
 
@@ -136,5 +137,56 @@ form {
 .userButton:hover {
     box-shadow: 0px 8px 15px -4px rgba(8, 73, 111, 0.6);
     transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+    main {
+        width: 100vw;
+        padding: 0;
+    }
+
+    .wrapper-form {
+        width: 95% !important;
+        height: 642px !important;
+        box-shadow: none;
+    }
+
+    h2 {
+        font-size: 48px;
+        margin: 30px 0 20px 0;
+    }
+
+    form {
+        gap: 1.2rem;
+
+        .form-group {
+            width: 90%;
+            gap: 0.3rem;
+        }
+
+        .form-label {
+            font-size: 1.1rem;
+        }
+
+        input[type="text"],input[type="email"],textarea {
+            font-size: 1rem;
+            height: 2.8rem; 
+            padding: 0.5rem 0.7rem;
+        }
+
+        .form-agreement {
+            width: 90%;
+            gap: 0.5rem;
+            font-size: 0.875rem; 
+            align-items: center; 
+        }
+    }
+
+    .userButton {
+        width: 60%; 
+        font-size: 1.2rem; 
+        padding: 0.8rem 1rem;
+        margin-top: 1.5rem;
+    }
 }
 </style>

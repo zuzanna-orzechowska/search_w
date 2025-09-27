@@ -106,6 +106,7 @@
   @media (max-width: 600px) {
     .links {
       font-size: 18px;
+      gap: 48px;
     }
 
     .author {

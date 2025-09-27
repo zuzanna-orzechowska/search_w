@@ -225,4 +225,86 @@ onMounted(async () => {
     }
 }
 
+@media (max-width: 600px) {
+    .container {
+        
+        .wrapper {
+            width: 95vw; 
+            height: 95vh;
+            box-shadow: none;
+            border-radius: 6px;
+        }
+
+        .text-container {
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            p{
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px;
+
+            .achievements-container {
+                gap: 20px;
+                margin: 0 10px; 
+            
+                .images-wrapper {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 10px;
+
+                    .image-item {
+
+                        .achievement-img {
+                            width: 100%; 
+                            height: auto;
+                            max-width: 180px; 
+                            max-height: 180px;
+                        }
+
+                        .hover-overlay {
+                            width: 100%;
+                            height: 100%;
+                            max-width: 180px;
+                            max-height: 180px;
+                            padding: 5px;
+                        }
+
+                        .description {
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        .footer {
+            height: 60px;
+            
+            button {
+                font-size: 18px; 
+                padding: 4px 12px; 
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .achievements-container {
+                .images-wrapper {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+        }
+    }
+}
 </style>

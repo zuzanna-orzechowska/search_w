@@ -236,6 +236,8 @@ onMounted(async () => {
                     .image-item {
                         display: flex;
                         flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
 
                         .avatar-img {
                             width: 164px;
@@ -264,10 +266,16 @@ onMounted(async () => {
                             align-items: center;
                             gap: 4px;
                             margin-top: 4px;
+                            text-align: center;
 
                             img {
                                 width: 28px;
                                 border: none;
+                            }
+
+                            p {
+                                margin: 0;
+                                text-align: center;
                             }
                         }
 
@@ -335,4 +343,98 @@ onMounted(async () => {
     }
 }
 
+@media (max-width: 600px) {
+    .container {
+        
+        .wrapper {
+            width: 90vw; 
+            height: 95vh;
+            box-shadow: none;
+        }
+
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            .coins-user {
+                p {
+                    font-size: 20px;
+                }
+                img {
+                    width: 28px;
+                    height: 28px;
+                }
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px;
+            width: 95%;
+
+            .avatars-container {
+                gap: 40px;
+                margin: 20px 0;
+                padding-left: 10px;
+            
+                .avatar-category {
+                    gap: 10px;
+
+                    p {
+                        font-size: 1.1rem; 
+                        padding-left: 10px;
+                    }
+
+                    .images-wrapper {
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 12px;
+
+                        .image-item {
+
+                            .avatar-img {
+                                width: 80px; 
+                                height: 80px;
+                                border-width: 1px;
+                            }
+
+                            .price-wrapper {
+                                gap: 2px;
+
+                                p {
+                                    font-size: 16px;
+                                }
+                                img {
+                                    width: 20px;
+                                }
+                            }
+
+                            .owned-label {
+                                p {
+                                    font-size: 14px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .avatars-container {
+                .avatar-category {
+                    .images-wrapper {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            }
+        }
+    }
+}
 </style>
