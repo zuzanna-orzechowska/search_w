@@ -397,6 +397,9 @@ main {
             }
             
             .userButton {
+                -webkit-tap-highlight-color: transparent;
+                -webkit-text-fill-color: initial;
+                color: black !important;
                 margin-top: 22px;
                 font-size: 24px;
                 padding: 1% 6%;

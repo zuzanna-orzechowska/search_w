@@ -66,7 +66,7 @@ onMounted(() => {
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-    min-height: 100vh;
+    min-height: 100dvh;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -124,6 +124,9 @@ onMounted(() => {
             margin-left: 52px;
     
             button{
+                -webkit-tap-highlight-color: transparent;
+                -webkit-text-fill-color: initial;
+                color: black !important;
                 font-size: 24px;
                 padding: 1% 6%;
                 border: 2px black solid;

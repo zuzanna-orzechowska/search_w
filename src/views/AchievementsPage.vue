@@ -205,6 +205,9 @@ onMounted(async () => {
         bottom: 0px;
         left: 0px;
         button {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-fill-color: initial;
+            color: black !important;
             font-size: 24px;
             padding: 1% 2%;
             font-weight: 500;
