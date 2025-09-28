@@ -43,7 +43,6 @@
     </div>
 </template>
 
-
 <script setup>
 import { account } from '@/lib/appwrite';
 import { ref, onMounted, computed } from 'vue';

@@ -207,24 +207,23 @@ function randomColor() {
 function getCellStyle(row, col) {
   let style = {};
 
-  // Check if the current cell is part of an active selection
+  //checking if the current cell is part of an active selection
   const isSelected = selection.value?.some(c => c.row === row && c.col === col);
   if (isSelected) {
     style = { ...style, backgroundColor: selectionColor.value, color: 'white' };
   }
 
-  // Check if the cell is part of a found word
+  //checking if the cell is part of a found word
   const isFound = foundWordsData.value?.some(item => item.coords?.some(c => c.row === row && c.col === col));
   if (isFound) {
-    // If the cell is found, apply its specific color
+    //if the cell is found, apply its specific color
     const foundItem = foundWordsData.value.find(item => item.coords?.some(c => c.row === row && c.col === col));
     if (foundItem) {
       style = { ...style, backgroundColor: wordsColor.value[foundItem.word], color: 'white' };
     }
   }
 
-  // Check if the current cell is the hinted cell
-  // This is the correct way to apply the hint without interfering with found words
+  //checking if the current cell is the hinted cell
   const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
   if (isHinted && !isFound && !isSelected) {
     style = { ...style, border: '2px solid red' };
@@ -350,7 +349,6 @@ async function showHint() {
         const randomWordData = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
         const firstLetterCoords = randomWordData.coords[0];
         hintedCell.value = firstLetterCoords;
-
         // console.log(`Hinting for word: ${randomWordData.word}`);
     } else {
         console.log('No words left to show a hint for.');

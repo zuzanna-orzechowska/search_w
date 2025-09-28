@@ -65,7 +65,7 @@
       padding: .5rem;
     }
     
-    //animation form https://www.proglobalbusinesssolutions.com/css-hover-effects/
+    //animation from https://www.proglobalbusinesssolutions.com/css-hover-effects/
     a:before, a:after {
       content: '';
       height: 16px;

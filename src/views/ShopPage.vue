@@ -137,7 +137,6 @@ async function buyAvatar(source, price) {
     }
 }
 
-
 // other functions
 function isPurchased(source) {
     return purchasedAvatars.value.includes(source);
