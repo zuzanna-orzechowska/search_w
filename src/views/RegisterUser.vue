@@ -47,32 +47,23 @@
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
                         <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredTerms">
-                        Accept <router-link> Privacy Policy</router-link><span>*</span>
+                        Accept <router-link to="/privacy"> Privacy Policy</router-link><span>*</span>
                     </label>
                     <label for="accTermsofUse">
                         <input type="checkbox" name="Accept-Terms-of-Use" id="accTermsofUse" v-model="requiredTerms">
-                        Accept <router-link> Terms of Use</router-link><span>*</span>
+                        Accept <router-link to="/terms"> Terms of Use</router-link><span>*</span>
                     </label>
                 </div>
                 <button type="submit" class="userButton" >Register</button>
             </form>
-            <div class="otherRegister">
-                <p>or</p>
-                <div class="linksRegister">
-                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
-                     <img src="../assets/google-icon.svg" alt="Google icon">
-                    <img src="../assets/apple-icon.svg" alt="Apple icon">
-                </div>
-            </div>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
-            <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom">
         </div>
     </main>
 </template>
 
 <script setup>
 import { account, databases, ID} from '../lib/appwrite'
-// import { OAuthProvider } from 'appwrite';
+
 import { Query } from 'appwrite';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -111,20 +102,8 @@ const collection_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_user_avatars_id = process.env.VUE_APP_COLLECTION_USER_AVATARS_ID;
 const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 
-//functions 
-// function loginWithGoogle() {
-//     try { // fisrt link - redirect here on success, second link - redirect on failure 
-//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
-//     } catch (err) {
-//         console.log('Error with google login:', err);
-        
-//     }
-// }
-
 //functions
 function chooseAvatar(imgSrc) {
-    //pop() returns the element it removed
-    //const imgName = imgSrc.split('/').pop();
     selectedAvatar.value = imgSrc; //this will be send to database as a name for proper avatar!
     avatars.value = false;
 }
@@ -188,10 +167,10 @@ async function register() {
 
         const newUserId = ID.unique();
         await account.create(newUserId, email.value, password.value, username.value);
-        
-        //login user after creating an account
-        //await account.createEmailPasswordSession(email, password);
-        //console.log("Obecna sesja istnieje, nie trzeba logować:", user);
+        //login user so link can be send
+        await account.createEmailPasswordSession(email.value, password.value);
+        //sending verification link
+        await account.createVerification(`${window.location.origin}/verify`);
 
         //checking if user selected an avatar - if not then the deafult one will be send to database
         if (!selectedAvatar.value) {
@@ -213,9 +192,7 @@ async function register() {
 
         //creating document for user stats
         await databases.createDocument(database_id, collection_user_stats_id, ID.unique(), {user_id: newUserId});
-
-        //console.log('Zarejestrowano użytkownika:', await account.get());
-        router.push('/login');
+        router.push('/check');
     } catch (err) {
         console.log('Error : ', err);
     }
@@ -227,41 +204,30 @@ function toogleState() {
 </script>
 
 <style lang="scss">
-.lines-top-bottom {
-  position: absolute;
-  //bottom: 12px;
-  top: -44px;
-  left: -164px;
-  height: 110%;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
-}
-
 main {
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     background-color: #f9f9f9;
+    width: 100%;
     
     .wrapper-register {
+        width: 40%;
         position: relative;
-        width: 600px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         background-color: rgba(174, 210, 229,0.5);
-        height: 820px;
+        height: 680px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        z-index: 0;
 
         h2 {
-            position: relative;
-            z-index: 10;
-            font-size: 64px;
+           font-size: 64px;
             text-align: center;
-            margin-top: 52px;
-            margin-bottom: 22px;
+            margin: 16px 0px;
             font-weight: 450;
         }
 
@@ -269,8 +235,7 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            //background-color: aqua;
-            gap: 22px;
+            gap: 1rem;
 
             .error {
                 display: none;
@@ -306,9 +271,9 @@ main {
 
                 .container-avatars {
                     width: 700px;
-                    background-color: #6AAED3;
+                    background-color: #79AED3;
                     position: absolute;
-                    bottom: 216px;
+                    bottom: 116px;
                     z-index: 1;
                     display: flex;
                     align-items: center;
@@ -353,7 +318,7 @@ main {
 
             input[type="text"], input[type="password"], input[type="email"] {
                 width: 364px;
-                font-size: 24px;
+                font-size: 1.1rem;
                 background-color: #6AAED3;
                 border: none;
                 border-radius: 16px;
@@ -365,7 +330,6 @@ main {
 
             input[type="text"]::placeholder, input[type="password"]::placeholder, input[type="email"]::placeholder {
                 color: #f9f9f9d1;
-                //padding-left: 30px;
                 font-weight: 300px;
             }
 
@@ -436,6 +400,7 @@ main {
                 margin-top: 22px;
                 font-size: 24px;
                 padding: 1% 6%;
+                color: white;
                 font-weight: 500;
                 background-color: #2A8DC1;
                 border: 2px solid black;
@@ -453,56 +418,131 @@ main {
             }
         }
 
-        .otherRegister {
-           p {
-            text-align: center;
-            overflow: hidden;
-            margin-top: 32px;
-           }
-
-           p:before, p:after {
-            background-color: #000;
-            content: "";
-            display: inline-block;
-            height: 2px;
-            position: relative;
-            vertical-align: middle;
-            width: 20%;
-           }
-
-           p:before {
-            right: 0.5em;
-            margin-left: -50%;
-        }
-
-            p:after {
-            left: 0.5em;
-            margin-right: -50%;
-        }
-
-            .linksRegister {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 36px;
-                margin-top: 24px;
-
-                img {
-                    width: 40px;
-                    cursor: pointer;
-                }
-            }
-        }
-
         #sign-in-p {
             text-align: center;
             margin-top: 32px;
-
+            font-size: 1.1rem;
           }
 
           a {
             color: #000;
+            font-weight: 500;
           }
+    }
+
+    @media (max-width: 600px) {
+        main {
+            align-items: flex-start;
+            padding: 30px 0;
+            min-height: auto; 
+        }
+
+        .wrapper-register {
+            width: 90%;
+            max-width: 400px;
+            height: auto;
+            padding: 30px 20px 40px 20px;
+            box-sizing: border-box;
+            box-shadow: 2px 2px 8px 2px rgba(0,0,0,0.2); 
+
+            h2 {
+                font-size: 40px; 
+                margin: 10px 0 20px 0; 
+            }
+
+            form {
+                width: 100%;
+                gap: 0.6rem;
+
+                .wrapper-avatars {
+                    margin-bottom: 10px;
+
+                    .avatar-icon {
+                        width: 80px;
+                    }
+
+                    .container-avatars {
+                        width: 95vw;
+                        max-width: 350px;
+                        bottom: 164px;
+                        padding: 15px 10px;
+                        gap: 15px;
+
+                        p {
+                            font-size: 18px;
+                        }
+
+                        .images {
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 12px;
+
+                            img {
+                                width: 70px;
+                                height: 70px;
+                            }
+                            img:hover {
+                                transform: none; 
+                            }
+                        }
+                    }
+                }
+                
+                .icon {
+                    left: 12px;
+                    top: 32px; 
+                    width: 24px;
+                }
+                
+                input[type="text"], input[type="password"], input[type="email"] {
+                    width: 100%;
+                    font-size: 1rem;
+                    padding: 16px 0 16px 48px;
+                }
+                
+                .error {
+                    left: 20px;
+                }
+                .error.errPass {
+                    width: 100%;
+                    padding-right: 10px;
+                    box-sizing: border-box;
+                }
+                
+                .password-wrapper {
+                    .toggleBtn {
+                        top: 12px;
+                        width: 50px; 
+                        img {
+                            width: 26px;
+                        }
+                    }
+                }
+
+                .bottom-form-txt {
+                    width: 100%;
+                    align-items: flex-start;
+                    gap: 8px;
+                    font-size: 14px;
+                    margin-top: 10px;
+                }
+                
+                .userButton {
+                    margin-top: 15px;
+                    font-size: 20px;
+                    padding: 4px 12px;
+                }
+
+                .userButton:hover {
+                    box-shadow: none;
+                    transform: none;
+                }
+            }
+
+            #sign-in-p {
+                margin-top: 25px;
+                font-size: 14px;
+            }
+        }
     }
 }
 </style>

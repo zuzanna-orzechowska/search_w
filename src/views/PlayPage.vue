@@ -4,7 +4,7 @@
             <div class="wrapper">
                 <div class="text-container">
                     <h2>Play</h2>
-                    <p class="bigger">Choose a category</p>
+                    <p class="bigger">Choose a category, scroll to show more.</p>
                     <p class="smaller">{{ completedLen }} / {{ categoryLen }} completed</p>
                 </div>
                 <div class="scroll">
@@ -23,10 +23,9 @@
                         </div>
                     </div>
                 </div>
-    
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+                
+                <ButtonFooter />
+                
             </div>
         </div>
     </div>
@@ -39,6 +38,7 @@ import { ref, onMounted } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import { handleAchievements } from '@/lib/achievementsHandler';
+import ButtonFooter from '@/components/ButtonFooter.vue';
 
 const router = useRouter();
 
@@ -54,7 +54,7 @@ const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
 
 //checking if given category is completed
 function isCategoryCompleted(name) {
-    return !!completedCategories.value[name.toLowerCase()]; //!! means that variable will always be boolean not null or undefined
+    return !!completedCategories.value[name.toLowerCase().trim()]; //!! means that variable will always be boolean not null or undefined
 }
 
 //fetching puzzles and it's stages with progress
@@ -62,57 +62,51 @@ async function fetchPuzzlesProgress() {
     try {
         const user = await account.get();
         currentUser.value = user;
-        // console.log("Current user:", user);
 
-        //listing all documents related with progress in Play puzzles
-        //{ documents: progressDocument} takes the property documents from the returned object and renames it to progressDocuments
-        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id,[Query.equal('user_id', user.$id)]);
+        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
 
-        const { documents: puzzleDocuments } = await databases.listDocuments(database_id,collection_id);
+        //pagination for fetch all of the documents - Appwrite only fetch 100 document but in collection is a lot more
+        let puzzleDocuments = [];
+        let offset = 0;
+        let response;
+        const limit = 100;
 
-        // console.log("Progress documents:", progressDocuments);
-        // console.log("Puzzle documents:", puzzleDocuments);
+        do {
+            response = await databases.listDocuments(database_id, collection_id, [Query.limit(limit),Query.offset(offset)]);
+            puzzleDocuments = puzzleDocuments.concat(response.documents);
+            offset += limit;
+        } while (response.documents.length === limit);
 
-        //checking how many stages does puzzle have so it will be easier to mark category as completed
         const maxStages = {};
         puzzleDocuments.forEach(doc => {
-            const categoryName = doc.title.toLowerCase().trim(); //normalizing text
-            const stageNumber = parseInt(doc.puzzleId.split('-')[1]); //puzzleId is like 'fruit-1' and we only need number
+            const categoryName = doc.title.toLowerCase().trim();
+            const stageNumber = parseInt(doc.puzzleId.split('-')[1]);
             if (!maxStages[categoryName] || stageNumber > maxStages[categoryName]) {
                 maxStages[categoryName] = stageNumber;
             }
         });
 
-        // console.log(" Max stages per category (from puzzleDocuments):", maxStages);
-
-        //firstly all of the categories are marked as uncompleted
         categories.forEach(cat => {
             completedCategories.value[cat.name.toLowerCase().trim()] = false;
         });
 
-        //checking progress
         progressDocuments.forEach(doc => {
             const categoryName = doc.category.toLowerCase().trim();
             const stagesData = JSON.parse(doc.stages_data);
-
-            //getting the total number of stages for the category
             const totalStages = maxStages[categoryName]; 
 
             if (!totalStages) {
                 return;
             }
             
-            //checking if the final stage has been completed in the user's progress
-            const finalStageProgress = stagesData[totalStages];
-
-            const isCompleted = finalStageProgress?.completed === true;
+            const userMaxStage = stagesData.userMaxStageReached;
+            const finalStageData = stagesData[userMaxStage];
+            const isCompleted = userMaxStage === totalStages && finalStageData.completed === true;
 
             completedCategories.value[categoryName] = isCompleted;
         });
 
         completedLen.value = Object.values(completedCategories.value).filter(Boolean).length;
-        // console.log("Completed categories:", completedCategories.value);
-        // console.log("completedLen:", completedLen.value);
         await handleAchievements({ completedCategoriesCount: completedLen.value });
 
     } catch (err) {
@@ -120,12 +114,7 @@ async function fetchPuzzlesProgress() {
     }
 }
 
-
 // other functions
-function goBack() {
-    router.back();
-}
-
 function playCategory(name) {
     router.push({ path: '/wsplay', query: { category: name } });
 }
@@ -185,7 +174,7 @@ onMounted(fetchPuzzlesProgress);
 
     .scroll {
         flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
+        overflow-y: scroll; //enable vertical scroll
         padding-bottom: 100px;
 
         .categories-container {
@@ -251,34 +240,90 @@ onMounted(fetchPuzzlesProgress);
             }
         }
     }
+}
 
-
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
+@media (max-width: 600px) {
+    .container {
+        min-height: 100vh;
+        
+        .wrapper {
+            width: 90vw; 
+            height: 95vh;
+            box-shadow: none;
         }
 
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            .bigger{
+                font-size: 20px;
+            }
+
+            .smaller {
+                font-size: 18px;
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px;
+            
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5vw;
+                margin-top: 30px;
+        
+                .category {
+                    gap: 3vw;
+                    
+                    .overlay-txt {
+                        width: 140px;
+                        height: 140px;
+
+                        img {
+                            padding: 0px 8px;
+                        }
+                    }
+        
+                    img {
+                        width: 140px;
+                    }
+
+                    .tick {
+                        width: 36px;
+                    }
+        
+                    button {
+                        font-size: 18px;
+                        padding: 3% 8%;
+                    }
+                }
+            }
         }
     }
 }
 
+@media (max-width: 992px) {
+    .container {
+        .scroll {
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .categories-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    }
+}
 </style>

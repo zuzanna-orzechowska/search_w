@@ -1,25 +1,25 @@
 <template>
     <div class="dropdown-content long">
         <div class="dropdown-section">
-            <p>Welcome {{username}}</p>
-            <img :src="avatar" alt="User avatar">
+            <p>Welcome {{userStore.username}}</p>
+            <img :src="userStore.avatar" alt="User avatar">
         </div>
         <div class="dropdown-section-left">
-            <div class="dropdown-option" @click="goToProfile">
+            <div class="dropdown-option" @click="router.push('/profile')">
                 <img src="../assets/profile-icon.svg" alt="Profile icon">
-                <p >Profile</p>
+                <p>Profile</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/achievements')">
                 <img src="../assets/achievements-icon.svg" alt="Achievements icon">
-                <router-link to="/achievements">Achievements</router-link>
+                <p>Achievements</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/settings')">
                 <img src="../assets/settings-icon.svg" alt="Settings icon">
-                <router-link to="/settings">Settings</router-link>
+                <p>Settings</p>
             </div>
-            <div class="dropdown-option">
+            <div class="dropdown-option" @click="router.push('/help')">
                 <img src="../assets/help-icon.svg" alt="Help icon">
-                <router-link to="/help">Help</router-link>
+                <p>Help</p>
             </div>
             <div @click="signOut" class="dropdown-option last">
                 <img src="../assets/sign-out-icon.svg" alt="Sign out icon">
@@ -30,39 +30,14 @@
 </template>
 
 <script setup>
-import { account, databases } from '@/lib/appwrite';
-import { ref, onMounted } from 'vue';
-import { Query } from 'appwrite';
+import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
 
 const router = useRouter();
-const username = ref('');
-const avatar = ref('');
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_ID;
+const userStore = useUserStore();
 
 //functions
-async function getUserAvatar () {
-
-    try {
-        const user = await account.get();
-        const userId = user.$id;
-        username.value = user.name;
-    
-        //searching user by id to find avatar src
-        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
-        const searchedUser = await databases.listDocuments(database_id,collection_id, [Query.equal('id_user',userId)]);
-    
-        if(searchedUser.total > 0) { //checking if databse return any document
-            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
-            avatar.value = userDocuments.avatar;
-            //console.log("Img src: ",avatar.value);
-        }
-    } catch(err) {
-        console.log("Error: ",err);
-    }
-}
-
 async function signOut() {
     try {
          await account.deleteSession('current');
@@ -72,19 +47,9 @@ async function signOut() {
          console.error('Logout error:', err);
     }
 }
-
-function goToProfile() {
-    router.push('/profile');
-}
-
-
-onMounted(async () => {
-    await getUserAvatar();
-})
-
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .long {
     height: 420px;
 }
@@ -95,7 +60,7 @@ onMounted(async () => {
       flex-direction: column;
       align-items: center;
       gap: 12px;
-
+      height: 444px;
       position: absolute;
       width: 300px;
       z-index: 1;
@@ -122,6 +87,7 @@ onMounted(async () => {
         img {
             width: 80px;
             padding: 8px 0px;
+            border-radius: 50%;
         }
 
       }
@@ -144,15 +110,9 @@ onMounted(async () => {
                 width: 30px;
             }
 
-            p,a {
+            p{
                 font-size: 18px;
-            }
-
-            a{
-                text-decoration: none;
-                color: black;
-            }
-            
+            }            
         }
 
         .dropdown-option.last {

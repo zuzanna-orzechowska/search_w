@@ -1,5 +1,4 @@
 <template>
-    <img src="../assets/linesTopBottom.png" alt="drawing of lines" class="lines-top-bottom-login">
     <main>
         <div class="wrapper-login">
             <h2>Login</h2>
@@ -22,18 +21,10 @@
                         <input type="checkbox" name="Remember-me" id="rememberLogin" v-model="rememberMe">
                         Remember me
                     </label>
-                    <label for="">Forgot password?</label>
+                    <label @click.prevent="router.push('/forgot')">Forgot password?</label>
                 </div>
                 <button type="submit" class="userButton">Login</button>
             </form>
-            <div class="otherRegister">
-                <p>or</p>
-                <div class="linksRegister">
-                    <!-- <img @click="loginWithGoogle" src="../assets/google-icon.svg" alt="Google icon"> -->
-                     <img src="../assets/google-icon.svg" alt="Google icon">
-                    <img src="../assets/apple-icon.svg" alt="Apple icon">
-                </div>
-            </div>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
         </div>
     </main>
@@ -41,7 +32,6 @@
 
 <script setup>
 import { account} from '@/lib/appwrite';
-// import { OAuthProvider } from '@/lib/appwrite';
 import { toast } from 'vue3-toastify';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -53,16 +43,6 @@ let hidPassword = ref(true);
 let rememberMe = ref(false);
 
 const router = useRouter();
-    
-//functions
-// function loginWithGoogle() {
-//     try { // fisrt link - redirect here on success, second link - redirect on failure 
-//         account.createOAuth2Session(OAuthProvider.Google, 'http://localhost:8080/auth/callback','http://localhost:8080/login');
-//     } catch (err) {
-//         console.log('Error with google login:', err);
-        
-//     }
-// }
 
 async function login() {
     try {
@@ -72,9 +52,6 @@ async function login() {
         if (!rememberMe.value) {
             await account.deleteSession('current');
         } 
-
-        // const user = account.get();
-        // console.log('Zalogowano jako ',user);
     } catch(err) {
         console.log('Error: ',err);
         if (err.code === 401) {
@@ -89,37 +66,29 @@ function toggleState() {
 </script>
 
 <style lang="scss">
-.lines-top-bottom-login {
-  position: absolute;
-  height: 90%;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
-}
-
 main {
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     background-color: #f9f9f9;
+    width: 100%;
     
     .wrapper-login {
-        width: 600px;
+        width: 40%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         background-color: rgba(174, 210, 229,0.5);
-        //backdrop-filter: blur(20px); ???
-        //-webkit-backdrop-filter: blur(100px);
-        height: 700px;
+        height: 524px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        z-index: 0;
 
         h2 {
             font-size: 64px;
             text-align: center;
-            margin-top: 116px;
-            margin-bottom: 44px;
+            margin: 32px 0px;
             font-weight: 450;
         }
 
@@ -127,8 +96,7 @@ main {
             display: flex;
             flex-direction: column;
             align-items: center;
-            //background-color: aqua;
-            gap: 22px;
+            gap: 1rem;
 
             .icon{
                 position: relative;
@@ -139,7 +107,7 @@ main {
 
             input[type="email"], input[type="password"], input[type="text"] {
                 width: 364px;
-                font-size: 24px;
+                font-size: 1.1rem;
                 background-color: #6AAED3;
                 border: none;
                 border-radius: 16px;
@@ -151,7 +119,6 @@ main {
 
             input[type="email"]::placeholder, input[type="password"]::placeholder, input[type="text"]::placeholder {
                 color: #f9f9f9d1;
-                //padding-left: 30px;
                 font-weight: 300px;
             }
 
@@ -223,6 +190,7 @@ main {
                 font-size: 24px;
                 padding: 1% 6%;
                 font-weight: 500;
+                color: white;
                 background-color: #2A8DC1;
                 border: 2px solid black;
                 border-radius: 6px;
@@ -247,47 +215,82 @@ main {
 
           a {
             color: #000;
+            font-weight: 500;
           }
+    }
 
-          .otherRegister {
-           p {
-            text-align: center;
-            overflow: hidden;
-           }
-
-           p:before, p:after {
-            background-color: #000;
-            content: "";
-            display: inline-block;
-            height: 2px;
-            position: relative;
-            vertical-align: middle;
-            width: 20%;
-           }
-
-           p:before {
-            right: 0.5em;
-            margin-left: -50%;
+    @media (max-width: 600px) {
+        main {
+            align-items: flex-start;
+            padding: 30px 0;
+            min-height: auto;
         }
 
-            p:after {
-            left: 0.5em;
-            margin-right: -50%;
-        }
+        .wrapper-login {
+            width: 90%; 
+            max-width: 400px;
+            height: auto;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            box-shadow: 2px 2px 8px 2px rgba(0,0,0,0.2);
 
-            .linksRegister {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 36px;
-                margin-top: 24px;
+            h2 {
+                font-size: 48px;
+                margin: 20px 0; 
+            }
 
-                img {
-                    width: 40px;
-                    cursor: pointer;
+            form {
+                width: 100%;
+                gap: 0.8rem;
+
+                .icon {
+                    left: 12px;
+                    top: 32px;
+                    width: 24px;
+                }
+
+                input[type="email"], input[type="password"], input[type="text"] {
+                    width: 100%;
+                    font-size: 1rem;
+                    padding: 16px 0 16px 48px; 
+                }
+                
+                .password-wrapper {
+                    .toggleBtn {
+                        width: 50px; 
+                        top: 12px;
+
+                        img {
+                            width: 26px;
+                        }
+                    }
+                }
+
+                .bottom-form-txt {
+                    width: 100%;
+                    font-size: 14px;
+                    margin-top: 8px;
+                }
+                
+                .userButton {
+                    margin-top: 15px;
+                    font-size: 20px;
+                    padding: 4px 12px;
+                }
+                
+                .userButton:hover {
+                    box-shadow: none;
+                    transform: none;
                 }
             }
+            
+            p {
+                margin-top: 20px;
+                font-size: 14px;
+            }
+            
         }
     }
 }
+
 </style>

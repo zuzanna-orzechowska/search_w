@@ -4,7 +4,7 @@
             <div class="wrapper">
                 <div class="text-container">
                     <h2>Challenge</h2>
-                    <p class="bigger">Take the challenge and test your skills</p>
+                    <p class="bigger">Take the challenge and test your skills, scroll to show more.</p>
                     <p class="smaller">{{ completedCount }}/{{categoryLen}} completed</p>
                 </div>
                 <div class="scroll">
@@ -33,9 +33,7 @@
                 </div>
                 </div>
     
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+                <ButtonFooter />
             </div>
         </div>
     </div>
@@ -48,6 +46,7 @@ import { databases, account } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import categories from '@/lib/categoriesChallenge'
 import { handleAchievements } from '@/lib/achievementsHandler';
+import ButtonFooter from '@/components/ButtonFooter.vue';
 
 const router = useRouter();
 const categoryLen = categories.length;
@@ -81,26 +80,32 @@ function categoryStarsNumber(name) {
 function getBestTime(name) {
     return challengesProgress.value[name]?.best_time;
 }
-
 async function fetchChallengeProgress() {
     try {
         const user = await account.get();
         currentUser.value = user;
 
-        //fetching all progress documents for the current user
-        const { documents: progressDocuments } = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id)]);
+        //pagination
+        let progressDocuments = [];
+        let offset = 0;
+        const limit = 100;
+        let response;
 
-        const temp = {}; //temporary array for storing info about stars for each category
+        do {
+            response = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id),Query.limit(limit),Query.offset(offset)]);
+            progressDocuments = progressDocuments.concat(response.documents);
+            offset += limit;
+        } while (response.documents.length === limit);
+
+        const temp = {};
         progressDocuments.forEach(doc => {
             const categoryName = doc.category;
-            const challengeData = JSON.parse(doc.challenge_data); //parsing string array into object to have access to properties - stars
+            const challengeData = JSON.parse(doc.challenge_data);
             temp[categoryName] = challengeData;
-            challengesProgress.value = temp; //storing data in original array
-
-            //console.log(`Category: ${categoryName}, Stars: ${starsNumber}`);
-            
         });
 
+        challengesProgress.value = temp;
+        
         await handleAchievements({ completedChallengesCount: completedCount.value });
 
     } catch (err) {
@@ -123,10 +128,6 @@ function formatTime(seconds) {
 
 function playCategory(name) {
     router.push({path: '/wschallenge', query: {category: name}});
-}
-
-function goBack() {
-    router.back();
 }
 
 onMounted( async () => {
@@ -171,6 +172,7 @@ onMounted( async () => {
             font-size: 56px;
             font-weight: 500;
             margin-bottom: 4px;
+            margin-top: 12px;
         }
 
         .bigger{
@@ -273,34 +275,98 @@ onMounted( async () => {
             }
         }
     }
+}
 
-
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
+@media (max-width: 600px) {
+    .container {
+        min-height: 100vh;
+        
+        .wrapper {
+            width: 90vw; 
+            height: 95vh;
+            box-shadow: none;
         }
 
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            .bigger{
+                font-size: 20px; 
+            }
+
+            .smaller {
+                font-size: 18px;
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px; 
+            
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 5vw; 
+                margin-top: 30px;
+        
+                .category {
+                    gap: 3vw;
+                    
+                    .overlay-txt {
+                        width: 140px;
+                        height: 140px;
+                        gap: 8px;
+
+                        .completed-text {
+                            width: 124px;
+                        }   
+
+                        .best-time {
+                            font-size: 20px; 
+                        }
+
+                        .stars {
+                            img {
+                                width: 30px;
+                            }
+                        }
+                    }
+        
+                    .challenge-img {
+                        width: 140px; 
+                        border-width: 3px;
+                    }
+        
+                    .challenge-btn {
+                        font-size: 18px; 
+                        padding: 3% 8%;
+                    }
+                }
+            }
         }
     }
 }
 
+@media (max-width: 992px) {
+    .container {
+        .scroll {
+            .categories-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .categories-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    }
+}
 </style>

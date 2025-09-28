@@ -11,7 +11,12 @@
                     <img src="../assets/coin-icon.svg" alt="Coin deducted">
                 </div>
                 <div class="avatar-wrapper">
-                    <img :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                    <div class="dropdown" v-click-outside="() => {dropdownActive = false}">
+                        <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
+                        <img @click="toggleVisibility" :src="userAvatar" alt="User Avatar" class="user-avatar" />
+                        <!--is dynamically loads given component if the requirement is met-->
+                        <component v-if="dropdownActive" :is="DropdownUser" />
+                    </div>
                 </div>
             </div>
             <div class="text-container">
@@ -27,16 +32,17 @@
                     </ul>
                 </div>
     
-                <div class="grid">
+                <div class="grid" ref="gridRef">
                     <!--2D array-->
                     <div class="row" v-for="(row,indRow) in grid" :key="indRow">
                         <!--getCellClass takes coordinates of a letter and gives it proper class - selected or found
                         mousedown - mouse is clicked, .prevent prevents default behavior like selecting text, mouseover when clicked mouse is being drag across letter
                         mouseup when user stops clicking mouse
                         .some checks if at least one element in the array passes the test-->
-                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell" 
+                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell"
                         :style="getCellStyle(indRow, indCell)"
-                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
+                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection"
+                        @touchstart.prevent="startSelection(indRow, indCell)" @touchmove="handleTouchMove($event)" @touchend="endSelection">
                         {{ cell }}
                         </span>
                     </div>
@@ -92,11 +98,13 @@ import { Query, ID } from 'appwrite';
 import { toast } from 'vue3-toastify';
 import { levelData } from '@/lib/levelsData';
 import { handleAchievements } from '@/lib/achievementsHandler';
+import DropdownUser from '@/components/DropdownUser.vue';
 
 //all variables
 //global variables
 const route = useRoute();
 const router = useRouter();
+const dropdownActive = ref(false);
 
 //variables related to word search 
 const allWordsData = ref([]);
@@ -136,7 +144,10 @@ const puzzleCoins = ref(0);
 const hintCost = ref(20); //cost of using a hint;
 const showHintCost = ref(false);
 const showCoinsDeducted = ref(false);
-
+//variables for mobile responsibe - so user can click and select words without problem, as on website
+const cellWidth = 24; //value from mobile query, 
+const cellHeight = 24;
+const gridRef = ref(null);
 
 //functions related to database
 async function getUser() { //what user is currenlty logged in
@@ -497,13 +508,38 @@ function getCellStyle(row, col) {
   // This is the correct way to apply the hint without interfering with found words
   const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
   if (isHinted && !isFound && !isSelected) {
-    style = { ...style, border: '2px solid red' };
+    style = { ...style, border: '2px solid red'};
   }
 
   return style;
 }
 
-//functions related to word search - selecting letters
+// functions related to word search - selecting letters
+function handleTouchMove(event) { //function for users on mobile, have to calculate coords for touchmove event
+  if (!isSelecting.value || !gridRef.value) return;
+  //preventing default to stop scrolling during drag
+  event.preventDefault(); 
+  
+  //getting the current touch position
+  const touch = event.touches[0];
+  const touchX = touch.clientX;
+  const touchY = touch.clientY;
+
+  //getting the grid's position on the screen
+  const gridRect = gridRef.value.getBoundingClientRect();
+  
+  //calculating relative coordinates within the grid
+  const relativeX = touchX - gridRect.left;
+  const relativeY = touchY - gridRect.top;
+
+  //calculating the column and row index -> Math.floor(relative / size) gives the 0-indexed position
+  const col = Math.floor(relativeX / cellWidth);
+  const row = Math.floor(relativeY / cellHeight);
+
+  //calling extendSelection only if the touch is within the bounds of the grid, 
+  extendSelection(row, col);
+}
+
 function startSelection(row, col) {
      if (!isValidCell(row, col)) return;
     isSelecting.value = true; //letter is being selected
@@ -635,6 +671,9 @@ function goBack() {
     router.back();
 }
 
+const toggleVisibility = () => {
+  dropdownActive.value = !dropdownActive.value;
+}
 
 // loading before mounting component
 onMounted(async () => {
@@ -650,6 +689,8 @@ onMounted(async () => {
 .background-container {
     width: 100vw;
     height: 100vh;
+    background-color: rgb(174, 210, 229);
+    overflow-y: scroll;
 }
 
 .container {
@@ -677,7 +718,7 @@ onMounted(async () => {
             p {
                 font-size: 24px;
                 text-align: center;
-                margin: 0;
+                margin-top: 24px;
             }
 
             img {
@@ -687,14 +728,38 @@ onMounted(async () => {
         }
 
         .coins-deducted {
-
-            p{
-                font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; 
+            position: absolute;
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            opacity: 0;
+            animation: deduct-animation 2s forwards;
+            
+            p {
+                font-size: 24px;
+                font-weight: 500;
+                color: #e74c3c;
+                margin: 0;
             }
+            
+            img {
+                width: 42px;
+                height: 42px;
+            }
+        }
 
-            img{
-                width: 36px;
-                height: 36px;
+        @keyframes deduct-animation {
+            0% {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -150%);
+                opacity: 0; 
             }
         }
 
@@ -713,11 +778,11 @@ onMounted(async () => {
 
     .text-container {
         text-align: center;
-        margin-top: 12px;
+        margin-top: 4px;
 
         h2{
             font-size: 56px;
-            margin-bottom: 4px;
+            margin: 0px;
         }
 
         .bigger{
@@ -726,15 +791,14 @@ onMounted(async () => {
         }
 
         .smaller {
-            font-size: 28px;
-            margin-bottom: 64px;
+            font-size: 20px;
+            margin-bottom: 16px;
         }
     }
 
     .wrapper-search {
         display: flex;
         justify-content: center;
-        //align-items: center;
         gap: 96px;
 
         .words-list {
@@ -767,11 +831,13 @@ onMounted(async () => {
             display: flex;
             flex-direction: column;
             border: 4px solid #57A4CD;
-            // gap: 2px;
     
             .row {
                 display: flex;
-                // gap: 2px;
+
+                .hinted-cell {
+                    border: 2px solid red !important;
+                }
     
                 .cell {
                     background: #f9f9f9;
@@ -780,7 +846,6 @@ onMounted(async () => {
                     text-align: center;
                     line-height: 44px;
                     font-weight: 400;
-                    //border: 2px solid #ccc;
                     font-size: 28px;
                     cursor: pointer;
                 }
@@ -800,7 +865,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 64px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
@@ -813,11 +878,48 @@ onMounted(async () => {
             cursor: pointer;
             margin-top: 0;
         }
+
+        .hint-wrapper {
+            position: relative;
+            
+            .hint-cost-text {
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                white-space: nowrap;
+                background-color: #f9f9f9;
+                color: #333;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: bold;
+                opacity: 0; 
+                visibility: hidden;
+                transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+                z-index: 10;
+                
+                &::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    bottom: -5px;
+                    transform: translateX(-50%);
+                    border-left: 5px solid transparent;
+                    border-right: 5px solid transparent;
+                    border-top: 5px solid #f9f9f9;
+                }
+            }
+            
+            &:hover .hint-cost-text {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(-5px);
+            }
+        }
     }
 
     .puzzle-done{
-        //display: none;
-        background-color: pink;
         border-radius: 6px;
         width: 540px;
         height: 420px;
@@ -839,6 +941,7 @@ onMounted(async () => {
             text-align: center;
             width: 300px;
             margin-bottom: 24px;
+            margin-top: 12px;
         }
 
         .rewards-txt {
@@ -917,6 +1020,7 @@ onMounted(async () => {
         font-weight: 500;
         text-align: center;
         margin-bottom: 24px;
+        margin-top: 12px;
     }
 
     p{
@@ -958,5 +1062,317 @@ onMounted(async () => {
                 background-color: #71ACCC;
         }
         }
+}
+
+@media (max-width: 600px) {
+    .container {
+        .right-up-wrapper {
+            top: 10px;
+            right: 10px;
+            gap: 8px;
+
+            .coins-display {
+                gap: 4px;
+                
+                p {
+                    font-size: 18px;
+                    margin-top: 18px;
+                }
+
+                img {
+                    width: 30px;
+                    height: 30px;
+                }
+            }
+            
+            .coins-deducted {
+                gap: 4px;
+                p {
+                    font-size: 18px;
+                }
+                img {
+                    width: 30px;
+                    height: 30px;
+                }
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        .text-container {
+            margin-top: 10px;
+            
+            h2 {
+                font-size: 36px;
+            }
+
+            .bigger {
+                font-size: 24px; 
+            }
+
+            .smaller {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+        }
+
+        .wrapper-search {
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            align-items: center;
+
+            .words-list {
+                
+                h4 {
+                    font-size: 24px;
+                    margin-bottom: 8px;
+                }
+
+                ul {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    padding: 0 10px;
+                    
+                    li {
+                        font-size: 16px;
+                        line-height: 1.5;
+                        margin: 0 5px; 
+                    }
+                }
+            }
+            .grid{
+                border-width: 2px;
+        
+                .row {
+                    .cell {
+                        width: 24px; 
+                        height: 24px;
+                        line-height: 24px;
+                        font-size: 16px;
+                    }
+                }
+            }
+        }
+
+        .bottom {
+            margin-top: 64px;
+            width: 200px;
+            border-width: 2px;
+            border-radius: 16px;
+            gap: 16px;
+
+            img {
+                width: 36px;
+            }
+            
+            .hint-wrapper {
+                .hint-cost-text {
+                    font-size: 14px; 
+                    padding: 2px 6px;
+                    bottom: 90%;
+                }
+            }
+        }
+        
+        .puzzle-done, .category-done {
+            width: 90%;
+            height: auto;
+            padding: 30px 10px;
+            
+            h2 {
+                font-size: 36px;
+                margin-bottom: 16px;
+                width: 100%; 
+            }
+
+            p {
+                font-size: 18px;
+            }
+            
+            img {
+                margin-top: 16px;
+                width: 150px;
+            }
+
+            .rewards-txt {
+                flex-direction: column; 
+                gap: 16px;
+                font-size: 18px;
+                margin-bottom: 24px;
+
+                .txt-icon img {
+                    width: 30px;
+                    bottom: 4px;
+                }
+            }
+            
+            .btns {
+                gap: 24px;
+
+                button {
+                    font-size: 18px;
+                    padding: 8px 24px;
+                }
+            }
+        }
+
+        .category-done {
+            h2 {
+                font-size: 32px;
+            }
+            p {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+            .btns {
+                margin-top: 16px;
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        
+        .right-up-wrapper {
+            top: 15px;
+            right: 15px;
+            gap: 12px; 
+
+            .coins-display {
+                p {
+                    font-size: 22px;
+                    margin-top: 20px;
+                }
+
+                img {
+                    width: 38px;
+                    height: 38px;
+                }
+            }
+            
+            .coins-deducted {
+                p {
+                    font-size: 22px;
+                }
+                img {
+                    width: 38px;
+                    height: 38px;
+                }
+            }
+
+            .user-avatar {
+                width: 54px;
+                height: 54px;
+            }
+        }
+
+        .text-container {
+            margin-top: 8px;
+
+            h2{
+                font-size: 48px;
+            }
+
+            .bigger{
+                font-size: 28px;
+            }
+
+            .smaller {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+        }
+
+        .wrapper-search {
+            gap: 64px;
+
+            .words-list {
+                h4{
+                    font-size: 32px;
+                }
+
+                ul {
+                    li {
+                        font-size: 20px;
+                        line-height: 1.7;
+                    }
+                }
+            }
+
+            .grid{
+                border-width: 3px;
+        
+                .row {
+                    .cell {
+                        width: 38px;
+                        height: 38px;
+                        line-height: 38px;
+                        font-size: 24px;
+                    }
+                }
+            }
+        }
+
+        .bottom{
+            width: 240px;
+            border-width: 3px;
+            border-radius: 20px;
+            gap: 20px;
+
+            img{
+                width: 40px;
+            }
+        }
+        
+        .puzzle-done {
+            width: 480px;
+            height: 380px;
+            
+            h2 {
+                font-size: 48px;
+                width: 280px;
+            }
+
+            .rewards-txt {
+                gap: 48px;
+                font-size: 22px;
+
+                .txt-icon img {
+                    width: 40px;
+                    bottom: 6px;
+                }
+            }
+            
+            .btns {
+                gap: 48px;
+
+                button {
+                    font-size: 20px;
+                    padding: 10px 40px;
+                }
+            }
+        }
+
+        .category-done {
+            width: 600px;
+            height: 400px;
+            
+            h2 {
+                font-size: 48px;
+            }
+            p {
+                font-size: 24px;
+            }
+            img {
+                width: 180px;
+            }
+        }
+    }
 }
 </style>

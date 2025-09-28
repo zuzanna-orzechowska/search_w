@@ -54,7 +54,7 @@ export const puzzlesChallenge = [
         xp: 100
     },
     {
-        title: "royalty",
+        title: "roalty",
         searchWord: ["KING","QUEEN","CROWN","PRINCE","PRINCESS","DUKE","DUCHESS","THRONE","CASTLE","SCEPTER","PALACE","COURT","NOBLE","HEIR","ROYAL","REGENT","MONARCH","PAGE","KNIGHT","TIARA"],
         coin: 120,
         xp: 100

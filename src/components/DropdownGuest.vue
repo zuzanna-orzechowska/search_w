@@ -7,53 +7,30 @@
         <div class="dropdown-section">
             <p>Don’t have an account?</p>
             <button class="dropdown-btn white" @click="toRegister">Sign up</button>
-            <div class="otherRegister">
-                <p>or</p>
-                <div class="linksRegister">
-                    <img src="../assets/google-icon.svg" alt="Google icon">
-                    <img src="../assets/apple-icon.svg" alt="Apple icon"> 
-                </div>
-            </div>
         </div>
     </div>
 </template>
 <script setup>
-import { account } from '@/lib/appwrite';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const toLogin = async () => {
-    try {
-        const user = await account.get();
-        console.log('User exists:', user);
-        router.push('/');
-    } catch(err) {
-        console.log('No session, redirecting to login');
-        router.push('/login');
-    }
+const toLogin = () => {
+  router.push('/login');
 }
 
 const toRegister = async () => {
-    try {
-        const user = await account.get();
-        console.log('User exists:', user);
-        router.push('/');
-    } catch(err) {
-        console.log('No session, redirecting to login');
-        router.push('/register');
-    }
+  router.push('/register');
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .dropdown-content {
       display: flex;
       justify-content: center;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
-
+      gap: 42px;
       position: absolute;
       width: 300px;
       height: 304px;
@@ -74,6 +51,7 @@ const toRegister = async () => {
         p { 
           text-align: center;
           width: 224px;
+          font-size: 20px;
         }
   
         .dropdown-btn {
@@ -98,46 +76,6 @@ const toRegister = async () => {
 
         .white {
           background-color: #f9f9f9;
-        }
-
-        .otherRegister {
-          p {
-            text-align: center;
-            overflow: hidden;
-          }
-
-           p:before, p:after {
-            background-color: #000;
-            content: "";
-            display: inline-block;
-            height: 2px;
-            position: relative;
-            vertical-align: middle;
-            width: 40%;
-           }
-
-           p:before {
-            right: 0.5em;
-            margin-left: -50%;
-          }
-
-            p:after {
-            left: 0.5em;
-            margin-right: -50%;
-        }
-
-            .linksRegister {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              gap: 36px;
-              margin-top: 12px;
-
-              img {
-                width: 24px;
-                 cursor: pointer;
-              }
-            }
         }
       }
 }

@@ -29,23 +29,20 @@
                     </div>
                 </div>
     
-                <div class="footer">
-                    <button @click="goBack">Back</button>
-                </div>
+                <ButtonFooter />
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
 import avatars from '@/lib/shopData';
 import { ref, onMounted, computed } from 'vue';
 import { databases, account } from '@/lib/appwrite';
 import { Query, ID} from 'appwrite';
 import { toast } from 'vue3-toastify';
 import { handleAchievements } from '@/lib/achievementsHandler';
-const router = useRouter();
+import ButtonFooter from '@/components/ButtonFooter.vue';
 
 let currentUser = ref(null);
 let userCoins = ref(0);
@@ -140,16 +137,10 @@ async function buyAvatar(source, price) {
     }
 }
 
-
 // other functions
 function isPurchased(source) {
     return purchasedAvatars.value.includes(source);
 }
-
-function goBack() {
-    router.back();
-}
-
 
 onMounted(async () => {
     await getUser();
@@ -215,15 +206,15 @@ onMounted(async () => {
 
     .scroll {
         flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
+        overflow-y: scroll; //enable vertical scroll
         padding-bottom: 100px;
         width: 100%;
 
         .avatars-container {
             display: flex;
             flex-direction: column;
-            gap: 40px;
-            margin: 0 40px;
+            gap: 52px;
+            margin: 20px 40px;
         
             .avatar-category {
                position: relative;
@@ -231,14 +222,21 @@ onMounted(async () => {
                 flex-direction: column;
                 gap: 16px;
 
+                p {
+                    font-size: 1.3rem;
+                    font-weight: 450;
+                }
+
                 .images-wrapper {
                     display: grid;
-                    grid-template-columns: repeat(6, 1fr);
-                    gap: 12px;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
 
                     .image-item {
                         display: flex;
                         flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
 
                         .avatar-img {
                             width: 164px;
@@ -267,10 +265,16 @@ onMounted(async () => {
                             align-items: center;
                             gap: 4px;
                             margin-top: 4px;
+                            text-align: center;
 
                             img {
                                 width: 28px;
                                 border: none;
+                            }
+
+                            p {
+                                margin: 0;
+                                text-align: center;
                             }
                         }
 
@@ -336,34 +340,114 @@ onMounted(async () => {
             }
         }
     }
+}
 
-
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
+@media (max-width: 600px) {
+    .container {
+        
+        .wrapper {
+            width: 90vw; 
+            height: 95vh;
+            box-shadow: none;
         }
 
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 40px;
+                margin-top: 20px;
+            }
+
+            .coins-user {
+                p {
+                    font-size: 20px;
+                }
+                img {
+                    width: 28px;
+                    height: 28px;
+                }
+            }
+        }
+
+        .scroll {
+            padding-bottom: 80px;
+            width: 95%;
+
+            .avatars-container {
+                gap: 40px;
+                margin: 20px 0;
+                padding-left: 10px;
+            
+                .avatar-category {
+                    gap: 10px;
+
+                    p {
+                        font-size: 1.1rem; 
+                        padding-left: 10px;
+                    }
+
+                    .images-wrapper {
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 12px;
+
+                        .image-item {
+
+                            .avatar-img {
+                                width: 80px; 
+                                height: 80px;
+                                border-width: 1px;
+                            }
+
+                            .price-wrapper {
+                                gap: 2px;
+
+                                p {
+                                    font-size: 16px;
+                                }
+                                img {
+                                    width: 20px;
+                                }
+                            }
+
+                            .owned-label {
+                                p {
+                                    font-size: 14px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
+@media (max-width: 992px) {
+    .container {
+        .scroll {
+            .avatars-container {
+                .avatar-category {
+                    .images-wrapper {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .scroll {
+            .avatars-container {
+                .avatar-category {
+                    .images-wrapper {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+            }
+        }
+    }
+}
 </style>

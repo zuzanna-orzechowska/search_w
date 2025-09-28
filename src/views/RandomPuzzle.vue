@@ -14,7 +14,7 @@
                     </ul>
                 </div>
     
-                <div class="grid">
+                <div class="grid" ref="gridRef">
                     <!--2D array-->
                     <div class="row" v-for="(row,indRow) in grid" :key="indRow">
                         <!--getCellClass takes coordinates of a letter and gives it proper class - selected or found
@@ -23,7 +23,8 @@
                         .some checks if at least one element in the array passes the test-->
                         <span class="cell" v-for="(cell, indCell) in row" :key="indCell" 
                         :style="getCellStyle(indRow, indCell)"
-                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
+                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection"
+                        @touchstart.prevent="startSelection(indRow, indCell)" @touchmove="handleTouchMove($event)" @touchend="endSelection">
                         {{ cell }}
                         </span>
                     </div>
@@ -77,6 +78,10 @@ const foundWordsData = ref([]) //info of found - value of word and it's cords
 const hintedCell = ref()// {row,col} will be stored here
 const completedCategories = ref(0);
 let showCreateAccount = ref(false);   
+//variables for mobile responsibe - so user can click and select words without problem, as on website
+const cellWidth = 24; //value from mobile query, 
+const cellHeight = 24;
+const gridRef = ref(null);
 
 //variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
@@ -202,30 +207,54 @@ function randomColor() {
 function getCellStyle(row, col) {
   let style = {};
 
-  // Check if the current cell is part of an active selection
+  //checking if the current cell is part of an active selection
   const isSelected = selection.value?.some(c => c.row === row && c.col === col);
   if (isSelected) {
     style = { ...style, backgroundColor: selectionColor.value, color: 'white' };
   }
 
-  // Check if the cell is part of a found word
+  //checking if the cell is part of a found word
   const isFound = foundWordsData.value?.some(item => item.coords?.some(c => c.row === row && c.col === col));
   if (isFound) {
-    // If the cell is found, apply its specific color
+    //if the cell is found, apply its specific color
     const foundItem = foundWordsData.value.find(item => item.coords?.some(c => c.row === row && c.col === col));
     if (foundItem) {
       style = { ...style, backgroundColor: wordsColor.value[foundItem.word], color: 'white' };
     }
   }
 
-  // Check if the current cell is the hinted cell
-  // This is the correct way to apply the hint without interfering with found words
+  //checking if the current cell is the hinted cell
   const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
   if (isHinted && !isFound && !isSelected) {
     style = { ...style, border: '2px solid red' };
   }
 
   return style;
+}
+
+function handleTouchMove(event) { //function for users on mobile, have to calculate coords for touchmove event
+  if (!isSelecting.value || !gridRef.value) return;
+  //preventing default to stop scrolling during drag
+  event.preventDefault(); 
+  
+  //getting the current touch position
+  const touch = event.touches[0];
+  const touchX = touch.clientX;
+  const touchY = touch.clientY;
+
+  //getting the grid's position on the screen
+  const gridRect = gridRef.value.getBoundingClientRect();
+  
+  //calculating relative coordinates within the grid
+  const relativeX = touchX - gridRect.left;
+  const relativeY = touchY - gridRect.top;
+
+  //calculating the column and row index -> Math.floor(relative / size) gives the 0-indexed position
+  const col = Math.floor(relativeX / cellWidth);
+  const row = Math.floor(relativeY / cellHeight);
+
+  //calling extendSelection only if the touch is within the bounds of the grid, 
+  extendSelection(row, col);
 }
 
 function startSelection(row, col) {
@@ -320,7 +349,6 @@ async function showHint() {
         const randomWordData = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
         const firstLetterCoords = randomWordData.coords[0];
         hintedCell.value = firstLetterCoords;
-
         // console.log(`Hinting for word: ${randomWordData.word}`);
     } else {
         console.log('No words left to show a hint for.');
@@ -349,6 +377,7 @@ onMounted(async () => {
 .background-container {
     width: 100vw;
     height: 100vh;
+    background-color: rgb(174, 210, 229);
 }
 
 .container {
@@ -357,6 +386,7 @@ onMounted(async () => {
     align-items: center;
     flex-direction: column;
     position: relative;
+    overflow-y: scroll;
 
     .text-container {
         text-align: center;
@@ -367,9 +397,9 @@ onMounted(async () => {
             margin-bottom: 4px;
         }
 
-        .bigger{
-            font-size: 32px;
-            margin-bottom: 4px;
+        .smaller {
+            font-size: 28px;
+            margin-bottom: 32px;
         }
     }
 
@@ -409,11 +439,9 @@ onMounted(async () => {
             display: flex;
             flex-direction: column;
             border: 4px solid #57A4CD;
-            // gap: 2px;
     
             .row {
                 display: flex;
-                // gap: 2px;
     
                 .cell {
                     background: #f9f9f9;
@@ -422,7 +450,6 @@ onMounted(async () => {
                     text-align: center;
                     line-height: 44px;
                     font-weight: 400;
-                    //border: 2px solid #ccc;
                     font-size: 28px;
                     cursor: pointer;
                 }
@@ -442,7 +469,7 @@ onMounted(async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 64px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
@@ -520,5 +547,177 @@ onMounted(async () => {
                 background-color: #71ACCC;
         }
         }
+}
+
+@media (max-width: 600px) {
+    .container {
+        .text-container {
+            margin-top: 8px;
+
+            h2 {
+                font-size: 36px;
+            }
+
+            .smaller {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+        }
+
+        .wrapper-search {
+            flex-direction: column; 
+            gap: 24px; 
+            align-items: center;
+
+            .words-list {
+                
+                h4 {
+                    font-size: 24px;
+                }
+
+                ul {
+                    display: flex;
+                    flex-wrap: wrap; 
+                    justify-content: center; 
+                    padding: 0 10px;
+                    li {
+                        font-size: 16px;
+                        line-height: 1.5;
+                        margin: 0 5px;
+                    }
+                }
+            }
+
+            .grid {
+                border-width: 2px;
+        
+                .row {
+                    .cell {
+                        width: 24px;
+                        height: 24px;
+                        line-height: 24px; 
+                        font-size: 16px; 
+                    }
+                }
+            }
+        }
+
+        .bottom {
+            margin-top: 64px;
+            width: 200px;
+            border-width: 2px;
+            border-radius: 16px;
+            gap: 16px;
+
+            img {
+                width: 36px; 
+            }
+        }
+
+        .category-done {
+            width: 90%; 
+            height: auto;
+            padding: 30px 20px; 
+            
+            h2 {
+                font-size: 32px;
+                margin-bottom: 16px;
+            }
+
+            p {
+                font-size: 18px;
+                margin-bottom: 24px;
+            }
+
+            .btns {
+                gap: 32px;
+
+                button {
+                    font-size: 18px;
+                    padding: 8px 30px; 
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        .text-container {
+            margin-top: 10px;
+
+            h2 {
+                font-size: 48px; 
+            }
+
+            .smaller {
+                font-size: 24px; 
+                margin-bottom: 24px; 
+            }
+        }
+
+        .wrapper-search {
+            gap: 64px; 
+
+            .words-list {
+                h4 {
+                    font-size: 32px;
+                }
+
+                ul {
+                    li {
+                        font-size: 20px;
+                        line-height: 1.7;
+                    }
+                }
+            }
+
+            .grid {
+                border-width: 3px;
+        
+                .row {
+                    .cell {
+                        width: 38px; 
+                        height: 38px;
+                        line-height: 38px;
+                        font-size: 24px; 
+                    }
+                }
+            }
+        }
+
+        .bottom {
+            width: 240px;
+            border-width: 3px;
+            border-radius: 20px;
+            gap: 20px;
+
+            img {
+                width: 40px;
+            }
+        }
+
+        .category-done {
+            width: 600px;
+            height: 400px;
+            
+            h2 {
+                font-size: 48px;
+            }
+
+            p {
+                font-size: 24px;
+            }
+
+            .btns {
+                gap: 48px;
+
+                button {
+                    font-size: 20px;
+                    padding: 10px 40px;
+                }
+            }
+        }
+    }
 }
 </style>

@@ -18,7 +18,9 @@
 .footer {
   bottom: 0;
   height: auto;
-  position: static;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   background-color: #AED2E5;
   padding: 16px 0;
   display: flex;
@@ -63,7 +65,7 @@
       padding: .5rem;
     }
     
-    //animation form https://www.proglobalbusinesssolutions.com/css-hover-effects/
+    //animation from https://www.proglobalbusinesssolutions.com/css-hover-effects/
     a:before, a:after {
       content: '';
       height: 16px;
@@ -98,6 +100,20 @@
   
     a:hover {
       color: #00537f;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .links {
+      font-size: 18px;
+      gap: 48px;
+    }
+
+    .author {
+
+      a{
+        font-size: 18px;
+      }
     }
   }
 }

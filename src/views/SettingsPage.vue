@@ -25,10 +25,12 @@
                     
                     <button v-else @click="isEditingPassword = true">Change</button>
                 </div>
-                <div class="setting danger">
+                <div class="setting">
                     <h1>Delete account</h1>
                     <p>Your account will be permanently deleted from SearchW.</p>
-                    <button @click="deleteAccount">Delete</button>
+                    <p>If you wish to delete your account, please inform the administrator.
+                    </p>
+                    <a :href="mailToLink">Click here to send an email.</a>
                 </div>
             </div>
 
@@ -41,10 +43,9 @@
     </div>
 </template>
 
-
 <script setup>
 import { account } from '@/lib/appwrite';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { toast } from 'vue3-toastify';
 import { useRouter } from 'vue-router';
 
@@ -57,6 +58,13 @@ const newPassword = ref('');
 const hidPassword = ref(true);
 const passwordError = ref(false);
 
+const adminEmail = process.env.VUE_APP_EMAIL_ADMIN;
+const subject = "Account Deletion Request";
+const body = "Hello Administrator,%0A%0AI would like to request the deletion of my account.%0A%0AUsername:%20[Your Username]%0AEmail:%20[Your Email]%0A%0AThank you.";
+
+const mailToLink = computed(() => {
+  return `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+});
 
 function toggleState() {
     hidPassword.value = !hidPassword.value;
@@ -88,42 +96,6 @@ async function changePassword() {
     }
 }
 
-async function deleteAccount() {
-    try {
-        const user = await account.get(); // upewnij się, że user jest zalogowany
-
-        const res = await fetch(
-            `https://cloud.appwrite.io/v1/functions/${process.env.VUE_APP_APPWRITE_FUNCTION_ID}/executions`, 
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Appwrite-Project": process.env.VUE_APP_APPWRITE_PROJECT_ID,
-                    "X-Appwrite-Key": process.env.VUE_APP_APPWRITE_API_KEY,
-                },
-                body: JSON.stringify({ userId: user.$id }),
-                // credentials: "include", // <-- WAŻNE dla Execute as user
-            }
-        );
-
-        const data = await res.json();
-        const result = data.response ? JSON.parse(data.response) : { success: false, message: data.message || "Unknown error" };
-
-        if (result.success) {
-            toast.success("Your account has been deleted.");
-            await account.deleteSession("current"); // wylogowanie
-            router.push("/"); 
-        } else {
-            toast.error("Failed to delete account: " + (result.message || "Unknown error"));
-        }
-    } catch (err) {
-        console.error("Delete account failed:", err);
-        toast.error("Delete account failed: " + err.message);
-    }
-}
-
-
-
 async function getUser() {
     try {
         currentUser.value = await account.get();
@@ -146,49 +118,128 @@ onMounted(async () => {
     background-color: rgb(174, 210, 229);
     width: 100vw;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .container {
     background-color: rgb(174, 210, 229);
     display: flex;
     align-items: center;
+    justify-content: center;
+    margin: 0 auto;
     flex-direction: column;
 
     .settings-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+
         .setting {
-            .password-wrapper {
-                position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
 
-                input {
-                    padding-right: 64px;
+            a {
+                text-decoration: none;
+                color: black;
+                font-weight: bold;
+                width: 200px;
+            }
+
+            h1 {
+                font-weight: 500;
+            }
+
+            form {
+                .icon {
+                    position: relative;
+                    left: 40px;
+                    top: 6px;
+                    width: 30px;
                 }
-
-                .toggleBtn {
-                    position: absolute;
-                    right: 0px;
-                    top: 0px;
-                    background-color: transparent;
+    
+                input[type="text"], input[type="password"]{
+                    width: 364px;
+                    font-size: 18px;
+                    background-color: #6AAED3;
                     border: none;
-                    border-radius: 0 16px 16px 0;
-                    padding: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100%;
-                    width: 64px;
-                    cursor: pointer;
-
-                    img {
-                        width: 32px;
+                    border-radius: 16px;
+                    height: 34px;
+                    padding: 24px 0 24px 48px;
+                    color: #f9f9f9;
+                    transition: all 0.3s ease;
+                }
+    
+                input[type="text"]::placeholder, input[type="password"]::placeholder {
+                    color: #f9f9f9d1;
+                    font-weight: 300px;
+                }
+    
+                input[type="text"]:focus, input[type="password"]:focus{
+                    border: 3px solid #2A8DC1;
+                    outline: none;
+                }
+    
+                .password-wrapper {
+                    position: relative;
+                    margin-top: 24px;
+    
+                    input {
+                        padding-right: 64px;
+                    }
+    
+                    .toggleBtn {
+                        position: absolute;
+                        right: 0px;
+                        top: 0px;
+                        background-color: transparent;
+                        border: none;
+                        border-radius: 0 16px 16px 0;
+                        padding: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100%;
+                        width: 64px;
+                        cursor: pointer;
+    
+                        img {
+                            width: 32px;
+                        }
                     }
                 }
+
+            }
+            button {
+                font-size: 16px;
+                width: 80px;
+                padding: 2px 4px;
+                font-weight: 500;
+                margin-top: 12px;
+                background-color: #f9f9f9;
+                border: 2px solid black;
+                border-radius: 6px;
+                cursor: pointer;
+                transform: perspective(1px) translateZ(0);
+                box-shadow: 0 0 1px transparent;
+                transition-duration: 0.3s;
+                transition-property: box-shadow, transform;
+            }
+
+            button:hover {
+                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
+                transform: scale(1.1);
             }
         }
     }
 
     h2{
         font-size: 56px;
-        margin-bottom: 4px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        margin-top: 12px;
     }
 
 
@@ -210,196 +261,91 @@ onMounted(async () => {
             margin-top: 0;
         }
     }
-
-    
-    .challenge-paused, .before-game {
-        //display: none;
-        border-radius: 6px;
-        width: 540px;
-        height: 420px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        background-color: rgba(113, 172, 204,0.6);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        gap: 8px;
-    }
-    
-    h2 {
-        font-size: 54px;
-        font-weight: 500;
-        text-align: center;
-        margin-bottom: 24px;
-    }
-    
-    .paused-txt, .before-txt {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-
-        p{
-            font-size: 28px;
-            text-align: center;
-        }
-
-        .warning {
-            font-size: 18px;
-            color: rgb(216, 5, 5);
-        }
-        
-        .btns {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            gap: 64px;
-
-            .continue-btn {
-                background-color: #71ACCC;
-            }
-            
-            button {
-                font-size: 24px;
-                padding: 1% 12%;
-                font-weight: 500;
-                background-color: #f9f9f9;
-                border: 2px solid black;
-                border-radius: 6px;
-                cursor: pointer;
-                transform: perspective(1px) translateZ(0);
-                box-shadow: 0 0 1px transparent;
-                transition-duration: 0.3s;
-                transition-property: box-shadow, transform;
-            }
-            
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
-            
-            .next-btn, .play-btn {
-                background-color: #71ACCC;
-            }
-        }
-    }
-
-    .before-txt {
-        p{
-            font-size: 20px;
-        }
-
-        .btns {
-            margin-top: 24px;
-        }
-    }
-
-    .paused-txt.second {
-        margin-top: 32px;
-        margin-bottom: 8px;
-    }
-
 }
 
-.challenge-completed{
-    //display: none;
-    background-color: pink;
-    border-radius: 6px;
-    width: 540px;
-    height: 420px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    background-color: rgba(113, 172, 204,0.6);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    h2{
-        font-size: 54px;
-        font-weight: 500;
-        text-align: center;
-        //width: 300px;
-        margin-bottom: 12px;
+@media (max-width: 600px) {
+    .background-container {
+        padding-top: 20px;
     }
 
-    .results {
-        margin-bottom: 24px;
-        text-align: center;
+    .container {
+        width: 95%;
+        
+        h2 {
+            font-size: 40px;
+            margin-bottom: 24px;
+        }
 
-        .stars {
-            img {
-                width: 80px;
+        .settings-wrapper {
+            width: 100%;
+            gap: 40px;
+            padding: 0 10px;
+
+            .setting {
+                gap: 8px;
+
+                a {
+                    width: auto;
+                }
+
+                h1 {
+                    font-size: 1.5rem;
+                }
+
+                p {
+                    font-size: 0.95rem;
+                }
+
+                form {
+                    width: 100%;
+                    padding-right: 10px;
+
+                    .icon {
+                        left: 12px;
+                        top: 36px;
+                        width: 24px;
+                    }
+        
+                    input[type="text"], input[type="password"]{
+                        width: 100%;
+                        font-size: 16px;
+                        height: 28px;
+                        padding: 20px 0 20px 48px;
+                    }
+
+                    .password-wrapper {
+                        margin: 0px;
+        
+                        input {
+                            padding-right: 50px;
+                        }
+        
+                        .toggleBtn {
+                            width: 50px;
+        
+                            img {
+                                width: 28px;
+                            }
+                        }
+                    }
+                }
+                button {
+                    font-size: 18px;
+                    width: 100px;
+                    padding: 4px 8px;
+                    margin-top: 16px;
+                }
             }
         }
 
-        p {
-            font-size: 24px;
-
-            span {
-                font-weight: 500;
-            }
-        }
-    }
-
-    .rewards-txt {
-        display: flex;
-        gap: 64px;
-        font-size: 24px;
-        margin-bottom: 24px;
-
-        .txt-icon {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .bottom{
+            width: 200px;
+            margin-top: 40px;
             
-            img {
-                width: 48px;
-                position: relative;
-                bottom: 8px;
+            img{
+                width: 36px;
             }
         }
-
     }
-
-    .btns {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        gap: 64px;
-
-        button {
-        font-size: 24px;
-        padding: 1% 12%;
-        font-weight: 500;
-        background-color: #f9f9f9;
-        border: 2px solid black;
-        border-radius: 6px;
-        cursor: pointer;
-        transform: perspective(1px) translateZ(0);
-        box-shadow: 0 0 1px transparent;
-        transition-duration: 0.3s;
-        transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
-        }
-
-        .again-btn {
-            background-color: #71ACCC;
-            padding: 1% 14%;
-        }
-    }
-
 }
 </style>
