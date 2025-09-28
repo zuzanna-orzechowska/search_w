@@ -424,6 +424,20 @@ onMounted(async () => {
     }
 }
 
+@media (max-width: 992px) {
+    .container {
+        .scroll {
+            .avatars-container {
+                .avatar-category {
+                    .images-wrapper {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+            }
+        }
+    }
+}
+
 @media (min-width: 992px) and (max-width: 1280px) {
     .container {
         .scroll {

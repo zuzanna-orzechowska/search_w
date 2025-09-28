@@ -37,7 +37,7 @@
                     </div>
                 </div>
     
-                <div class="grid">
+                <div class="grid" ref="gridRef">
                     <!--2D array-->
                     <div class="row" v-for="(row,indRow) in grid" :key="indRow">
                         <!--getCellClass takes coordinates of a letter and gives it proper class - selected or found
@@ -46,7 +46,8 @@
                         .some checks if at least one element in the array passes the test-->
                         <span class="cell" v-for="(cell, indCell) in row" :key="indCell"
                         :style="getCellStyle(indRow, indCell)"
-                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection">
+                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection"
+                        @touchstart.prevent="startSelection(indRow, indCell)" @touchmove="handleTouchMove($event)" @touchend="endSelection">
                         {{ cell }}
                         </span>
                     </div>
@@ -165,6 +166,10 @@ const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
 let puzzleXpValue = 0;
 let puzzleCoinsValue = 0;
+//variables for mobile responsibe - so user can click and select words without problem, as on website
+const cellWidth = 24; //value from mobile query, 
+const cellHeight = 24;
+const gridRef = ref(null);
 
 //variables for dynamic content after completing the category
 //computed is a property that automatically updates whenever its dependencies change
@@ -344,6 +349,31 @@ function getCellStyle(row, col) {
 
 
 //functions related to word search - selecting letters
+function handleTouchMove(event) { //function for users on mobile, have to calculate coords for touchmove event
+  if (!isSelecting.value || !gridRef.value) return;
+  //preventing default to stop scrolling during drag
+  event.preventDefault(); 
+  
+  //getting the current touch position
+  const touch = event.touches[0];
+  const touchX = touch.clientX;
+  const touchY = touch.clientY;
+
+  //getting the grid's position on the screen
+  const gridRect = gridRef.value.getBoundingClientRect();
+  
+  //calculating relative coordinates within the grid
+  const relativeX = touchX - gridRect.left;
+  const relativeY = touchY - gridRect.top;
+
+  //calculating the column and row index -> Math.floor(relative / size) gives the 0-indexed position
+  const col = Math.floor(relativeX / cellWidth);
+  const row = Math.floor(relativeY / cellHeight);
+
+  //calling extendSelection only if the touch is within the bounds of the grid, 
+  extendSelection(row, col);
+}
+
 function startSelection(row, col) {
     if (!canInteract.value) return; //if user didn't start a game, can select words
     if (!isValidCell(row, col)) return;
@@ -812,7 +842,7 @@ onMounted( async () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 16px;
+        margin-top: 32px;
         background-color: #57A4CD;
         width: 280px;
         height: auto;
@@ -1019,5 +1049,296 @@ onMounted( async () => {
         }
     }
 
+}
+
+@media (max-width: 600px) {
+    .container {
+        .right-up-wrapper {
+            top: 10px;
+            right: 10px;
+            gap: 8px;
+
+            .coins-display {
+                gap: 4px;
+                
+                p {
+                    font-size: 18px;
+                }
+
+                img {
+                    width: 30px;
+                    height: 30px;
+                }
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        .text-container {
+            margin-top: 10px;
+            
+            h2 {
+                font-size: 32px;
+            }
+
+            .bigger {
+                font-size: 24px;
+            }
+
+            .smaller {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+        }
+
+        .wrapper-search {
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            align-items: center;
+
+            .wrapper-words-text {
+                
+                h4 {
+                    font-size: 24px;
+                    margin-bottom: 8px;
+                }
+
+                .wrapper-words-list {
+                    flex-direction: row; 
+                    flex-wrap: wrap; 
+                    justify-content: center;
+                    gap: 16px; 
+        
+                    .words-list {
+                        ul {
+                            display: flex;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            
+                            li {
+                                font-size: 16px;
+                                line-height: 1.2;
+                                margin: 4px 6px; 
+                            }
+                        }
+                    }
+                }
+            }
+            .grid{
+                border-width: 2px;
+        
+                .row {
+                    .cell {
+                        width: 24px; 
+                        height: 24px;
+                        line-height: 24px;
+                        font-size: 16px;
+                    }
+                }
+            }
+        }
+
+        .bottom {
+            margin-top: 64px;
+            width: 200px;
+            border-width: 2px;
+            border-radius: 16px;
+            gap: 16px;
+
+            img {
+                width: 36px;
+            }
+        }
+        
+        .challenge-paused, .before-game, .challenge-completed {
+            width: 90%;
+            height: auto;
+            padding: 30px 10px;
+            
+            h2 {
+                font-size: 36px;
+                margin-bottom: 16px;
+            }
+
+            .paused-txt, .before-txt {
+                gap: 12px;
+                
+                p {
+                    font-size: 18px;
+                }
+
+                .btns {
+                    gap: 24px;
+
+                    button {
+                        font-size: 18px;
+                        padding: 8px 24px;
+                    }
+                }
+            }
+
+            .paused-txt.second {
+                margin-top: 24px;
+            }
+            
+            .challenge-completed {
+                .results {
+                    margin-bottom: 16px;
+                    .stars img {
+                        width: 50px;
+                    }
+                    p {
+                        font-size: 18px;
+                    }
+                }
+                .rewards-txt {
+                    gap: 32px;
+                    font-size: 18px;
+                    margin-bottom: 16px;
+
+                    .txt-icon img {
+                        width: 30px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1280px) {
+    .container {
+        
+        .right-up-wrapper {
+            top: 15px;
+            right: 15px;
+            gap: 12px; 
+
+            .coins-display {
+                p {
+                    font-size: 22px;
+                }
+
+                img {
+                    width: 38px;
+                    height: 38px;
+                }
+            }
+
+            .user-avatar {
+                width: 54px;
+                height: 54px;
+            }
+        }
+
+        .text-container {
+            margin-top: 8px;
+
+            h2{
+                font-size: 48px;
+            }
+
+            .bigger{
+                font-size: 28px;
+            }
+
+            .smaller {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+        }
+
+        .wrapper-search {
+            gap: 32px;
+
+            .wrapper-words-text {
+                h4{
+                    font-size: 32px;
+                }
+
+                .wrapper-words-list {
+                    gap: 16px;
+        
+                    .words-list {
+                        ul {
+                            li {
+                                font-size: 20px;
+                                line-height: 2.2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .grid{
+                border-width: 3px;
+        
+                .row {
+                    .cell {
+                        width: 38px;
+                        height: 38px;
+                        line-height: 38px;
+                        font-size: 24px;
+                    }
+                }
+            }
+        }
+
+        .bottom{
+            width: 240px;
+            border-width: 3px;
+            border-radius: 20px;
+            gap: 20px;
+
+            img{
+                width: 40px;
+            }
+        }
+        
+        .challenge-paused, .before-game, .challenge-completed {
+            width: 480px;
+            height: 380px;
+            
+            h2 {
+                font-size: 48px;
+            }
+            
+            .paused-txt, .before-txt {
+                p {
+                    font-size: 24px;
+                }
+                
+                .btns {
+                    gap: 48px;
+
+                    button {
+                        font-size: 20px;
+                        padding: 10px 40px;
+                    }
+                }
+            }
+
+            .challenge-completed {
+                .results {
+                    .stars img {
+                        width: 70px;
+                    }
+                    p {
+                        font-size: 22px;
+                    }
+                }
+                .rewards-txt {
+                    gap: 48px;
+                    font-size: 22px;
+                    .txt-icon img {
+                        width: 40px;
+                    }
+                }
+            }
+        }
+    }
 }
 </style>

@@ -487,6 +487,28 @@ onMounted(async () => {
     }
 }
 
+@media (max-width: 992px) {
+    .container {
+        .wrapper {
+            width: 90vw; 
+            height: 90vh;
+        }
+        .scroll {
+            .avatars-container {
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+
+            .achievements-container {
+                .images {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+        }
+    }
+}
+
 @media (min-width: 992px) and (max-width: 1280px) {
     .container {
         .scroll {
