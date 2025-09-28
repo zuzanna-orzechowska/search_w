@@ -17,8 +17,8 @@
                 <button type="button" id="shop" @click="goToShop">Shop</button>
             </div>
         </div>
+        <AppFooter />
      </div>
-     <AppFooter />
 </template>
 
 <script setup>

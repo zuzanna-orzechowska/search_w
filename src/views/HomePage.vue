@@ -16,8 +16,8 @@
                 <button type="button" id="random" @click="randomCategory">Random</button>
             </div>
         </div>
+        <AppFooter />
     </div>
-    <AppFooter />
      
 </template>
 
