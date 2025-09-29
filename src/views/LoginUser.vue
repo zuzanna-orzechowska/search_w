@@ -26,6 +26,9 @@
                 <button type="submit" class="userButton">Login</button>
             </form>
             <p>Don't have an account? Sign up <router-link to="/register" id="register-link">here</router-link></p>
+            <div class="bottom-form-txt">
+                <router-link to="/" class="backHome">Back to Home</router-link>
+            </div> 
         </div>
     </main>
 </template>
@@ -164,6 +167,7 @@ main {
                 font-size: 16px;
                 text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.3);
 
+
                 input[type="checkbox"] {
                     width: 16px;
                     height: 16px;
@@ -184,7 +188,7 @@ main {
                     gap: 4px;
                 }
             }
-            
+
             .userButton {
                 -webkit-tap-highlight-color: transparent;
                 -webkit-text-fill-color: initial;
@@ -213,13 +217,20 @@ main {
         p {
             text-align: center;
             margin-top: 32px;
-
+            margin-bottom: 16px;
+            
+            a {
+              color: #000;
+              font-weight: 500;
+            }
           }
 
-          a {
+        .backHome {
             color: #000;
             font-weight: 500;
-          }
+            text-decoration: none;
+        }
+
     }
 
     @media (max-width: 600px) {

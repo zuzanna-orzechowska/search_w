@@ -7,6 +7,7 @@ import { toast } from 'vue3-toastify';
 export const useUserStore = defineStore('user', {
   state: () => ({
     currentUser: null,
+    verificationEmail: '',
     avatar: '',
     username: '',
     title: '',
@@ -21,6 +22,9 @@ export const useUserStore = defineStore('user', {
   getters: {
   },
   actions: {
+    setVerificationEmail(email) {
+      this.verificationEmail = email;
+    },
     async fetchUser() {
       try {
         this.currentUser = await account.get();

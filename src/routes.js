@@ -56,10 +56,18 @@ const router = createRouter ({
 
 async function getCurrentUser() {
   try {
-    return await account.get()
+    const user = await account.get()
+    
+    //checking if user has verification
+    if (!user.emailVerification) {
+      // user only have permission if status of his email is verified
+      return { ...user, isVerified: false }; 
+    }
+    
+    return { ...user, isVerified: true };
   } catch (err) {
     if (err.code === 401) {
-      return null // no session = no log in console
+      return null
     }
     console.error("Appwrite error:", err)
     return null
@@ -68,17 +76,35 @@ async function getCurrentUser() {
 
 // navigation guard - after user gets to new route
 router.beforeEach(async (to, from, next) => {
-  const user = await getCurrentUser() //checking current user
-
-  if (to.meta.requiresAuth && !user) {
-    return next('/login')
+  const user = await getCurrentUser() 
+  
+  const requiresAuth = to.meta.requiresAuth;
+  const isVerificationRoute = to.path === '/check' || to.path === '/verify';
+  
+  // user not logged in
+  if (requiresAuth && !user) {
+    return next('/');
   }
 
-  if ((to.path === '/login' || to.path === '/') && user) {
-    return next('/user')
+  //user logged in but not verified - force to stay in /check if link is not clicked
+  if (user && !user.isVerified) {
+    //if user wants to go back to any other page
+    if (requiresAuth && !isVerificationRoute) {
+      return next('/check'); 
+    }
+    //forcing to /check
+    if ((to.path === '/login' || to.path === '/register' || to.path === '/') && !isVerificationRoute) {
+        return next('/check');
+    }
   }
 
-  next() //letting user go where he wanted to
+  //user logged in and verified
+  if (user && user.isVerified) {
+    if (to.path === '/login' || to.path === '/' || isVerificationRoute) {
+      return next('/user');
+    }
+  }
+  next() 
 })
 
 export default router;

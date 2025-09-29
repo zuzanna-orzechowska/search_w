@@ -36,17 +36,26 @@
                 <label for="passwordRegister">
                     <div class="password-wrapper">
                         <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                        <input @blur="isPassworValid" v-if="hidPassword" type="password" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
-                        <input @blur="isPassworValid" v-else type="text" id="passwordLogin" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input @blur="isPassworValid" v-if="hidPassword" type="password" id="passwordRegister" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
+                        <input @blur="isPassworValid" v-else type="text" id="passwordRegister" name="Password" placeholder="Password" v-model="password" autocomplete="off" required>
                         <!--require() dynamically loads the file with given url-->
                         <button class="toggleBtn" @click.prevent="toogleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
                     </div>
                     <p class="error errPass" :class="{active : passwordError}">Incorrect password! It must be at least 8 characters, with uppercase, lowercase, number and special character.</p>
                 </label>
+                <label for="confirmPasswordRegister">
+                    <div class="password-wrapper">
+                        <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
+                        <input @blur="isPasswordMatch" v-if="hidPassword" type="password" id="confirmPasswordRegister" name="ConfirmPassword" placeholder="Confirm Password *" v-model="confirmPassword" autocomplete="off" required>
+                        <input @blur="isPasswordMatch" v-else type="text" id="confirmPasswordRegister" name="ConfirmPassword" placeholder="Confirm Password *" v-model="confirmPassword" autocomplete="off" required>
+                        <button class="toggleBtn" @click.prevent="toogleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+                    </div>
+                    <p class="error errPass" :class="{active : passwordMismatchError}">Passwords do not match!</p>
+                </label>
                 <div class="bottom-form-txt">
                     <label for="accPrivacyPolicy">
                         <!--this info shouldn't be in database, because it works like that - if user doesn't agree then he can't create an accont-->
-                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredTerms">
+                        <input type="checkbox" name="Accept-Privacy-Policy" id="accPrivacyPolicy" v-model="requiredPrivacy">
                         Accept <router-link to="/privacy"> Privacy Policy</router-link><span>*</span>
                     </label>
                     <label for="accTermsofUse">
@@ -57,13 +66,16 @@
                 <button type="submit" class="userButton" >Register</button>
             </form>
             <p id="sign-in-p">Already have an account? Sign in <router-link to="/login" id="login-link">here</router-link></p>
+            <div class="bottom-form-txt">
+                <router-link to="/" class="backHome">Back to Home</router-link>
+            </div> 
         </div>
     </main>
 </template>
 
 <script setup>
 import { account, databases, ID} from '../lib/appwrite'
-
+import { useUserStore } from '@/stores/user';
 import { Query } from 'appwrite';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -73,6 +85,10 @@ import 'vue3-toastify/dist/index.css';
 const avatars = ref(false);
 const hidPassword = ref(true);
 let selectedAvatar = ref(''); //this variable is forwarded to database
+const userStore = useUserStore();
+
+const confirmPassword = ref('');
+let passwordMismatchError = ref(false); 
 
 //require is used to import other modules - in this case svg images
 const avatarsArr = [
@@ -87,6 +103,7 @@ const avatarsArr = [
 ];
 
 const requiredTerms = ref(false);
+const requiredPrivacy = ref(false);
 const router = useRouter();
 let emailError = ref(false); //variable for checking if email is correct
 let passwordError = ref(false); //variable for checking if password is correct
@@ -118,6 +135,16 @@ function isPassworValid() {
     passwordError.value = !regex.test(password.value);
 }
 
+function isPasswordMatch() {
+    //password cannot be blank for comparing
+    if (password.value && confirmPassword.value) {
+        //if passwords are not the same
+        passwordMismatchError.value = password.value !== confirmPassword.value;
+    } else {
+        passwordMismatchError.value = false;
+    }
+}
+
 async function uniqueEmail(email) {
     try {
         //.listDocuments check all of the documents from given database and collection
@@ -142,6 +169,7 @@ async function uniqueUsername(username) {
 
 async function register() {
     try {
+        let hasError = false;
         //checking if given username is already in use
         const isUsernameUnique = await uniqueUsername(username.value);
         if(!isUsernameUnique) {
@@ -149,7 +177,7 @@ async function register() {
             if (usernameInput.value) usernameInput.value.value = '';
             return;
         }
-
+        
         //checking if given email is alredy in use
         const isEmailUnique = await uniqueEmail(email.value);
         if(!isEmailUnique) {
@@ -158,18 +186,40 @@ async function register() {
             return;
         }
 
-
-        //checking if Policy privacy and Terms of use are checked and accepted
-        if (!requiredTerms.value) {
-            toast.error("You must accept the terms and conditions.");
+        if (password.value !== confirmPassword.value) {
+            toast.error("The passwords you entered do not match!");
+            passwordMismatchError.value = true;
             return;
         }
 
+        isPassworValid(); 
+        if (passwordError.value) {
+            toast.error("Please ensure your password meets all requirements.");
+            hasError = true;
+        }
+        
+        
+        //checking if Policy privacy and Terms of use are checked and accepted
+        if (!requiredPrivacy.value) {
+            toast.error("You must accept the privacy policy.");
+            hasError = true;
+        }
+        
+        if (!requiredTerms.value) {
+            toast.error("You must accept the terms and conditions.");
+            hasError = true;
+        }
+        
+        if (hasError) {
+            return;
+        }
+        
         const newUserId = ID.unique();
         await account.create(newUserId, email.value, password.value, username.value);
         //login user so link can be send
         await account.createEmailPasswordSession(email.value, password.value);
         //sending verification link
+        userStore.setVerificationEmail(email.value);
         await account.createVerification(`${window.location.origin}/verify`);
 
         //checking if user selected an avatar - if not then the deafult one will be send to database
@@ -220,7 +270,7 @@ main {
         align-items: center;
         justify-content: center;
         background-color: rgba(174, 210, 229,0.5);
-        height: 680px;
+        height: 740px;
         border-radius: 6px;
         box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
 
@@ -425,12 +475,20 @@ main {
             text-align: center;
             margin-top: 32px;
             font-size: 1.1rem;
-          }
+            margin-bottom: 16px;
 
-          a {
+        }
+        a {
+          color: #000;
+          font-weight: 500;
+        }
+        
+        .backHome {
             color: #000;
             font-weight: 500;
-          }
+            text-decoration: none;
+        }
+
     }
 
     @media (max-width: 600px) {
