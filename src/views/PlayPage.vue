@@ -24,7 +24,7 @@
                     </div>
                 </div>
                 
-                <ButtonFooter />
+                <ButtonFooter class="footer-positioned"/>
                 
             </div>
         </div>
@@ -220,6 +220,9 @@ onMounted(fetchPuzzlesProgress);
                 }
     
                 button {
+                    -webkit-tap-highlight-color: transparent;
+                    -webkit-text-fill-color: initial;
+                    color: black !important;
                     font-size: 20px;
                     padding: 1% 6%;
                     font-weight: 500;
@@ -250,6 +253,15 @@ onMounted(fetchPuzzlesProgress);
             width: 90vw; 
             height: 95vh;
             box-shadow: none;
+        }
+
+        .footer-positioned {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 10;
         }
 
         .text-container {

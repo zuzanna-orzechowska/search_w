@@ -29,7 +29,7 @@
                     </div>
                 </div>
     
-                <ButtonFooter />
+                <ButtonFooter class="footer-positioned" />
             </div>
         </div>
     </div>
@@ -176,6 +176,15 @@ onMounted(async () => {
         align-items: center;
         flex-direction: column;
         position: relative;
+    }
+
+    .footer-positioned {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 10;
     }
 
     .text-container {

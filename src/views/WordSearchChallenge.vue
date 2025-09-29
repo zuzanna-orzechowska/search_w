@@ -167,8 +167,8 @@ const puzzleCoins = ref(0);
 let puzzleXpValue = 0;
 let puzzleCoinsValue = 0;
 //variables for mobile responsibe - so user can click and select words without problem, as on website
-const cellWidth = 24; //value from mobile query, 
-const cellHeight = 24;
+const cellWidth = 42; //value from mobile query, 
+const cellHeight = 42;
 const gridRef = ref(null);
 
 //variables for dynamic content after completing the category
@@ -1133,10 +1133,10 @@ onMounted( async () => {
         
                 .row {
                     .cell {
-                        width: 24px; 
-                        height: 24px;
-                        line-height: 24px;
-                        font-size: 16px;
+                        width: 42px; 
+                        height: 42px;
+                        line-height: 42px;
+                        font-size: 22px;
                     }
                 }
             }
