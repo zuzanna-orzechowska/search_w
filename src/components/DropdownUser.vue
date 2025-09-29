@@ -41,7 +41,6 @@ const userStore = useUserStore();
 async function signOut() {
     try {
          await account.deleteSession('current');
-         console.log('Logged out');
          router.push('/');
      } catch (err) {
          console.error('Logout error:', err);
