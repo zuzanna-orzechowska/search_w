@@ -145,8 +145,8 @@ const hintCost = ref(20); //cost of using a hint;
 const showHintCost = ref(false);
 const showCoinsDeducted = ref(false);
 //variables for mobile responsibe - so user can click and select words without problem, as on website
-const cellWidth = 42; //value from mobile query, 
-const cellHeight = 42;
+const cellWidth = 40; //value from mobile query, 
+const cellHeight = 40;
 const gridRef = ref(null);
 
 //functions related to database
@@ -1147,9 +1147,9 @@ onMounted(async () => {
         
                 .row {
                     .cell {
-                        width: 42px; 
-                        height: 42px;
-                        line-height: 42px;
+                        width: 40px; 
+                        height: 40px;
+                        line-height: 40px;
                         font-size: 22px;
                     }
                 }
@@ -1157,7 +1157,7 @@ onMounted(async () => {
         }
 
         .bottom {
-            margin-top: 64px;
+            margin-top: 16px;
             width: 200px;
             border-width: 2px;
             border-radius: 16px;

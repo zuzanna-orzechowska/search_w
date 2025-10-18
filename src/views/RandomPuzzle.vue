@@ -79,8 +79,8 @@ const hintedCell = ref()// {row,col} will be stored here
 const completedCategories = ref(0);
 let showCreateAccount = ref(false);   
 //variables for mobile responsibe - so user can click and select words without problem, as on website
-const cellWidth = 24; //value from mobile query, 
-const cellHeight = 24;
+const cellWidth = 40; //value from mobile query, 
+const cellHeight = 40;
 const gridRef = ref(null);
 
 //variables related to database
@@ -593,17 +593,17 @@ onMounted(async () => {
         
                 .row {
                     .cell {
-                        width: 24px;
-                        height: 24px;
-                        line-height: 24px; 
-                        font-size: 16px; 
+                        width: 40px;
+                        height: 40px;
+                        line-height: 40px; 
+                        font-size: 22px; 
                     }
                 }
             }
         }
 
         .bottom {
-            margin-top: 64px;
+            margin-top: 16px;
             width: 200px;
             border-width: 2px;
             border-radius: 16px;
