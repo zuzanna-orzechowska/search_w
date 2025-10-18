@@ -167,8 +167,8 @@ const puzzleCoins = ref(0);
 let puzzleXpValue = 0;
 let puzzleCoinsValue = 0;
 //variables for mobile responsibe - so user can click and select words without problem, as on website
-const cellWidth = 42; //value from mobile query, 
-const cellHeight = 42;
+const cellWidth = 36; //value from mobile query, 
+const cellHeight = 36;
 const gridRef = ref(null);
 
 //variables for dynamic content after completing the category
@@ -1111,7 +1111,7 @@ onMounted( async () => {
                     flex-direction: row; 
                     flex-wrap: wrap; 
                     justify-content: center;
-                    gap: 16px; 
+                    gap: 8px; 
         
                     .words-list {
                         ul {
@@ -1133,9 +1133,9 @@ onMounted( async () => {
         
                 .row {
                     .cell {
-                        width: 42px; 
-                        height: 42px;
-                        line-height: 42px;
+                        width: 36px; 
+                        height: 36px;
+                        line-height: 36px;
                         font-size: 22px;
                     }
                 }
@@ -1143,7 +1143,7 @@ onMounted( async () => {
         }
 
         .bottom {
-            margin-top: 64px;
+            margin-top: 16px;
             width: 200px;
             border-width: 2px;
             border-radius: 16px;
