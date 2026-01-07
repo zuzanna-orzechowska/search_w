@@ -2,8 +2,8 @@
     <div class="background-container">
         <div class="container">
             <WordSearchHeader 
-                :userCoins="userCoins" 
-                :userAvatar="userAvatar" 
+                :userCoins="userStore.coins" 
+                :userAvatar="userStore.avatar" 
                 :dropdownActive="dropdownActive"
                 @toggleDropdown="dropdownActive = !dropdownActive"
                 @closeDropdown="dropdownActive = false"
@@ -91,7 +91,6 @@
                     </div>
                 </div>
            </div>
-
         </div>
     </div>
 </template>
@@ -99,23 +98,24 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { databases, account } from '@/lib/appwrite';
-import { Query, ID } from 'appwrite';
 import { useWordSearch } from '@/composables/useWordSearch';
+import { useUserStore } from '@/stores/user';
+import { useGameStore } from '@/stores/game';
+
 import WordSearchHeader from '@/components/WordSearchHeader.vue';
 import WordSearchList from '@/components/WordSearchList.vue';
 import WordSearchGrid from '@/components/WordSearchGrid.vue';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
+const gameStore = useGameStore();
 
-//logic for word search
 const { 
     grid, selection, isSelecting, startCell, selectionColor, 
     wordsColor, foundWordsData, generateGrid 
 } = useWordSearch(14);
 
-//game
 const isChallengePaused = ref(false);
 const isChallengeCompleted = ref(false);
 const isGameStarted = ref(false);
@@ -128,22 +128,13 @@ const category = route.query.category;
 const categoryName = ref(category.charAt(0).toUpperCase() + category.slice(1));
 const foundWords = ref([]);
 
-//logic for databse
-const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_CHALLENGE_ID;
-const collection_user_id = process.env.VUE_APP_COLLECTION_ID;
-const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_CHALLENGE_ID;
-const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
-
-const userAvatar = ref('');
-const userCoins = ref(0);
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
 const puzzleXpValue = ref(0);
 const puzzleCoinsValue = ref(0);
+
 const canInteract = computed(() => isGameStarted.value && !isChallengePaused.value && !isChallengeCompleted.value);
 
-//results
 const starsCount = computed(() => {
     if (time.value <= 4 * 60) return 3;
     if (time.value <= 6 * 60) return 2;
@@ -218,7 +209,7 @@ const handleEnd = async () => {
 
         if (foundWords.value.length === wordsToFind.value.length) {
             stopTimer();
-            await getUserStats(puzzleXp.value, puzzleCoins.value);
+            await applyRewards();
             isChallengeCompleted.value = true;
             localStorage.removeItem('challenge-progress');
             await saveProgress();
@@ -229,14 +220,23 @@ const handleEnd = async () => {
     selection.value = [];
 };
 
+//logic with game store
 async function loadData() {
-    const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
-    if (data.total > 0) {
-        puzzleXp.value = data.documents[0].xp;
-        puzzleCoins.value = data.documents[0].coin;
-        wordsToFind.value = data.documents[0].searchWord.sort((a, b) => a.localeCompare(b));
+    const docs = await gameStore.fetchPuzzleData(category, true);
+    if (docs.length > 0) {
+        puzzleXp.value = docs[0].xp;
+        puzzleCoins.value = docs[0].coin;
+        wordsToFind.value = docs[0].searchWord.sort((a, b) => a.localeCompare(b));
         if (grid.value.length === 0) generateGrid(wordsToFind.value);
     }
+}
+
+async function applyRewards() {
+    const mult = starsCount.value === 3 ? 1 : starsCount.value === 2 ? 0.5 : 0.25;
+    puzzleCoinsValue.value = Math.floor(puzzleCoins.value * mult);
+    puzzleXpValue.value = Math.floor(puzzleXp.value * mult);
+    
+    await gameStore.updateUserStats(puzzleCoinsValue.value, puzzleXpValue.value);
 }
 
 function saveGame() {
@@ -249,38 +249,8 @@ function saveGame() {
 }
 
 async function saveProgress() {
-    try {
-        const user = await account.get();
-        const challenge_data = { best_time: time.value, stars: starsCount.value };
-        const data = await databases.listDocuments(database_id, collection_progress_id, [Query.equal('user_id', user.$id), Query.equal('category', category)]);
-
-        if (data.documents.length > 0) {
-            const doc = data.documents[0];
-            const currentBest = JSON.parse(doc.challenge_data);
-            if (time.value < currentBest.best_time) {
-                await databases.updateDocument(database_id, collection_progress_id, doc.$id, { challenge_data: JSON.stringify(challenge_data) });
-            }
-        } else {
-            await databases.createDocument(database_id, collection_progress_id, ID.unique(), { user_id: user.$id, category, challenge_data: JSON.stringify(challenge_data) });
-        }
-    } catch (err) { console.error(err); }
-}
-
-async function getUserStats(coins, xp) {
-    try {
-        const user = await account.get();
-        const stats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
-        if (stats.total > 0) {
-            const doc = stats.documents[0];
-            const mult = starsCount.value === 3 ? 1 : starsCount.value === 2 ? 0.5 : 0.25;
-            puzzleCoinsValue.value = Math.floor(coins * mult);
-            puzzleXpValue.value = Math.floor(xp * mult);
-            await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
-                coin: doc.coin + puzzleCoinsValue.value,
-                xp: doc.xp + puzzleXpValue.value
-            });
-        }
-    } catch (err) { console.error(err); }
+    const challengeData = { best_time: time.value, stars: starsCount.value };
+    await gameStore.saveChallengeProgress(userStore.currentUser.$id, category, challengeData);
 }
 
 function goBack() { localStorage.removeItem('challenge-progress'); router.back(); }
@@ -300,7 +270,11 @@ async function playAgain() {
 }
 
 onMounted(async () => {
+    if (!userStore.currentUser) {
+        await userStore.fetchUser();
+    }
     await loadData();
+    
     const saved = localStorage.getItem('challenge-progress');
     if (saved) {
         const state = JSON.parse(saved);
@@ -311,11 +285,6 @@ onMounted(async () => {
             isChallengePaused.value = true;
         }
     }
-    const user = await account.get();
-    const avatarData = await databases.listDocuments(database_id, collection_user_id, [Query.equal('id_user', user.$id)]);
-    if (avatarData.total > 0) userAvatar.value = avatarData.documents[0].avatar;
-    const statsData = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', user.$id)]);
-    if (statsData.total > 0) userCoins.value = statsData.documents[0].coin;
 });
 </script>
 

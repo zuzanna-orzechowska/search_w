@@ -2,8 +2,8 @@
     <div class="background-container">
         <div class="container">
             <WordSearchHeader 
-                :userCoins="userCoins" 
-                :userAvatar="userAvatar" 
+                :userCoins="userStore.coins" 
+                :userAvatar="userStore.avatar" 
                 :showCoinsDeducted="showCoinsDeducted" 
                 :hintCost="hintCost"
                 :dropdownActive="dropdownActive"
@@ -77,25 +77,26 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { databases, account } from '@/lib/appwrite';
-import { Query, ID } from 'appwrite';
-import { toast } from 'vue3-toastify';
-import { levelData } from '@/lib/levelsData';
-import { handleAchievements } from '@/lib/achievementsHandler';
+import { databases } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 import { useWordSearch } from '@/composables/useWordSearch';
+import { useUserStore } from '@/stores/user';
+import { useGameStore } from '@/stores/game';
 import WordSearchHeader from '@/components/WordSearchHeader.vue';
 import WordSearchList from '@/components/WordSearchList.vue';
 import WordSearchGrid from '@/components/WordSearchGrid.vue';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
+const gameStore = useGameStore();
 
+//grid
 const { 
     grid, selection, isSelecting, startCell, selectionColor, 
     wordsColor, foundWordsData, allWordsData, generateGrid 
 } = useWordSearch(12);
 
-//game
 const dropdownActive = ref(false);
 const wordsToFind = ref([]);
 const category = route.query.category;
@@ -104,33 +105,19 @@ const foundWords = ref([]);
 const hintedCell = ref(null);
 
 const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
-const collection_user_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
-const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
 
 let currentStage = ref(1);
 let maxStage = ref();
-const userAvatar = ref('');
-let userCoins = ref(0);
 const showPuzzleDone = ref(false);
 const showCategoryDone = ref(false);
-let currentUser = ref(null);
-let progressDocumentId = null;
+
 let progressData = {};
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
 const hintCost = ref(20);
 const showHintCost = ref(false);
 const showCoinsDeducted = ref(false);
-
-// logic for databse
-async function getUser() {
-    try {
-        const user = await account.get();
-        currentUser.value = user;
-    } catch (err) { console.log("Error: ", err); }
-}
 
 async function loadStage(stage) {
     try {
@@ -153,7 +140,7 @@ async function loadStage(stage) {
             resetStageState();
             generateGrid(wordsToFind.value);
         }
-    } catch (err) { console.log("Error loading stage:", err); }
+    } catch (err) { console.error("Error loading stage:", err); }
 }
 
 function resetStageState() {
@@ -166,33 +153,32 @@ function resetStageState() {
 }
 
 async function findStagePuzzle(stage) {
-    const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
-    return data.documents.find(doc => parseInt(doc.puzzleId.split('-')[1]) === stage);
+    const docs = await gameStore.fetchPuzzleData(category, false);
+    return docs.find(doc => parseInt(doc.puzzleId.split('-')[1]) === stage);
 }
 
 async function loadData() {
     try {
-        const puzzlesData = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
-        if (puzzlesData.total === 0) return;
-        maxStage.value = Math.max(...puzzlesData.documents.map(doc => parseInt(doc.puzzleId.split('-')[1])));
+        const docs = await gameStore.fetchPuzzleData(category, false);
+        if (docs.length === 0) return;
+        
+        maxStage.value = Math.max(...docs.map(doc => parseInt(doc.puzzleId.split('-')[1])));
+        
         await loadProgressDocument();
-        loadStage(currentStage.value);
-    } catch (err) { console.log("Error:", err); }
+        await loadStage(currentStage.value);
+    } catch (err) { console.error("Error loading data:", err); }
 }
 
 async function loadProgressDocument() {
     const progressDocs = await databases.listDocuments(database_id, collection_progress_id, [
-        Query.equal("user_id", currentUser.value.$id), Query.equal("category", category)
+        Query.equal("user_id", userStore.currentUser.$id), 
+        Query.equal("category", category)
     ]);
+    
     if (progressDocs.total > 0) {
-        progressDocumentId = progressDocs.documents[0].$id;
         progressData = JSON.parse(progressDocs.documents[0].stages_data);
         currentStage.value = progressData.userMaxStageReached || 1;
     } else {
-        const newDoc = await databases.createDocument(database_id, collection_progress_id, ID.unique(), { 
-            user_id: currentUser.value.$id, category, stages_data: '{}' 
-        });
-        progressDocumentId = newDoc.$id;
         progressData = {};
         currentStage.value = 1;
     }
@@ -208,12 +194,11 @@ async function saveProgress(completed = false) {
         wordsColor: JSON.stringify(wordsColor.value),
     };
     progressData.userMaxStageReached = Math.max(progressData.userMaxStageReached || 0, currentStage.value);
-    await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { 
-        stages_data: JSON.stringify(progressData) 
-    });
+    
+    await gameStore.savePlayProgress(userStore.currentUser.$id, category, progressData);
 }
 
-//interacting with grid
+// interacting with grid
 const handleStart = (r, c) => {
     isSelecting.value = true;
     startCell.value = { row: r, col: c };
@@ -249,8 +234,9 @@ const handleEnd = async () => {
 
         const isCompleted = foundWords.value.length === wordsToFind.value.length;
         await saveProgress(isCompleted);
+        
         if (isCompleted) {
-            await processPuzzleCompletion(puzzleCoins.value, puzzleXp.value);
+            await gameStore.updateUserStats(puzzleCoins.value, puzzleXp.value);
             showPuzzleDone.value = true;
         }
     }
@@ -258,59 +244,35 @@ const handleEnd = async () => {
 };
 
 async function showHint() {
-    if (userCoins.value >= hintCost.value) {
-        userCoins.value -= hintCost.value;
+    if (userStore.coins >= hintCost.value) {
+        await gameStore.updateUserStats(-hintCost.value, 0); 
+        
         showCoinsDeducted.value = true;
         setTimeout(() => showCoinsDeducted.value = false, 1500);
+        
         const unfound = allWordsData.value.filter(w => !foundWords.value.includes(w.word));
         if (unfound.length > 0) hintedCell.value = unfound[Math.floor(Math.random() * unfound.length)].coords[0];
-    } else { toast.error("Not enough coins!"); }
-}
-
-async function processPuzzleCompletion(coins, xp) {
-    const statsDocs = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-    if (statsDocs.total > 0) {
-        const doc = statsDocs.documents[0];
-        let { coin, xp: uXp, level, title } = doc;
-        
-        const newCoins = coin + coins;
-        const newXp = uXp + xp;
-        const sortedLevels = [...levelData].sort((a,b) => b.xpNeeded - a.xpNeeded);
-        const nextLevel = sortedLevels.find(l => l.xpNeeded <= newXp);
-        
-        if (nextLevel && nextLevel.number > level) {
-            level = nextLevel.number; 
-            title = nextLevel.title;
-            toast.success(`Leveled up to ${level}!`);
-        }
-        
-        await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, { 
-            coin: newCoins, 
-            xp: newXp, 
-            level, 
-            title 
-        });
-
-        await handleAchievements({ coins: newCoins, level: level });
-        
-        userCoins.value = newCoins;
+    } else { 
+        import('vue3-toastify').then(({toast}) => toast.error("Not enough coins!")); 
     }
 }
 
 function nextStage() {
-    if (currentStage.value < maxStage.value) { currentStage.value++; loadStage(currentStage.value); }
-    else { showCategoryDone.value = true; }
+    if (currentStage.value < maxStage.value) { 
+        currentStage.value++; 
+        loadStage(currentStage.value); 
+    } else { 
+        showCategoryDone.value = true; 
+    }
 }
 
 function goBack() { router.back(); }
 
 onMounted(async () => {
-    await getUser();
+    if (!userStore.currentUser) {
+        await userStore.fetchUser();
+    }
     await loadData();
-    const avatarData = await databases.listDocuments(database_id, collection_user_id, [Query.equal('id_user', currentUser.value.$id)]);
-    if (avatarData.total > 0) userAvatar.value = avatarData.documents[0].avatar;
-    const statsData = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-    if (statsData.total > 0) userCoins.value = statsData.documents[0].coin;
 });
 </script>
 
