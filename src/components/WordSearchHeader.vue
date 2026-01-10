@@ -1,16 +1,23 @@
 <template>
-  <div class="right-up-wrapper">
-    <div class="coins-display">
-      <img src="@/assets/coin-icon.svg" alt="Coins">
-      <p>{{ userCoins }}</p>
+  <div class="absolute top-[10px] right-[10px] flex items-center gap-2 min-[601px]:top-5 min-[601px]:right-5 min-[601px]:gap-4">
+    <div class="flex items-center gap-2">
+      <img src="@/assets/coin-icon.svg" alt="Coins" class="h-[30px] w-[30px] min-[601px]:h-[42px] min-[601px]:w-[42px]">
+      <p class="mt-0 text-[18px] min-[601px]:mt-6 min-[601px]:text-[24px]">{{ userCoins }}</p>
     </div>
-    <div class="coins-deducted" v-if="showCoinsDeducted">
-      <p>-{{ hintCost }}</p>
-      <img src="@/assets/coin-icon.svg" alt="Coin deducted">
+
+    <div v-if="showCoinsDeducted" class="animate-deduct absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 opacity-0">
+      <p class="m-0 text-[24px] font-medium text-[#e74c3c]">-{{ hintCost }}</p>
+      <img src="@/assets/coin-icon.svg" alt="Coin deducted" class="h-[42px] w-[42px]">
     </div>
+
     <div class="avatar-wrapper">
-      <div class="dropdown" v-click-outside="closeDropdown">
-        <img @click="$emit('toggleDropdown')" :src="userAvatar" alt="User Avatar" class="user-avatar" />
+      <div class="relative" v-click-outside="closeDropdown">
+        <img 
+          @click="$emit('toggleDropdown')" 
+          :src="userAvatar" 
+          alt="User Avatar" 
+          class="h-10 w-10 cursor-pointer rounded-full min-[601px]:h-[60px] min-[601px]:w-[60px]" 
+        />
         <component v-if="dropdownActive" :is="DropdownUser" />
       </div>
     </div>
@@ -27,33 +34,12 @@ const emit = defineEmits(['toggleDropdown', 'closeDropdown']);
 const closeDropdown = () => emit('closeDropdown');
 </script>
 
-<style lang="scss" scoped>
-.right-up-wrapper {
-  position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 16px;
-  .coins-display { 
-    display: flex; align-items: center; gap: 8px;
-    p { font-size: 24px; margin-top: 24px; }
-    img { width: 42px; height: 42px; }
-  }
-  .coins-deducted {
-    display: flex; align-items: center; gap: 8px; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); opacity: 0; animation: deduct-animation 2s forwards;
-    p { font-size: 24px; font-weight: 500; color: #e74c3c; margin: 0; }
-    img { width: 42px; height: 42px; }
-  }
-  .user-avatar { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; }
-}
-
+<style>
 @keyframes deduct-animation {
   0% { transform: translate(-50%, -50%); opacity: 1; }
   100% { transform: translate(-50%, -150%); opacity: 0; }
 }
-
-@media (max-width: 600px) {
-  .right-up-wrapper {
-    top: 10px; right: 10px; gap: 8px;
-    .coins-display { p { font-size: 18px; } img { width: 30px; height: 30px; } }
-    .user-avatar { width: 40px; height: 40px; }
-  }
+.animate-deduct {
+  animation: deduct-animation 2s forwards;
 }
 </style>

@@ -1,73 +1,63 @@
 <template>
-    <div class="background-container">
-        <div class="container">
-            <WordSearchHeader 
-                :userCoins="userStore.coins" 
-                :userAvatar="userStore.avatar" 
-                :showCoinsDeducted="showCoinsDeducted" 
-                :hintCost="hintCost"
-                :dropdownActive="dropdownActive"
-                @toggleDropdown="dropdownActive = !dropdownActive"
-                @closeDropdown="dropdownActive = false"
-            />
+    <div class="h-screen w-screen overflow-y-auto bg-[#aed2e5]">
+        <div class="relative flex flex-col items-center bg-[#aed2e5] pb-[50px] px-4">
+            
+            <WordSearchHeader :userCoins="userStore.coins" :userAvatar="userStore.avatar" :showCoinsDeducted="showCoinsDeducted" :hintCost="hintCost" :dropdownActive="dropdownActive"
+                @toggleDropdown="dropdownActive = !dropdownActive" @closeDropdown="dropdownActive = false"/>
 
-            <div class="text-container">
-                <h2>{{ categoryName }}</h2>
-                <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
-                <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
+            <div class="mt-1 text-center">
+                <h2 class="m-0 text-[36px] min-[601px]:text-[56px] font-bold">{{ categoryName }}</h2>
+                <p class="text-[32px]">{{ currentStage }} / {{ maxStage }}</p>
+                <p class="text-[20px] max-w-2xl">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
             </div>
 
-            <div class="wrapper-search">
-                <WordSearchList 
-                    :wordsToFind="wordsToFind" 
-                    :foundWords="foundWords" 
-                />
+            <div class="mt-8 flex flex-col min-[992px]:flex-row items-center min-[992px]:items-start justify-center gap-10 w-full max-w-[1200px] mx-auto">
+                
+                <div class="w-full min-[992px]:w-1/4 max-w-[300px]">
+                    <WordSearchList :wordsToFind="wordsToFind" :foundWords="foundWords" />
+                </div>
     
-                <WordSearchGrid 
-                    :grid="grid"
-                    :selection="selection"
-                    :selectionColor="selectionColor"
-                    :foundWordsData="foundWordsData"
-                    :wordsColor="wordsColor"
-                    :hintedCell="hintedCell"
-                    @start="handleStart"
-                    @extend="handleExtend"
-                    @end="handleEnd"
-                />
-            </div>
-
-            <div class="bottom">
-                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <div class="hint-wrapper">
-                    <span class="hint-cost-text" v-if="showHintCost">{{ hintCost }}</span>
-                    <img @click="showHint" @mouseover="showHintCost = true" @mouseleave="showHintCost = false" src="../assets/hint-icon.svg" alt="hint icon">
+                <div class="w-full min-[992px]:w-2/3 max-w-[600px] flex justify-center">
+                    <WordSearchGrid :grid="grid" :selection="selection" :selectionColor="selectionColor" :foundWordsData="foundWordsData" :wordsColor="wordsColor" :hintedCell="hintedCell"
+                        @start="handleStart" @extend="handleExtend" @end="handleEnd"/>
                 </div>
             </div>
 
-            <div class="puzzle-done" v-if="showPuzzleDone">
-                <h2>Puzzle completed!</h2>
-                <div class="rewards-txt">
-                    <div class="txt-icon">
+            <div class="mt-8 flex w-[280px] items-center justify-center gap-6 rounded-[24px] border-4 border-black bg-[#57A4CD] py-2">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon" class="w-[44px] cursor-pointer">
+                <div class="relative">
+                    <span v-if="showHintCost" class="absolute bottom-[110%] left-1/2 -translate-x-1/2 rounded-sm bg-[#f9f9f9] px-2 py-1 font-bold">
+                        {{ hintCost }}
+                    </span>
+                    <img @click="showHint" @mouseover="showHintCost = true" @mouseleave="showHintCost = false" src="../assets/hint-icon.svg" alt="hint icon" class="w-[44px] cursor-pointer"
+                    >
+                </div>
+            </div>
+
+            <div v-if="showPuzzleDone" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl bg-[#71accc]/80 p-10 text-center backdrop-blur-md w-[90%] max-w-[600px]">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold">Puzzle completed!</h2>
+                <div class="flex justify-center gap-8 min-[601px]:gap-[64px] text-[18px] min-[601px]:text-[24px]">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleCoins }} coins</p>
-                        <img src="../assets/coin-icon.svg" alt="coin icon">
+                        <img src="../assets/coin-icon.svg" alt="coin icon" class="w-8 min-[601px]:w-12">
                     </div>
-                    <div class="txt-icon">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleXp }} exp</p>
-                        <img src="../assets/exp-icon.svg" alt="exp icon">
+                        <img src="../assets/exp-icon.svg" alt="exp icon" class="w-8 min-[601px]:w-12">
                     </div>
                 </div>
-                <div class="btns">
-                    <button @click="goBack">Back</button>
-                    <button class="next-btn" @click="nextStage">Next</button>
+                <div class="mt-5 flex justify-center gap-4 min-[601px]:gap-[64px]">
+                    <button @click="goBack" class="cursor-pointer rounded-md border-2 border-black p-2 min-[601px]:p-[10px_40px] text-[20px] min-[601px]:text-[24px] bg-white">Back</button>
+                    <button @click="nextStage" class="cursor-pointer rounded-md border-2 border-black bg-[#71ACCC] p-2 min-[601px]:p-[10px_40px] text-[20px] min-[601px]:text-[24px]">Next</button>
                 </div>
             </div>
 
-            <div class="category-done" v-if="showCategoryDone">
-                <h2>Congratulations!</h2>
-                <p>You've completed all puzzles in this category</p>
-                <img src="../assets/blueFluff.svg" alt="blue fluff">
-                <div class="btns">
-                    <button @click="goBack">Back</button>
+            <div v-if="showCategoryDone" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl bg-[#71accc]/80 p-10 text-center backdrop-blur-md w-[90%] max-w-[600px]">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold">Congratulations!</h2>
+                <p class="text-[18px] min-[601px]:text-[24px]">You've completed all puzzles in this category</p>
+                <img src="../assets/blueFluff.svg" alt="blue fluff" class="my-4 w-32 min-[601px]:w-48">
+                <div class="mt-5 flex justify-center gap-[64px]">
+                    <button @click="goBack" class="cursor-pointer rounded-md border-2 border-black p-[10px_40px] text-[20px] min-[601px]:text-[24px] bg-white">Back</button>
                 </div>
             </div>
         </div>
@@ -275,23 +265,3 @@ onMounted(async () => {
     await loadData();
 });
 </script>
-
-<style lang="scss" scoped>
-.background-container { width: 100vw; height: 100vh; background-color: rgb(174, 210, 229); overflow-y: scroll; }
-.container { background-color: rgb(174, 210, 229); display: flex; align-items: center; flex-direction: column; position: relative; padding-bottom: 50px; }
-.text-container { text-align: center; margin-top: 4px; h2 { font-size: 56px; margin: 0; } .bigger { font-size: 32px; } .smaller { font-size: 20px; } }
-.wrapper-search { display: flex; justify-content: center; gap: 96px; margin-top: 20px; }
-.bottom { display: flex; justify-content: center; align-items: center; margin-top: 32px; background-color: #57A4CD; width: 280px; border: 4px solid black; border-radius: 24px; gap: 24px; img { width: 44px; cursor: pointer; } }
-
-.puzzle-done, .category-done { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(113, 172, 204, 0.8); backdrop-filter: blur(10px); padding: 40px; border-radius: 12px; text-align: center; z-index: 100;
-    h2 { font-size: 54px; } .rewards-txt { display: flex; gap: 64px; justify-content: center; font-size: 24px; } .btns { display: flex; gap: 64px; justify-content: center; margin-top: 20px; }
-    button { font-size: 24px; padding: 10px 40px; border-radius: 6px; cursor: pointer; border: 2px solid black; } .next-btn { background: #71ACCC; }
-}
-
-.hint-wrapper { position: relative; .hint-cost-text { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #f9f9f9; padding: 4px 8px; border-radius: 4px; font-weight: bold; } }
-
-@media (max-width: 600px) {
-    .wrapper-search { flex-direction: column; align-items: center; gap: 20px; }
-    .text-container h2 { font-size: 36px; }
-}
-</style>

@@ -1,41 +1,42 @@
 <template>
-    <div class="background-container">
-        <div class="container">
-            <div class="text-container">
-                <h2>{{ categoryName }}</h2>
-                <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
+    <div class="h-screen w-screen bg-[#aed2e5] overflow-hidden">
+        <div class="relative flex flex-col items-center bg-[#aed2e5] h-screen overflow-y-auto pb-[50px] px-4">
+            
+            <div class="mt-3 text-center">
+                <h2 class="m-0 text-[36px] min-[601px]:text-[56px] font-bold">{{ categoryName }}</h2>
+                <p class="text-[20px] min-[601px]:text-[28px] mb-8">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
             </div>
 
-            <div class="wrapper-search">
-                <WordSearchList 
-                    :wordsToFind="wordsToFind" 
-                    :foundWords="foundWords" 
-                />
+            <div class="flex flex-col min-[992px]:flex-row items-center min-[992px]:items-start justify-center gap-8 w-full max-w-[1200px] mx-auto">
+                
+                <div class="w-full min-[992px]:w-1/4 max-w-[300px]">
+                    <WordSearchList 
+                        :wordsToFind="wordsToFind" 
+                        :foundWords="foundWords" 
+                    />
+                </div>
     
-                <WordSearchGrid 
-                    :grid="grid"
-                    :selection="selection"
-                    :selectionColor="selectionColor"
-                    :foundWordsData="foundWordsData"
-                    :wordsColor="wordsColor"
-                    :hintedCell="hintedCell"
-                    @start="handleStart"
-                    @extend="handleExtend"
-                    @end="handleEnd"
-                />
+                <div class="w-full max-w-[550px] flex justify-center">
+                    <WordSearchGrid :grid="grid" :selection="selection" :selectionColor="selectionColor" :foundWordsData="foundWordsData" :wordsColor="wordsColor" :hintedCell="hintedCell"
+                        @start="handleStart" @extend="handleExtend" @end="handleEnd"/>
+                </div>
             </div>
 
-            <div class="bottom">
-                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <img @click="showHint" src="../assets/hint-icon.svg" alt="hint icon">
+            <div class="mt-8 flex w-[280px] items-center justify-center gap-6 rounded-[24px] border-4 border-black bg-[#57A4CD] py-2">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon" class="w-[44px] cursor-pointer">
+                <img @click="showHint" src="../assets/hint-icon.svg" alt="hint icon" class="w-[44px] cursor-pointer">
             </div>
 
-            <div class="category-done" v-if="showCreateAccount">
-                <h2>No more random puzzles 😔</h2>
-                <p>Please sign in to save your progress and unlock more!</p>
-                <div class="btns">
-                    <button @click="goBack">Back</button>
-                    <button @click="router.push('/login')">Sign in</button>
+            <div v-if="showCreateAccount" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-md bg-[#71accc]/60 p-8 text-center backdrop-blur-md w-[90%] max-w-[696px] min-h-[400px]">
+                <h2 class="text-[32px] min-[601px]:text-[54px] font-medium leading-tight mb-6">No more random puzzles 😔</h2>
+                <p class="text-[18px] min-[601px]:text-[28px] mb-8">Please sign in to save your progress and unlock more!</p>
+                <div class="flex flex-wrap justify-center gap-8 md:gap-[64px]">
+                    <button @click="goBack" class="rounded-md border-2 border-black bg-white px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]">
+                        Back
+                    </button>
+                    <button @click="router.push('/login')" class="rounded-md border-2 border-black bg-[#3291C3] px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]">
+                        Sign in
+                    </button>
                 </div>
             </div>
 
@@ -148,58 +149,3 @@ onMounted(async () => {
    await loadData();
 });
 </script>
-
-<style lang="scss" scoped>
-.background-container {
-    width: 100vw; height: 100vh;
-    background-color: rgb(174, 210, 229);
-}
-
-.container {
-    background-color: rgb(174, 210, 229);
-    display: flex; align-items: center;
-    flex-direction: column; position: relative;
-    height: 100vh; overflow-y: scroll;
-
-    .text-container {
-        text-align: center; margin-top: 12px;
-        h2 { font-size: 56px; margin-bottom: 4px; }
-        .smaller { font-size: 28px; margin-bottom: 32px; }
-    }
-
-    .wrapper-search { display: flex; justify-content: center; gap: 96px; }
-
-    .bottom {
-        display: flex; justify-content: center; align-items: center;
-        margin-top: 32px; background-color: #57A4CD;
-        width: 280px; border: 4px solid black; border-radius: 24px; gap: 24px;
-        img { width: 44px; cursor: pointer; }
-    }
-
-    .category-done {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 696px; height: 496px; background-color: rgba(113, 172, 204, 0.6);
-        backdrop-filter: blur(10px); border-radius: 6px;
-        display: flex; align-items: center; justify-content: center; flex-direction: column;
-        z-index: 100;
-
-        h2 { font-size: 54px; font-weight: 500; text-align: center; margin-bottom: 24px; }
-        p { font-size: 28px; text-align: center; }
-        .btns {
-            display: flex; gap: 64px; margin-top: 24px;
-            button {
-                font-size: 24px; padding: 10px 40px; border-radius: 6px; cursor: pointer; border: 2px solid black;
-                &:hover { transform: scale(1.1); box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86); }
-            }
-        }
-    }
-}
-
-@media (max-width: 600px) {
-    .container {
-        .text-container h2 { font-size: 36px; }
-        .wrapper-search { flex-direction: column; align-items: center; gap: 24px; }
-        .category-done { width: 90%; height: auto; padding: 30px 20px; h2 { font-size: 32px; } p { font-size: 18px; } }
-    }
-}
-</style>

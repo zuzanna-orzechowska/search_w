@@ -1,39 +1,46 @@
 <template>
-    <div class="background-lines">
-        <div class="container">
-            <div class="wrapper">
-                <div class="text-container">
-                    <h2>Challenge</h2>
-                    <p class="bigger">Take the challenge and test your skills, scroll to show more.</p>
-                    <p class="smaller">{{ completedCount }}/{{categoryLen}} completed</p>
+    <div 
+        class="h-screen w-screen bg-cover bg-center bg-no-repeat"
+        :style="{ backgroundImage: `url(${require('@/assets/background-play.png')})` }"
+    >
+        <div class="flex min-h-screen items-center justify-center">
+            <div class="relative flex h-[90vh] w-[60vw] flex-col items-center rounded-md bg-[#aecde5]/50 shadow-[4px_4px_10px_3px_rgba(0,0,0,0.3)] backdrop-blur-[20px] max-[600px]:h-[95vh] max-[600px]:w-[90vw] max-[600px]:shadow-none">
+                
+                <div class="text-center">
+                    <h2 class="mt-3 mb-1 text-[56px] font-medium max-[600px]:mt-5 max-[600px]:text-[40px]">Challenge</h2>
+                    <p class="mb-1 text-[28px] max-[600px]:text-[20px]">Take the challenge and test your skills, scroll to show more.</p>
+                    <p class="text-[24px] max-[600px]:text-[18px]">{{ completedCount }}/{{categoryLen}} completed</p>
                 </div>
-                <div class="scroll">
-                    <div class="categories-container">
-                        <div class="category" v-for="category in categories" :key="category.name">
-                            <img :src="category.image" :alt="category.name" class="challenge-img">
 
-                            <div class="overlay-txt" v-if="categoryStarsNumber(category.name)"> 
-                                <img v-if="categoryStarsNumber(category.name) === 3" class="completed-text" src="../assets/completed-text.svg" alt="completed text">
-                                <div class="best-time" v-if="categoryStarsNumber(category.name) < 3">
+                <div class="flex-1 overflow-y-auto pb-[100px] max-[600px]:pb-20">
+                    <div class="mt-[42px] grid grid-cols-4 gap-[2vw] max-[1280px]:grid-cols-3 max-[992px]:grid-cols-2 max-[600px]:mt-[30px] max-[600px]:gap-[5vw]">
+                        <div class="relative flex flex-col items-center gap-[1vw] max-[600px]:gap-[3vw]" v-for="category in categories" :key="category.name">
+                            <img :src="category.image" :alt="category.name" class="challenge-img w-[180px] rounded-md border-4 border-[#FFBA08] max-[600px]:w-[140px] max-[600px]:border-[3px]">
+
+                            <div v-if="categoryStarsNumber(category.name)" class="absolute top-0 left-0 flex h-[180px] w-[180px] flex-col items-center justify-center gap-3 rounded-md bg-black/50 max-[600px]:h-[140px] max-[600px]:w-[140px] max-[600px]:gap-2"> 
+                                <img v-if="categoryStarsNumber(category.name) === 3" class="completed-text border-none max-[600px]:w-[124px]" src="../assets/completed-text.svg" alt="completed text">
+                                
+                                <div class="best-time rounded-md bg-black/40 px-[10px] py-[5px] text-[28px] font-medium tracking-wider text-[#FFBA08] max-[600px]:text-[20px]" style="text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">
                                     Best: {{ formatTime(getBestTime(category.name)) }}
                                 </div>
+
                                 <div class="stars">
-                                     <template v-for="s in 3" :key="s"> <!--adding not strictly HTML element - logic with stars, so it's better to use template than div, div can mess up styling-->
-                                        <img v-if="s <= categoryStarsNumber(category.name)" src="../assets/full-star.svg" alt="full star">
-                                        <img v-else src="../assets/blank-star.svg" alt="blank star">
+                                    <!--adding not strictly HTML element - logic with stars, so it's better to use template than div, div can mess up styling-->
+                                     <template v-for="s in 3" :key="s"> <img v-if="s <= categoryStarsNumber(category.name)" src="../assets/full-star.svg" alt="full star" class="inline w-[42px] max-[600px]:w-[30px]">
+                                        <img v-else src="../assets/blank-star.svg" alt="blank star" class="inline w-[42px] max-[600px]:w-[30px]">
                                      </template>
                                 </div>
                             </div>
 
-                            <button v-if="!isChallengeCompleted(category.name)" class="challenge-btn" @click="playCategory(category.name)">Play</button>
+                            <button v-if="!isChallengeCompleted(category.name)" class="challenge-btn cursor-pointer rounded-[12px] border-2 border-black bg-[#FFBA08] px-[6%] py-[1%] text-[20px] font-medium text-black transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] max-[600px]:px-[8%] max-[600px]:py-[3%] max-[600px]:text-[18px] max-[600px]:hover:scale-100 max-[600px]:hover:shadow-none" @click="playCategory(category.name)">Play</button>
                             <div v-else>
-                                <img src="../assets/tick.svg" alt="tick" class="tick">
+                                <img src="../assets/tick.svg" alt="tick" class="tick w-[42px] border-none">
                             </div>
                         </div>
-                </div>
+                    </div>
                 </div>
     
-                <ButtonFooter class="footer-positioned"/>
+                <ButtonFooter class="absolute bottom-0 left-0 right-0 z-10 w-full"/>
             </div>
         </div>
     </div>
@@ -136,249 +143,9 @@ onMounted( async () => {
 })
 </script>
 
-<style lang="scss" scoped>
-.background-lines {
-    background-image: url("../assets/background-play.png");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-    width: 100vw;
-}
-
-.container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    
-    .wrapper {
-        background-color: rgba(174, 210, 229,0.5);
-        backdrop-filter: blur(20px);
-        width: 60vw;
-        height: 90vh;
-        border-radius: 6px;
-        box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        position: relative;
-    }
-
-    .footer-positioned {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        z-index: 10;
-    }
-
-    .text-container {
-        text-align: center;
-
-        h2 {
-            font-size: 56px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            margin-top: 12px;
-        }
-
-        .bigger{
-            font-size: 28px;
-            margin-bottom: 4px;
-        }
-
-        .smaller {
-            font-size: 24px;
-        }
-    }
-
-    .scroll {
-        flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
-        padding-bottom: 100px;
-
-        .categories-container {
-            display: grid;
-            grid-template-columns: repeat(4,1fr);
-            gap: 2vw;
-            margin-top: 42px;
-    
-            .category {
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 1vw;
-
-                .overlay-txt {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 180px;
-                    height: 180px;
-                    background: rgba(0,0,0,0.5);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    flex-direction: column;
-                    gap: 12px;
-                    border-radius: 6px;
-                    
-                    .best-time {
-                        font-size: 28px;
-                        font-weight: 500;
-                        color: #FFBA08;
-                        text-shadow:
-                            -2px -2px 0 #000,
-                            2px -2px 0 #000,
-                            -2px 2px 0 #000,
-                            2px 2px 0 #000,
-                            -1px -1px 0 #000,
-                            1px -1px 0 #000,
-                            -1px 1px 0 #000,
-                            1px 1px 0 #000;
-                        background-color: rgba(0, 0, 0, 0.4); /* Slightly transparent background for the text */
-                        padding: 5px 10px;
-                        border-radius: 5px;
-                        letter-spacing: 1px; 
-                    }
-
-                    .completed-text {
-                        border: none;
-                    }
-
-                    .stars {
-                        
-                        img {
-                            width: 42px;
-                        }
-                    }
-                }
-    
-                .challenge-img {
-                    width: 180px;
-                    border: 4px solid #FFBA08;
-                    border-radius: 6px;
-                }
-    
-                .challenge-btn {
-                    -webkit-tap-highlight-color: transparent;
-                    -webkit-text-fill-color: initial;
-                    color: black !important;
-                    font-size: 20px;
-                    padding: 1% 6%;
-                    font-weight: 500;
-                    background-color: #FFBA08;
-                    border: 2px solid black;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transform: perspective(1px) translateZ(0);
-                    box-shadow: 0 0 1px transparent;
-                    transition-duration: 0.3s;
-                    transition-property: box-shadow, transform;
-                }
-    
-                button:hover {
-                    box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                    transform: scale(1.1);
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 600px) {
-    .container {
-        min-height: 100vh;
-        
-        .wrapper {
-            width: 90vw; 
-            height: 95vh;
-            box-shadow: none;
-        }
-
-        .text-container {
-            margin-top: 10px;
-
-            h2 {
-                font-size: 40px;
-                margin-top: 20px;
-            }
-
-            .bigger{
-                font-size: 20px; 
-            }
-
-            .smaller {
-                font-size: 18px;
-            }
-        }
-
-        .scroll {
-            padding-bottom: 80px; 
-            
-            .categories-container {
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 5vw; 
-                margin-top: 30px;
-        
-                .category {
-                    gap: 3vw;
-                    
-                    .overlay-txt {
-                        width: 140px;
-                        height: 140px;
-                        gap: 8px;
-
-                        .completed-text {
-                            width: 124px;
-                        }   
-
-                        .best-time {
-                            font-size: 20px; 
-                        }
-
-                        .stars {
-                            img {
-                                width: 30px;
-                            }
-                        }
-                    }
-        
-                    .challenge-img {
-                        width: 140px; 
-                        border-width: 3px;
-                    }
-        
-                    .challenge-btn {
-                        font-size: 18px; 
-                        padding: 3% 8%;
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 992px) {
-    .container {
-        .scroll {
-            .categories-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    }
-}
-
-@media (min-width: 992px) and (max-width: 1280px) {
-    .container {
-        .scroll {
-            .categories-container {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-    }
+<style scoped>
+button {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-fill-color: initial;
 }
 </style>

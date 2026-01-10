@@ -1,18 +1,9 @@
 <template>
-  <div class="grid" ref="gridRef">
-    <div class="row" v-for="(row, indRow) in grid" :key="indRow">
-      <span 
-        class="cell" 
-        v-for="(cell, indCell) in row" 
-        :key="indCell"
-        :style="getCellStyle(indRow, indCell)"
-        @mousedown.prevent="$emit('start', indRow, indCell)" 
-        @mouseover="$emit('extend', indRow, indCell)" 
-        @mouseup="$emit('end')"
-        @touchstart.prevent="$emit('start', indRow, indCell)" 
-        @touchmove="handleTouchMove" 
-        @touchend="$emit('end')"
-      >
+  <div class="flex flex-col border-2 border-[#57A4CD] min-[601px]:border-4 w-full bg-[#f9f9f9] shadow-lg touch-none max-h-[70vh] aspect-square mx-auto" ref="gridRef">
+    <div class="flex flex-1" v-for="(row, indRow) in grid" :key="indRow">
+      <span v-for="(cell, indCell) in row" :key="indCell" class="flex-1 aspect-square flex items-center justify-center cursor-pointer border-[0.5px] border-blue-100/20  uppercase transition-colors select-none"
+        :class="['text-[4.5vw] min-[601px]:text-[min(2.5vw,28px)]']" :style="getCellStyle(indRow, indCell)" @mousedown.prevent="$emit('start', indRow, indCell)" @mouseover="$emit('extend', indRow, indCell)" 
+        @mouseup="$emit('end')" @touchstart.prevent="$emit('start', indRow, indCell)" @touchmove="handleTouchMove" @touchend="$emit('end')">
         {{ cell }}
       </span>
     </div>
@@ -50,21 +41,3 @@ const getCellStyle = (row, col) => {
   return style;
 };
 </script>
-
-<style lang="scss" scoped>
-.grid {
-  display: flex; flex-direction: column; border: 4px solid #57A4CD;
-  .row {
-    display: flex;
-    .cell {
-      background: #f9f9f9; width: 44px; height: 44px; text-align: center;
-      line-height: 44px; font-weight: 400; font-size: 28px; cursor: pointer;
-      &:hover:not(.selected):not(.found) { outline: 2px solid #ccc; outline-offset: -2px; }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .grid { border-width: 2px; .row .cell { width: 40px; height: 40px; font-size: 22px; } }
-}
-</style>

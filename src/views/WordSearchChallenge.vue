@@ -1,93 +1,80 @@
 <template>
-    <div class="background-container">
-        <div class="container">
-            <WordSearchHeader 
-                :userCoins="userStore.coins" 
-                :userAvatar="userStore.avatar" 
-                :dropdownActive="dropdownActive"
-                @toggleDropdown="dropdownActive = !dropdownActive"
-                @closeDropdown="dropdownActive = false"
-            />
+    <div class="h-screen w-screen overflow-y-auto bg-[#aed2e5]">
+        <div class="relative flex flex-col items-center bg-[#aed2e5] pb-[50px] px-4">
+            <WordSearchHeader :userCoins="userStore.coins" :userAvatar="userStore.avatar" :dropdownActive="dropdownActive" @toggleDropdown="dropdownActive = !dropdownActive" @closeDropdown="dropdownActive = false"/>
 
-            <div class="text-container">
-                <h2>{{ categoryName }}</h2>
-                <p class="bigger">{{ timeString }}</p>
-                <p class="smaller">Found {{ foundWords.length }} / {{ wordsToFind.length }}</p>
+            <div class="mt-1 text-center">
+                <h2 class="m-0 text-[36px] min-[601px]:text-[56px] font-bold">{{ categoryName }}</h2>
+                <p class="text-[32px] font-medium">{{ timeString }}</p>
+                <p class="text-[20px]">Found {{ foundWords.length }} / {{ wordsToFind.length }}</p>
             </div>
 
-            <div class="wrapper-search">
-                <WordSearchList 
-                    :wordsToFind="wordsToFind" 
-                    :foundWords="foundWords" 
-                    :twoColumns="true" 
-                />
+            <div class="mt-5 flex flex-col items-center gap-8 min-[992px]:flex-row min-[992px]:items-start min-[992px]:justify-center w-full max-w-5xl">
+                
+                <div class="w-full min-[992px]:w-1/3 max-w-[350px]">
+                    <WordSearchList :wordsToFind="wordsToFind" :foundWords="foundWords" :twoColumns="true" />
+                </div>
     
-                <WordSearchGrid 
-                    :grid="grid"
-                    :selection="selection"
-                    :selectionColor="selectionColor"
-                    :foundWordsData="foundWordsData"
-                    :wordsColor="wordsColor"
-                    @start="handleStart"
-                    @extend="handleExtend"
-                    @end="handleEnd"
-                />
+                <div class="w-full max-w-[500px]">
+                    <WordSearchGrid :grid="grid" :selection="selection" :selectionColor="selectionColor" :foundWordsData="foundWordsData" :wordsColor="wordsColor"
+                        @start="handleStart" @extend="handleExtend" @end="handleEnd"/>
+                </div>
             </div>
 
-            <div class="bottom">
-                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <img @click="pauseGame" src="../assets/pause-icon.svg" alt="pause icon">
+            <div class="mt-8 flex w-[280px] items-center justify-center gap-6 rounded-[24px] border-4 border-black bg-[#57A4CD] py-2">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon" class="w-[44px] cursor-pointer">
+                <img @click="pauseGame" src="../assets/pause-icon.svg" alt="pause icon" class="w-[44px] cursor-pointer">
             </div>
 
-            <div class="challenge-paused" v-if="isChallengePaused">
-                <h2>Game paused</h2>
-                <div class="paused-txt">
-                    <p>Want to continue?</p>
-                    <div class="btns">
-                        <button @click="resumeGame" class="continue-btn">Continue</button>
+            <div v-if="isChallengePaused" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-md bg-[#71accc]/60 p-10 text-center backdrop-blur-md w-[90%] max-w-[540px] border-2 border-black/10">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold mb-6">Game paused</h2>
+                <div class="flex flex-col gap-4">
+                    <p class="text-[28px]">Want to continue?</p>
+                    <div class="flex justify-center mb-6">
+                        <button @click="resumeGame" class="rounded-md border-2 border-black bg-[#71ACCC] px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Continue</button>
                     </div>
                 </div>
-                <div class="paused-txt second">
-                    <p>Go back to challenges.</p>
-                    <div class="btns">
-                        <button @click="goBack">Back</button>
+                <div class="flex flex-col gap-4 border-t border-black/20 pt-6">
+                    <p class="text-[28px]">Go back to challenges.</p>
+                    <div class="flex justify-center">
+                        <button @click="goBack" class="rounded-md border-2 border-black bg-white px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Back</button>
                     </div>
-                    <p class="warning">All progress will be lost!</p>
+                    <p class="text-red-600 font-bold uppercase tracking-wider">All progress will be lost!</p>
                 </div>
            </div>
 
-            <div class="challenge-completed" v-if="isChallengeCompleted">
-                <h2>{{ completionTitle }}</h2>
-                <div class="results">
-                    <div class="stars">
-                        <img v-for="(star, index) in starsArray" :key="index" :src="require(`@/assets/${star}`)" alt="star">
+            <div v-if="isChallengeCompleted" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-md bg-[#71accc]/60 p-10 text-center backdrop-blur-md w-[90%] max-w-[540px] border-2 border-black/10">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold mb-6">{{ completionTitle }}</h2>
+                <div class="flex flex-col items-center">
+                    <div class="flex justify-center gap-2 mb-4">
+                        <img v-for="(star, index) in starsArray" :key="index" :src="require(`@/assets/${star}`)" alt="star" class="w-20">
                     </div>
-                    <p>Record: <span>{{ timeString }}</span></p>
+                    <p class="text-[24px]">Record: <span class="font-bold">{{ timeString }}</span></p>
                 </div>
-                <div class="rewards-txt">
-                    <div class="txt-icon">
+                <div class="flex justify-center gap-8 min-[601px]:gap-[64px] text-[24px] my-6">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleCoinsValue }} coins</p>
-                        <img src="../assets/coin-icon.svg" alt="coin icon">
+                        <img src="../assets/coin-icon.svg" alt="coin icon" class="w-12">
                     </div>
-                    <div class="txt-icon">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleXpValue }} exp</p>
-                        <img src="../assets/exp-icon.svg" alt="exp icon">
+                        <img src="../assets/exp-icon.svg" alt="exp icon" class="w-12">
                     </div>
                 </div>
-                <div class="btns">
-                    <button @click="goBack">Back</button>
-                    <button @click="playAgain" class="again-btn">Play again</button>
+                <div class="flex justify-center gap-8">
+                    <button @click="goBack" class="rounded-md border-2 border-black bg-white px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Back</button>
+                    <button @click="playAgain" class="rounded-md border-2 border-black bg-[#71ACCC] px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Play again</button>
                 </div>
             </div>
 
-            <div class="before-game" v-if="!isGameStarted">
-                <h2>Ready to play?</h2>
-                <div class="before-txt">
-                    <p>Find all given words within time limit to win.</p>
-                    <p>Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
-                    <div class="btns">
-                        <button @click="goBack">Back</button>
-                        <button class="play-btn" @click="startGame">Play</button>
+            <div v-if="!isGameStarted" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-md bg-[#71accc]/60 p-10 text-center backdrop-blur-md w-[90%] max-w-[540px] border-2 border-black/10">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold mb-6">Ready to play?</h2>
+                <div class="flex flex-col gap-4">
+                    <p class="text-[24px] min-[601px]:text-[28px]">Find all given words within time limit to win.</p>
+                    <p class="text-[18px] min-[601px]:text-[20px] opacity-80 italic">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
+                    <div class="flex justify-center gap-8 mt-6">
+                        <button @click="goBack" class="rounded-md border-2 border-black bg-white px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Back</button>
+                        <button @click="startGame" class="rounded-md border-2 border-black bg-[#71ACCC] px-10 py-2 text-[24px] cursor-pointer transition-transform hover:scale-110">Play</button>
                     </div>
                 </div>
            </div>
@@ -287,39 +274,3 @@ onMounted(async () => {
     }
 });
 </script>
-
-<style lang="scss" scoped>
-.background-container { background-color: rgb(174, 210, 229); width: 100vw; height: 100vh; }
-.container { display: flex; align-items: center; flex-direction: column; position: relative; padding-bottom: 50px; }
-.text-container { text-align: center; margin-top: 4px; h2 { font-size: 56px; margin: 0; } .bigger { font-size: 32px; font-weight: 500; } }
-.wrapper-search { display: flex; justify-content: center; gap: 48px; margin-top: 20px; }
-.bottom { display: flex; justify-content: center; align-items: center; margin-top: 32px; background-color: #57A4CD; width: 280px; border: 4px solid black; border-radius: 24px; gap: 24px; img { width: 44px; cursor: pointer; } }
-
-.challenge-paused, .before-game, .challenge-completed { 
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-    width: 540px; min-height: 420px; background-color: rgba(113, 172, 204,0.6); 
-    backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; 
-    flex-direction: column; border-radius: 6px; z-index: 100;
-}
-
-h2 { font-size: 54px; font-weight: 500; text-align: center; margin-bottom: 24px; }
-.paused-txt, .before-txt { display: flex; flex-direction: column; gap: 16px; p { font-size: 28px; text-align: center; } }
-.btns { display: flex; gap: 64px; justify-content: center; margin-top: 24px; 
-    button { font-size: 24px; padding: 10px 40px; border-radius: 6px; cursor: pointer; border: 2px solid black; background: #f9f9f9; transition: 0.3s;
-        &:hover { transform: scale(1.1); box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86); }
-    }
-    .play-btn, .continue-btn, .again-btn { background-color: #71ACCC; }
-}
-
-.stars img { width: 80px; margin: 0 5px; }
-.results p { font-size: 24px; margin-top: 10px; span { font-weight: 500; } }
-.rewards-txt { display: flex; gap: 64px; font-size: 24px; margin: 20px 0; 
-    .txt-icon { display: flex; align-items: center; gap: 8px; img { width: 48px; } }
-}
-
-@media (max-width: 600px) {
-    .wrapper-search { flex-direction: column; align-items: center; gap: 20px; }
-    .challenge-paused, .before-game, .challenge-completed { width: 90%; min-height: auto; padding: 20px; }
-    h2 { font-size: 32px; }
-}
-</style>
