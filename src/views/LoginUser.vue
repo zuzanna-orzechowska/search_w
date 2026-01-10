@@ -59,16 +59,24 @@ const router = useRouter();
 
 async function login() {
     try {
-        await account.createEmailPasswordSession(userLogin.value,password.value);
+        // Appwrite session
+        await account.createEmailPasswordSession(userLogin.value, password.value);
+        
+        if (rememberMe.value) {
+            localStorage.setItem('rememberMe', 'true');
+        } else {
+            //sessionStorage - user is logged out after closing the tab
+            localStorage.removeItem('rememberMe');
+            sessionStorage.setItem('tempSession', 'true');
+        }
         router.push('/user');
-
-        if (!rememberMe.value) {
-            await account.deleteSession('current');
-        } 
+        
     } catch(err) {
-        console.log('Error: ',err);
+        console.log('Error: ', err);
         if (err.code === 401) {
-            toast.error("Invalid username or email");
+            toast.error("Invalid email or password");
+        } else {
+            toast.error("An error occurred during login");
         }
     }
 }
