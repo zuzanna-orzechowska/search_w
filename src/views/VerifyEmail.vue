@@ -1,6 +1,6 @@
 <template>
-  <div class="wrapper">
-    <h2>Logging in...</h2>
+  <div class="grid h-screen w-screen place-items-center bg-[#aed2e5]">
+    <h2 class="text-[54px] font-bold text-[#333]">Logging in...</h2>
   </div>
 </template>
 
@@ -28,19 +28,3 @@ onMounted(async () => {
     }
 });
 </script>
-
-<style scoped>
-.wrapper {
-  background-color: rgb(174, 210, 229);
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  place-items: center;
-}
-
-@media (max-width: 600px) {
-  h2 {
-    font-size: 54px;
-  }
-}
-</style>

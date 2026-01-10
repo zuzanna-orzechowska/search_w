@@ -1,45 +1,18 @@
 <template>
-    <div class="footer">
-        <button @click="goBack">Back</button>
+    <div class="fixed bottom-0 left-0 flex h-20 w-full items-center justify-center bg-[#AED2E5]">
+        <button @click="goBack"
+            class="cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] px-[2%] py-[1%] text-[24px] font-medium text-black transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]"
+            style="-webkit-tap-highlight-color: transparent;">
+            Back
+        </button>
     </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router';
 const router = useRouter();
+
 function goBack() {
     router.back();
 }
 </script>
-
-<style lang="scss" scoped>
-.footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-text-fill-color: initial;
-            color: black !important;
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
-        }
-    }
-</style>

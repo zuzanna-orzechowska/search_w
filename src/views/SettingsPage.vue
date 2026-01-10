@@ -1,44 +1,54 @@
 <template>
-    <div class="background-container">
-        <div class="container">
-            <h2>Settings</h2>
-            <div class="settings-wrapper">
-                <div class="setting">
-                    <h1>Change password</h1>
-                    <p>Set a unique password to protect your account.</p>
+    <div class="flex min-h-screen w-screen items-center justify-center bg-[#aed2e5]">
+        <div class="mx-auto flex w-full flex-col items-center bg-[#aed2e5] px-2 min-[601px]:w-auto">
+            <h2 class="mt-3 mb-4 text-[40px] font-medium min-[601px]:mb-4 min-[601px]:text-[56px]">Settings</h2>
+            
+            <div class="flex w-full flex-col gap-10 px-[10px] min-[601px]:gap-8 min-[601px]:px-0">
+                <div class="flex flex-col gap-2 min-[601px]:gap-1">
+                    <h1 class="text-[1.5rem] font-medium min-[601px]:text-[2rem]">Change password</h1>
+                    <p class="text-[0.95rem] min-[601px]:text-base text-[#333]">Set a unique password to protect your account.</p>
 
-                    <form v-if="isEditingPassword" @submit.prevent="changePassword" class="edit-form">
-                        <div class="password-wrapper">
-                            <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                            <input v-if="hidPassword" type="password" id="oldPassword" name="oldPassword" placeholder="Old Password" v-model="oldPassword" autocomplete="off" required>
-                            <input v-else type="text" id="oldPassword" name="oldPassword" placeholder="Old Password" v-model="oldPassword" autocomplete="off" required>
-                            <button class="toggleBtn" @click.prevent="toggleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+                    <form v-if="isEditingPassword" @submit.prevent="changePassword" class="w-full pr-[10px] min-[601px]:w-auto min-[601px]:pr-0">
+                        
+                        <div class="relative mt-6 w-full max-w-[364px]">
+                            <img src="../assets/password-icon.svg" alt="password-icon" class="absolute left-3 top-1/2 w-6 -translate-y-1/2 min-[601px]:left-4 min-[601px]:w-7">
+                            <input 
+                                :type="hidPassword ? 'password' : 'text'" id="oldPassword" name="oldPassword" placeholder="Old Password" v-model="oldPassword" autocomplete="off" required
+                                class="h-[48px] w-full rounded-[16px] bg-[#6AAED3] pl-12 pr-12 text-[1rem] text-[#f9f9f9] transition-all duration-300 placeholder:font-[300] placeholder:text-[#f9f9f9d1] focus:ring-4 focus:ring-[#2A8DC1] focus:outline-none min-[601px]:pl-14 min-[601px]:pr-16 min-[601px]:text-[18px]"
+                            >
+                            <button class="absolute right-0 top-0 flex h-full w-12 cursor-pointer items-center justify-center rounded-r-[16px] bg-transparent p-0 min-[601px]:w-14" @click.prevent="toggleState">
+                                <img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="w-6 min-[601px]:w-7">
+                            </button>
                         </div>
-                        <div class="password-wrapper">
-                            <img src="../assets/password-icon.svg" alt="password-icon" class="icon">
-                            <input v-if="hidPassword" type="password" id="newPassword" name="newPassword" placeholder="New Password" v-model="newPassword" autocomplete="off" required>
-                            <input v-else type="text" id="newPassword" name="newPassword" placeholder="New Password" v-model="newPassword" autocomplete="off" required>
-                            <button class="toggleBtn" @click.prevent="toggleState"><img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="eye"></button>
+
+                        <div class="relative mt-6 w-full max-w-[364px]">
+                            <img src="../assets/password-icon.svg" alt="password-icon" class="absolute left-3 top-1/2 w-6 -translate-y-1/2 min-[601px]:left-4 min-[601px]:w-7">
+                            <input 
+                                :type="hidPassword ? 'password' : 'text'" id="newPassword" name="newPassword" placeholder="New Password" v-model="newPassword" autocomplete="off" required
+                                class="h-[48px] w-full rounded-[16px] bg-[#6AAED3] pl-12 pr-12 text-[1rem] text-[#f9f9f9] transition-all duration-300 placeholder:font-[300] placeholder:text-[#f9f9f9d1] focus:ring-4 focus:ring-[#2A8DC1] focus:outline-none min-[601px]:pl-14 min-[601px]:pr-16 min-[601px]:text-[18px]"
+                            >
+                            <button class="absolute right-0 top-0 flex h-full w-12 cursor-pointer items-center justify-center rounded-r-[16px] bg-transparent p-0 min-[601px]:w-14" @click.prevent="toggleState">
+                                <img :src="hidPassword ? require('@/assets/eye-cross-icon.svg') : require('@/assets/eye-icon.svg')" alt="eye password icon" class="w-6 min-[601px]:w-7">
+                            </button>
                         </div>
-                        <button type="submit">Confirm</button>
+
+                        <button type="submit" class="mt-4 w-[100px] cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] py-1 text-[18px] font-medium transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] min-[601px]:mt-6 min-[601px]:w-24 min-[601px]:py-[4px] min-[601px]:text-base">Confirm</button>
                     </form>
                     
-                    <button v-else @click="isEditingPassword = true">Change</button>
+                    <button v-else @click="isEditingPassword = true" class="mt-4 w-[100px] cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] py-1 text-[18px] font-medium transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] min-[601px]:mt-6 min-[601px]:w-24 min-[601px]:py-[4px] min-[601px]:text-base">Change</button>
                 </div>
-                <div class="setting">
-                    <h1>Delete account</h1>
-                    <p>Your account will be permanently deleted from SearchW.</p>
-                    <p>If you wish to delete your account, please inform the administrator.
-                    </p>
-                    <a :href="mailToLink">Click here to send an email.</a>
+
+                <div class="flex flex-col gap-2 min-[601px]:gap-1">
+                    <h1 class="text-[1.5rem] font-medium min-[601px]:text-[2rem]">Delete account</h1>
+                    <p class="text-[0.95rem] min-[601px]:text-base text-[#333]">Your account will be permanently deleted from SearchW.</p>
+                    <p class="text-[0.95rem] min-[601px]:text-base text-[#333]">If you wish to delete your account, please inform the administrator.</p>
+                    <a :href="mailToLink" class="w-auto font-bold text-black no-underline hover:text-[#2A8DC1] min-[601px]:w-[250px]">Click here to send an email.</a>
                 </div>
             </div>
 
-            <div class="bottom">
-                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
+            <div class="mt-10 flex h-auto w-[200px] items-center justify-center gap-6 rounded-[24px] border-4 border-black bg-[#57A4CD] py-1 min-[601px]:mt-12 min-[601px]:w-[280px]">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon" class="w-9 cursor-pointer min-[601px]:w-[44px]">
             </div>
-
-
         </div>
     </div>
 </template>
@@ -112,240 +122,3 @@ onMounted(async () => {
     getUser();
 });
 </script>
-
-<style lang="scss" scoped>
-.background-container {
-    background-color: rgb(174, 210, 229);
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.container {
-    background-color: rgb(174, 210, 229);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    flex-direction: column;
-
-    .settings-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-
-        .setting {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-
-            a {
-                text-decoration: none;
-                color: black;
-                font-weight: bold;
-                width: 200px;
-            }
-
-            h1 {
-                font-weight: 500;
-            }
-
-            form {
-                .icon {
-                    position: relative;
-                    left: 40px;
-                    top: 6px;
-                    width: 30px;
-                }
-    
-                input[type="text"], input[type="password"]{
-                    width: 364px;
-                    font-size: 18px;
-                    background-color: #6AAED3;
-                    border: none;
-                    border-radius: 16px;
-                    height: 34px;
-                    padding: 24px 0 24px 48px;
-                    color: #f9f9f9;
-                    transition: all 0.3s ease;
-                }
-    
-                input[type="text"]::placeholder, input[type="password"]::placeholder {
-                    color: #f9f9f9d1;
-                    font-weight: 300px;
-                }
-    
-                input[type="text"]:focus, input[type="password"]:focus{
-                    border: 3px solid #2A8DC1;
-                    outline: none;
-                }
-    
-                .password-wrapper {
-                    position: relative;
-                    margin-top: 24px;
-    
-                    input {
-                        padding-right: 64px;
-                    }
-    
-                    .toggleBtn {
-                        position: absolute;
-                        right: 0px;
-                        top: 0px;
-                        background-color: transparent;
-                        border: none;
-                        border-radius: 0 16px 16px 0;
-                        padding: 0;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        height: 100%;
-                        width: 64px;
-                        cursor: pointer;
-    
-                        img {
-                            width: 32px;
-                        }
-                    }
-                }
-
-            }
-            button {
-                font-size: 16px;
-                width: 80px;
-                padding: 2px 4px;
-                font-weight: 500;
-                margin-top: 12px;
-                background-color: #f9f9f9;
-                border: 2px solid black;
-                border-radius: 6px;
-                cursor: pointer;
-                transform: perspective(1px) translateZ(0);
-                box-shadow: 0 0 1px transparent;
-                transition-duration: 0.3s;
-                transition-property: box-shadow, transform;
-            }
-
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
-        }
-    }
-
-    h2{
-        font-size: 56px;
-        font-weight: 500;
-        margin-bottom: 16px;
-        margin-top: 12px;
-    }
-
-
-    .bottom{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 32px;
-        background-color: #57A4CD;
-        width: 280px;
-        height: auto;
-        border: 4px solid black;
-        border-radius: 24px;
-        gap: 24px;
-
-        img{
-            width: 44px;
-            cursor: pointer;
-            margin-top: 0;
-        }
-    }
-}
-
-@media (max-width: 600px) {
-    .background-container {
-        padding-top: 20px;
-    }
-
-    .container {
-        width: 95%;
-        
-        h2 {
-            font-size: 40px;
-            margin-bottom: 24px;
-        }
-
-        .settings-wrapper {
-            width: 100%;
-            gap: 40px;
-            padding: 0 10px;
-
-            .setting {
-                gap: 8px;
-
-                a {
-                    width: auto;
-                }
-
-                h1 {
-                    font-size: 1.5rem;
-                }
-
-                p {
-                    font-size: 0.95rem;
-                }
-
-                form {
-                    width: 100%;
-                    padding-right: 10px;
-
-                    .icon {
-                        left: 12px;
-                        top: 36px;
-                        width: 24px;
-                    }
-        
-                    input[type="text"], input[type="password"]{
-                        width: 100%;
-                        font-size: 16px;
-                        height: 28px;
-                        padding: 20px 0 20px 48px;
-                    }
-
-                    .password-wrapper {
-                        margin: 0px;
-        
-                        input {
-                            padding-right: 50px;
-                        }
-        
-                        .toggleBtn {
-                            width: 50px;
-        
-                            img {
-                                width: 28px;
-                            }
-                        }
-                    }
-                }
-                button {
-                    font-size: 18px;
-                    width: 100px;
-                    padding: 4px 8px;
-                    margin-top: 16px;
-                }
-            }
-        }
-
-        .bottom{
-            width: 200px;
-            margin-top: 40px;
-            
-            img{
-                width: 36px;
-            }
-        }
-    }
-}
-</style>

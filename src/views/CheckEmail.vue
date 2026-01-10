@@ -1,17 +1,19 @@
 <template>
-    <div class="wrapper">
-        <div class="content">
-            <h2>Hello! Please check your email to verify your account.</h2>
-            <p>We've sent the verification link to: {{ verificationEmail }}</p>
-            <p>If you don't see the email, check your spam folder.</p>
-            <img src="../assets/blueFluff.svg" alt="blueFluff">
-             <div @click="signOut" class="dropdown-option last">
-                <img class="signOutImg" src="../assets/sign-out-icon.svg" alt="Sign out icon">
-                <p class="signOutP">Sign out</p>
+    <div class="grid h-screen w-screen place-items-center bg-[#AED2E5]">
+        <div class="flex w-[80%] flex-col items-center gap-5 rounded-xl bg-[#f9f9f9] p-10 text-center shadow-[0_4px_15_rgba(0,0,0,0.1)] min-[601px]:w-auto min-[601px]:p-[80px_60px]">
+            <h2 class="m-0 max-w-[400px] text-[20px] text-[#333] min-[601px]:text-[28px] font-bold">Hello! Please check your email to verify your account.</h2>
+            <p class="text-[18px] min-[601px]:text-[20px]">We've sent the verification link to: {{ verificationEmail }}</p>
+            <p class="text-[18px] min-[601px]:text-[20px]">If you don't see the email, check your spam folder.</p>
+            <img src="../assets/blueFluff.svg" alt="blueFluff" class="w-[150px]">
+            
+             <div @click="signOut" class="flex cursor-pointer items-center gap-3 border-b border-black pb-2">
+                <img src="../assets/sign-out-icon.svg" alt="Sign out icon" class="w-[30px]">
+                <p class="text-[18px]">Sign out</p>
             </div>
         </div>
     </div>
 </template>
+
 <script setup>
 import { computed } from 'vue';
 import { useUserStore } from '../stores/user';
@@ -30,70 +32,3 @@ async function signOut() {
     }
 }
 </script>
-
-<style scoped>
-.wrapper {
-  background-color: rgb(174, 210, 229);
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  place-items: center;
-}
-.content {
-  text-align: center;
-  background-color: #f9f9f9;
-  padding: 80px 60px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-h2 {
-  font-size: 28px;
-  color: #333;
-  margin: 0;
-  max-width: 400px;
-}
-
-.dropdown-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid black;
-  padding-bottom: 8px;
-  cursor: pointer;
-}
-
-.signOutP{
-  font-size: 18px;
-}            
-
-.signOutImg {
-    width: 30px;
-}
-
-p {
-  font-size: 20px;
-}
-
-img {
-  width: 150px;
-}
-
-@media (max-width: 600px) {
-  .content {
-    width: 80%;
-  }
-
-  h2{
-    font-size: 20px;
-  }
-
-  p {
-    font-size: 18px;
-  }
-}
-</style>

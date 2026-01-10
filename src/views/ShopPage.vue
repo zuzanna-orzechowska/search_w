@@ -1,27 +1,44 @@
 <template>
-    <div class="background-lines">
-        <div class="container">
-            <div class="wrapper">
-                <div class="text-container">
-                    <h2>Shop</h2>
-                    <div class="coins-user">
-                        <p>Coins: <span>{{userCoins}}</span></p>
-                        <img src="../assets/coin-icon.svg" alt="coin icon">
+    <div 
+        class="h-screen w-screen bg-cover bg-center bg-no-repeat"
+        :style="{ backgroundImage: `url(${require('@/assets/background-play.png')})` }"
+    >
+        <div class="flex min-h-screen items-center justify-center">
+            <div class="relative flex h-[90vh] w-[60vw] flex-col items-center rounded-md bg-[#aecde5]/50 shadow-[4px_4px_10px_3px_rgba(0,0,0,0.3)] backdrop-blur-[20px] max-[600px]:h-[95vh] max-[600px]:w-[90vw] max-[600px]:shadow-none">
+                
+                <div class="text-center">
+                    <h2 class="mt-3 mb-1 text-[56px] font-medium max-[600px]:mt-5 max-[600px]:text-[40px]">Shop</h2>
+                    <div class="flex justify-center items-center gap-1">
+                        <p class="text-[28px] max-[600px]:text-[20px]">Coins: <span class="font-bold">{{userCoins}}</span></p>
+                        <img src="../assets/coin-icon.svg" alt="coin icon" class="w-9 h-9 max-[600px]:w-7 max-[600px]:h-7">
                     </div>
                 </div>
-                <div class="scroll">
-                    <div class="avatars-container">
-                        <div class="avatar-category" v-for="avatar in avatars" :key="avatar.category">
-                            <p>{{ avatar.category }} <span>{{ avatarsPerCategory(avatar.sources) }} / {{ avatar.sources.length }}</span></p>
-                            <div class="images-wrapper">
-                                <div class="image-item" v-for="source in avatar.sources" :key="source">
-                                    <img @click="buyAvatar(source,avatar.price)" :src="source" :alt="avatar.category" class="avatar-img" :class="{ 'purchased': isPurchased(source) }">
-                                    <div class="price-wrapper" v-if="!isPurchased(source)">
-                                        <p>{{ avatar.price }}</p>
-                                        <img src="../assets/coin-icon.svg" alt="coin">
+
+                <div class="flex-1 w-full overflow-y-auto pb-[100px] max-[600px]:pb-20 max-[600px]:w-[95%]">
+                    <div class="my-5 mx-10 flex flex-col gap-[52px] max-[600px]:my-5 max-[600px]:mx-0 max-[600px]:pl-[10px] max-[600px]:gap-10">
+                        
+                        <div class="relative flex flex-col gap-4 max-[600px]:gap-[10px]" v-for="avatar in avatars" :key="avatar.category">
+                            <p class="text-[1.3rem] font-[450] max-[600px]:text-[1.1rem] max-[600px]:pl-[10px]">
+                                {{ avatar.category }} 
+                                <span class="font-normal">{{ avatarsPerCategory(avatar.sources) }} / {{ avatar.sources.length }}</span>
+                            </p>
+
+                            <div class="grid grid-cols-4 gap-4 max-[1280px]:grid-cols-3 max-[992px]:grid-cols-2 max-[600px]:grid-cols-3 max-[600px]:gap-3">
+                                <div class="flex flex-col items-center justify-center" v-for="source in avatar.sources" :key="source">
+                                    <img 
+                                        @click="buyAvatar(source,avatar.price)" 
+                                        :src="source" 
+                                        :alt="avatar.category" 
+                                        class="h-[164px] w-[164px] cursor-pointer rounded-full border-2 border-black transition-all duration-500 hover:brightness-[60%] max-[600px]:h-20 max-[600px]:w-20 max-[600px]:border-[1px]" 
+                                        :class="{ 'purchased !grayscale hover:!brightness-100 cursor-default': isPurchased(source) }"
+                                    >
+                                    
+                                    <div class="mt-1 flex items-center justify-center gap-1 text-center" v-if="!isPurchased(source)">
+                                        <p class="m-0 max-[600px]:text-[16px]">{{ avatar.price }}</p>
+                                        <img src="../assets/coin-icon.svg" alt="coin" class="w-7 border-none max-[600px]:w-5">
                                     </div>
-                                    <div class="owned-label" v-else>
-                                        <p>Owned</p>
+                                    <div class="mt-1 text-center" v-else>
+                                        <p class="text-[20px] italic text-[#555] max-[600px]:text-[14px]">Owned</p>
                                     </div>
                                 </div>
                             </div>
@@ -29,7 +46,7 @@
                     </div>
                 </div>
     
-                <ButtonFooter class="footer-positioned" />
+                <ButtonFooter class="absolute bottom-0 left-0 right-0 z-10 w-full" />
             </div>
         </div>
     </div>
@@ -148,318 +165,14 @@ onMounted(async () => {
 });
 </script>
 
-
-<style lang="scss" scoped>
-.background-lines {
-    background-image: url("../assets/background-play.png");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-    width: 100vw;
+<style scoped>
+button {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-fill-color: initial;
 }
 
-.container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    
-    .wrapper {
-        background-color: rgba(174, 210, 229,0.5);
-        backdrop-filter: blur(20px);
-        width: 60vw;
-        height: 90vh;
-        border-radius: 6px;
-        box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        position: relative;
-    }
-
-    .footer-positioned {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        z-index: 10;
-    }
-
-    .text-container {
-        text-align: center;
-
-        h2 {
-            font-size: 56px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            margin-top: 12px;
-        }
-
-        .coins-user {
-            display: flex;
-            gap: 4px;
-
-            p{
-                font-size: 28px;
-                margin-bottom: 4px;
-            }
-
-            img {
-                width: 36px;
-                height: 36px;
-            }
-        }
-    }
-
-    .scroll {
-        flex: 1; //take up whole space of container wrapper
-        overflow-y: scroll; //enable vertical scroll
-        padding-bottom: 100px;
-        width: 100%;
-
-        .avatars-container {
-            display: flex;
-            flex-direction: column;
-            gap: 52px;
-            margin: 20px 40px;
-        
-            .avatar-category {
-               position: relative;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-
-                p {
-                    font-size: 1.3rem;
-                    font-weight: 450;
-                }
-
-                .images-wrapper {
-                    display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 16px;
-
-                    .image-item {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-
-                        .avatar-img {
-                            width: 164px;
-                            height: 164px;
-                            border: 2px solid black;
-                            border-radius: 50%;
-                            transition: filter 0.5s ease;
-                        }
-
-                        .avatar-img:hover {
-                            filter: brightness(60%);
-                            cursor: pointer;
-                        }
-                        
-                        .avatar-img.purchased {
-                            filter: grayscale(100%);
-                            cursor: default;
-                            &:hover {
-                                filter: grayscale(100%);
-                            }
-                        }
-
-                        .price-wrapper {
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            gap: 4px;
-                            margin-top: 4px;
-                            text-align: center;
-
-                            img {
-                                width: 28px;
-                                border: none;
-                            }
-
-                            p {
-                                margin: 0;
-                                text-align: center;
-                            }
-                        }
-
-                        .owned-label {
-                            text-align: center;
-                            margin-top: 4px;
-                            p {
-                                font-size: 20px;
-                                color: #555;
-                                font-style: italic;
-                            }
-                        }
-                    }
-                }
-
-                .overlay-txt {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 180px;
-                    height: 180px;
-                    background: rgba(0,0,0,0.5);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    border-radius: 6px;
-                    
-                    img {
-                        border: none;
-                        padding: 0px 12px;
-                    }
-                }
-    
-                img {
-                    width: 180px;
-                    border: 2px solid black;
-                    border-radius: 6px;
-                }
-
-                .tick {
-                    border: none;
-                    width: 42px;
-                }
-    
-                button {
-                    -webkit-tap-highlight-color: transparent;
-                    -webkit-text-fill-color: initial;
-                    color: black !important;
-                    font-size: 20px;
-                    padding: 1% 6%;
-                    font-weight: 500;
-                    background-color: #2A8DC1;
-                    border: 2px solid black;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transform: perspective(1px) translateZ(0);
-                    box-shadow: 0 0 1px transparent;
-                    transition-duration: 0.3s;
-                    transition-property: box-shadow, transform;
-                }
-    
-                button:hover {
-                    box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                    transform: scale(1.1);
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 600px) {
-    .container {
-        
-        .wrapper {
-            width: 90vw; 
-            height: 95vh;
-            box-shadow: none;
-        }
-
-        .text-container {
-            margin-top: 10px;
-
-            h2 {
-                font-size: 40px;
-                margin-top: 20px;
-            }
-
-            .coins-user {
-                p {
-                    font-size: 20px;
-                }
-                img {
-                    width: 28px;
-                    height: 28px;
-                }
-            }
-        }
-
-        .scroll {
-            padding-bottom: 80px;
-            width: 95%;
-
-            .avatars-container {
-                gap: 40px;
-                margin: 20px 0;
-                padding-left: 10px;
-            
-                .avatar-category {
-                    gap: 10px;
-
-                    p {
-                        font-size: 1.1rem; 
-                        padding-left: 10px;
-                    }
-
-                    .images-wrapper {
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 12px;
-
-                        .image-item {
-
-                            .avatar-img {
-                                width: 80px; 
-                                height: 80px;
-                                border-width: 1px;
-                            }
-
-                            .price-wrapper {
-                                gap: 2px;
-
-                                p {
-                                    font-size: 16px;
-                                }
-                                img {
-                                    width: 20px;
-                                }
-                            }
-
-                            .owned-label {
-                                p {
-                                    font-size: 14px;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 992px) {
-    .container {
-        .scroll {
-            .avatars-container {
-                .avatar-category {
-                    .images-wrapper {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (min-width: 992px) and (max-width: 1280px) {
-    .container {
-        .scroll {
-            .avatars-container {
-                .avatar-category {
-                    .images-wrapper {
-                        grid-template-columns: repeat(3, 1fr);
-                    }
-                }
-            }
-        }
-    }
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #57A4CD transparent;
 }
 </style>
