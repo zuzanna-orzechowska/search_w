@@ -1,27 +1,41 @@
 <template>
-    <div class="background-lines">
-        <div class="container">
-            <div class="wrapper">
-                <div class="text-container">
-                    <h2>Achievements</h2>
-                    <p>Gained: <span>{{ achievements_count }} / {{ achievements_amount }}</span></p>
+    <div 
+        class="h-screen w-screen bg-cover bg-center bg-no-repeat"
+        :style="{ backgroundImage: `url(${require('@/assets/background-play.png')})` }"
+    >
+        <div class="flex min-h-screen items-center justify-center">
+            <div class="relative flex h-[95vh] w-[95vw] flex-col items-center rounded-md bg-[#aecde5]/50 shadow-none backdrop-blur-[20px] md:h-[90vh] md:w-[60vw] md:shadow-[4px_4px_10px_3px_rgba(0,0,0,0.3)]">
+                
+                <div class="text-center">
+                    <h2 class="mt-5 mb-1 text-[40px] font-medium md:mt-3 md:text-[56px]">Achievements</h2>
+                    <p class="mb-[10px] text-[20px] md:mb-1 md:text-[28px]">Gained: <span class="font-bold">{{ achievements_count }} / {{ achievements_amount }}</span></p>
                 </div>
-                <div class="scroll">
-                    <div class="achievements-container">
-                        <div class="images-wrapper">
-                            <div class="image-item" v-for="achievement in achievements" :key="achievement.image">
-                                <img :src="achievement.image" :alt="achievement.alt" class="achievement-img" :class="{'grayscale-img': !unlockedAchievements.includes(achievement.name)}">
-                                <div class="hover-overlay">
-                                    <p class="description">{{ achievement.description }}</p>
+
+                <div class="flex-1 w-full overflow-y-auto pb-20 md:pb-[100px]">
+                    <div class="mx-[10px] flex flex-col gap-5 md:mx-10 md:gap-10">
+                        <div class="grid grid-cols-2 gap-[10px] md:grid-cols-3 lg:grid-cols-4 md:gap-3">
+                            <div class="group relative flex flex-col cursor-pointer items-center" v-for="achievement in achievements" :key="achievement.image">
+                                <img :src="achievement.image" :alt="achievement.alt" 
+                                    class="h-auto w-full max-w-[180px] max-h-[180px] border-2 border-black rounded-md md:h-[200px] md:w-[200px] md:max-w-none md:max-h-none transition-all duration-300"
+                                    :class="{'grayscale': !unlockedAchievements.includes(achievement.name)}"
+                                >
+                                
+                                <div class="absolute top-0 flex h-full w-full max-w-[180px] max-h-[180px] items-center justify-center rounded-md bg-black/60 p-[5px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:h-[200px] md:w-[200px] md:max-w-none md:max-h-none md:p-0">
+                                    <p class="text-center text-[14px] font-bold text-white md:text-[16px]">
+                                        {{ achievement.description }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                        
                     </div>
                 </div>
     
-                <div class="footer">
-                    <button @click="goBack">Back</button>
+                <div class="fixed bottom-0 left-0 flex h-[60px] w-full items-center justify-center bg-[#aecde5] md:h-20">
+                    <button @click="goBack"
+                        class="cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] px-3 py-1 text-[18px] font-medium text-black transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] md:px-[2%] md:py-[1%] md:text-[24px]"
+                        style="-webkit-tap-highlight-color: transparent;">
+                        Back
+                    </button>
                 </div>
             </div>
         </div>
@@ -80,246 +94,3 @@ onMounted(async () => {
     await getUserData();
 });
 </script>
-
-
-<style lang="scss" scoped>
-.background-lines {
-    background-image: url("../assets/background-play.png");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-    width: 100vw;
-}
-
-.container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    
-    .wrapper {
-        background-color: rgba(174, 210, 229,0.5);
-        backdrop-filter: blur(20px);
-        width: 60vw;
-        height: 90vh;
-        border-radius: 6px;
-        box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        flex-direction: column;
-        position: relative;
-    }
-
-    .text-container {
-        text-align: center;
-
-        h2 {
-            font-size: 56px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            margin-top: 12px;
-        }
-
-        p{
-            font-size: 28px;
-            margin-bottom: 4px;
-        }
-    }
-
-    .scroll {
-        flex: 1; //take up whole space of container wrapper
-        overflow-y: auto; //enable vertical scroll
-        padding-bottom: 100px;
-        width: 100%;
-
-        .achievements-container {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            margin: 0 40px;
-        
-            .images-wrapper {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 12px;
-
-                .image-item {
-                    display: flex;
-                    flex-direction: column;
-                    cursor: pointer;
-                    position: relative;
-
-                    .achievement-img {
-                        width: 200px;
-                        height: 200px;
-                        border: 2px solid black;
-                        border-radius: 6px;
-                        filter: grayscale(0);
-                    }
-
-                    .grayscale-img {
-                        filter: grayscale(1);
-                    }
-
-                    .hover-overlay {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 200px;
-                        height: 200px;
-                        background-color: rgba(0, 0, 0, 0.6);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        border-radius: 6px;
-                        opacity: 0;
-                        transition: opacity 0.3s ease;
-                        text-align: center;
-                    }
-
-                    .description {
-                        color: #fff;
-                        font-size: 16px;
-                        font-weight: bold;
-                    }
-
-                    //& means parent element, so longer version will be image-item:hover
-                    &:hover {
-                        .hover-overlay {
-                            opacity: 1;
-                        }
-                    }
-                }
-            }
-           
-        }
-    }
-
-
-    .footer {
-        background-color: rgb(174, 210, 229);
-        width: 100%;
-        height: 80px;
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        button {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-text-fill-color: initial;
-            color: black !important;
-            font-size: 24px;
-            padding: 1% 2%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-            box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-            transform: scale(1.1);
-        }
-    }
-}
-
-@media (max-width: 600px) {
-    .container {
-        
-        .wrapper {
-            width: 95vw; 
-            height: 95vh;
-            box-shadow: none;
-            border-radius: 6px;
-        }
-
-        .text-container {
-
-            h2 {
-                font-size: 40px;
-                margin-top: 20px;
-            }
-
-            p{
-                font-size: 20px;
-                margin-bottom: 10px;
-            }
-        }
-
-        .scroll {
-            padding-bottom: 80px;
-
-            .achievements-container {
-                gap: 20px;
-                margin: 0 10px; 
-            
-                .images-wrapper {
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 10px;
-
-                    .image-item {
-
-                        .achievement-img {
-                            width: 100%; 
-                            height: auto;
-                            max-width: 180px; 
-                            max-height: 180px;
-                        }
-
-                        .hover-overlay {
-                            width: 100%;
-                            height: 100%;
-                            max-width: 180px;
-                            max-height: 180px;
-                            padding: 5px;
-                        }
-
-                        .description {
-                            font-size: 14px;
-                        }
-                    }
-                }
-            }
-        }
-
-
-        .footer {
-            height: 60px;
-            
-            button {
-                font-size: 18px; 
-                padding: 4px 12px; 
-            }
-        }
-    }
-}
-
-@media (max-width: 992px) {
-    .container {
-        .scroll {
-            .achievements-container {
-                .images-wrapper {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
-        }
-    }
-}
-
-@media (min-width: 992px) and (max-width: 1280px) {
-    .container {
-        .scroll {
-            .achievements-container {
-                .images-wrapper {
-                    grid-template-columns: repeat(3, 1fr);
-                }
-            }
-        }
-    }
-}
-</style>

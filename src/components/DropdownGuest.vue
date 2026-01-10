@@ -1,15 +1,16 @@
 <template>
-    <div class="dropdown-content">
-        <div class="dropdown-section">
-            <p>Come back to word searching’s journey</p>
-            <button class="dropdown-btn" @click="toLogin">Sign in</button>
+    <div class="absolute right-5 z-[1] mt-2 flex h-[304px] w-[300px] flex-col items-center justify-center gap-[42px] rounded-md bg-[#AED2E5]/50 shadow-[4px_4px_10px_3px_rgba(0,0,0,0.3)] backdrop-blur-[20px]">
+        <div class="flex flex-col items-center gap-3">
+            <p class="w-[224px] text-center text-[20px]">Come back to word searching’s journey</p>
+            <button class="w-[100px] cursor-pointer rounded-md border-2 border-black bg-[#2A8DC1] py-[1%] px-[6%] text-[18px] font-medium transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]" @click="toLogin">Sign in</button>
         </div>
-        <div class="dropdown-section">
-            <p>Don’t have an account?</p>
-            <button class="dropdown-btn white" @click="toRegister">Sign up</button>
+        <div class="flex flex-col items-center gap-3">
+            <p class="w-[224px] text-center text-[20px]">Don’t have an account?</p>
+            <button class="w-[100px] cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] py-[1%] px-[6%] text-[18px] font-medium transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]" @click="toRegister">Sign up</button>
         </div>
     </div>
 </template>
+
 <script setup>
 import { useRouter } from 'vue-router';
 
@@ -23,60 +24,3 @@ const toRegister = async () => {
   router.push('/register');
 }
 </script>
-
-<style lang="scss" scoped>
-.dropdown-content {
-      display: flex;
-      justify-content: center;
-      flex-direction: column;
-      align-items: center;
-      gap: 42px;
-      position: absolute;
-      width: 300px;
-      height: 304px;
-      z-index: 1;
-      right: 20px;
-      margin-top: 8px;
-      border-radius: 6px;
-      background-color: rgba(174, 210, 229,0.5);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-
-      .dropdown-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        p { 
-          text-align: center;
-          width: 224px;
-          font-size: 20px;
-        }
-  
-        .dropdown-btn {
-          font-size: 18px;
-          padding: 1% 6%;
-          font-weight: 500;
-          width: 100px;
-          background-color: #2A8DC1;
-          border: 2px solid black;
-          border-radius: 6px;
-          cursor: pointer;
-          transform: perspective(1px) translateZ(0);
-          box-shadow: 0 0 1px transparent;
-          transition-duration: 0.3s;
-          transition-property: box-shadow, transform;
-        }
-
-        .dropdown-btn:hover {
-          box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-          transform: scale(1.1);
-        }
-
-        .white {
-          background-color: #f9f9f9;
-        }
-      }
-}
-</style>

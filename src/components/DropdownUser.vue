@@ -1,29 +1,29 @@
 <template>
-    <div class="dropdown-content long">
-        <div class="dropdown-section">
-            <p>Welcome {{userStore.username}}</p>
-            <img :src="userStore.avatar" alt="User avatar">
+    <div class="absolute right-5 z-[1] mt-2 flex h-[444px] w-[300px] flex-col items-center justify-center gap-3 rounded-md bg-[#AED2E5]/50 shadow-[4px_4px_10px_3px_rgba(0,0,0,0.3)] backdrop-blur-[20px]">
+        <div class="flex flex-col items-center gap-3">
+            <p class="w-[224px] text-center text-[20px]">Welcome {{userStore.username}}</p>
+            <img :src="userStore.avatar" alt="User avatar" class="w-20 rounded-full py-2">
         </div>
-        <div class="dropdown-section-left">
-            <div class="dropdown-option" @click="router.push('/profile')">
-                <img src="../assets/profile-icon.svg" alt="Profile icon">
-                <p>Profile</p>
+        <div class="flex w-[254px] flex-col gap-3">
+            <div class="flex cursor-pointer items-center gap-3 border-b border-black pb-2" @click="router.push('/profile')">
+                <img src="../assets/profile-icon.svg" alt="Profile icon" class="w-[30px]">
+                <p class="text-[18px]">Profile</p>
             </div>
-            <div class="dropdown-option" @click="router.push('/achievements')">
-                <img src="../assets/achievements-icon.svg" alt="Achievements icon">
-                <p>Achievements</p>
+            <div class="flex cursor-pointer items-center gap-3 border-b border-black pb-2" @click="router.push('/achievements')">
+                <img src="../assets/achievements-icon.svg" alt="Achievements icon" class="w-[30px]">
+                <p class="text-[18px]">Achievements</p>
             </div>
-            <div class="dropdown-option" @click="router.push('/settings')">
-                <img src="../assets/settings-icon.svg" alt="Settings icon">
-                <p>Settings</p>
+            <div class="flex cursor-pointer items-center gap-3 border-b border-black pb-2" @click="router.push('/settings')">
+                <img src="../assets/settings-icon.svg" alt="Settings icon" class="w-[30px]">
+                <p class="text-[18px]">Settings</p>
             </div>
-            <div class="dropdown-option" @click="router.push('/help')">
-                <img src="../assets/help-icon.svg" alt="Help icon">
-                <p>Help</p>
+            <div class="flex cursor-pointer items-center gap-3 border-b border-black pb-2" @click="router.push('/help')">
+                <img src="../assets/help-icon.svg" alt="Help icon" class="w-[30px]">
+                <p class="text-[18px]">Help</p>
             </div>
-            <div @click="signOut" class="dropdown-option last">
-                <img src="../assets/sign-out-icon.svg" alt="Sign out icon">
-                <p>Sign out</p>
+            <div @click="signOut" class="flex cursor-pointer items-center gap-3 border-none pb-2">
+                <img src="../assets/sign-out-icon.svg" alt="Sign out icon" class="w-[30px]">
+                <p class="text-[18px]">Sign out</p>
             </div>
         </div>
     </div>
@@ -47,76 +47,3 @@ async function signOut() {
     }
 }
 </script>
-
-<style lang="scss" scoped>
-.long {
-    height: 420px;
-}
-
-.dropdown-content {
-      display: flex;
-      justify-content: center;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      height: 444px;
-      position: absolute;
-      width: 300px;
-      z-index: 1;
-      right: 20px;
-      margin-top: 8px;
-      border-radius: 6px;
-      background-color: rgba(174, 210, 229,0.5);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-
-      .dropdown-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        
-        p { 
-          text-align: center;
-          width: 224px;
-          font-size: 20px;
-        }
-
-        img {
-            width: 80px;
-            padding: 8px 0px;
-            border-radius: 50%;
-        }
-
-      }
-
-    .dropdown-section-left {
-        width: 254px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-
-        .dropdown-option {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid black;
-            padding-bottom: 8px;
-            cursor: pointer;
-
-            img {
-                width: 30px;
-            }
-
-            p{
-                font-size: 18px;
-            }            
-        }
-
-        .dropdown-option.last {
-            border-bottom: none;
-        }
-    }
-}
-</style>

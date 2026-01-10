@@ -1,88 +1,63 @@
 <template>
-    <div class="background-container">
-        <div class="container">
-            <div class="right-up-wrapper">
-                <div class="coins-display">
-                    <img src="../assets/coin-icon.svg" alt="Coins">
-                    <p>{{ userCoins }}</p>
-                </div>
-                <div class="coins-deducted" v-if="showCoinsDeducted">
-                    <p>-{{ hintCost }}</p>
-                    <img src="../assets/coin-icon.svg" alt="Coin deducted">
-                </div>
-                <div class="avatar-wrapper">
-                    <div class="dropdown" v-click-outside="() => {dropdownActive = false}">
-                        <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
-                        <img @click="toggleVisibility" :src="userAvatar" alt="User Avatar" class="user-avatar" />
-                        <!--is dynamically loads given component if the requirement is met-->
-                        <component v-if="dropdownActive" :is="DropdownUser" />
-                    </div>
-                </div>
+    <div class="h-screen w-screen overflow-y-auto bg-[#aed2e5]">
+        <div class="relative flex flex-col items-center bg-[#aed2e5] pb-[50px] px-4">
+            
+            <WordSearchHeader :userCoins="userStore.coins" :userAvatar="userStore.avatar" :showCoinsDeducted="showCoinsDeducted" :hintCost="hintCost" :dropdownActive="dropdownActive"
+                @toggleDropdown="dropdownActive = !dropdownActive" @closeDropdown="dropdownActive = false"/>
+
+            <div class="mt-1 text-center">
+                <h2 class="m-0 text-[36px] min-[601px]:text-[56px] font-bold">{{ categoryName }}</h2>
+                <p class="text-[32px]">{{ currentStage }} / {{ maxStage }}</p>
+                <p class="text-[20px] max-w-2xl">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
             </div>
-            <div class="text-container">
-                <h2>{{ categoryName }}</h2>
-                <p class="bigger">Stage {{ currentStage }} / {{ maxStage }}</p>
-                <p class="smaller">Words may appear horizontally, vertically and diagonally, forwards and backwards.</p>
-            </div>
-            <div class="wrapper-search">
-                <div class="words-list">
-                    <h4>Words to find:</h4>
-                    <ul>
-                        <li :class="{foundWord : foundWords.includes(word)}" v-for="(word,ind) in wordsToFind" :key="ind">{{ word }}</li>
-                    </ul>
+
+            <div class="mt-8 flex flex-col min-[992px]:flex-row items-center min-[992px]:items-start justify-center gap-10 w-full max-w-[1200px] mx-auto">
+                
+                <div class="w-full min-[992px]:w-1/4 max-w-[300px]">
+                    <WordSearchList :wordsToFind="wordsToFind" :foundWords="foundWords" />
                 </div>
     
-                <div class="grid" ref="gridRef">
-                    <!--2D array-->
-                    <div class="row" v-for="(row,indRow) in grid" :key="indRow">
-                        <!--getCellClass takes coordinates of a letter and gives it proper class - selected or found
-                        mousedown - mouse is clicked, .prevent prevents default behavior like selecting text, mouseover when clicked mouse is being drag across letter
-                        mouseup when user stops clicking mouse
-                        .some checks if at least one element in the array passes the test-->
-                        <span class="cell" v-for="(cell, indCell) in row" :key="indCell"
-                        :style="getCellStyle(indRow, indCell)"
-                        @mousedown.prevent="startSelection(indRow, indCell)" @mouseover="extendSelection(indRow, indCell)" @mouseup="endSelection"
-                        @touchstart.prevent="startSelection(indRow, indCell)" @touchmove="handleTouchMove($event)" @touchend="endSelection">
-                        {{ cell }}
-                        </span>
-                    </div>
+                <div class="w-full min-[992px]:w-2/3 max-w-[600px] flex justify-center">
+                    <WordSearchGrid :grid="grid" :selection="selection" :selectionColor="selectionColor" :foundWordsData="foundWordsData" :wordsColor="wordsColor" :hintedCell="hintedCell"
+                        @start="handleStart" @extend="handleExtend" @end="handleEnd"/>
                 </div>
             </div>
 
-            <div class="bottom">
-                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon">
-                <div class="hint-wrapper">
-                    <span class="hint-cost-text" v-if="showHintCost">
+            <div class="mt-8 flex w-[280px] items-center justify-center gap-6 rounded-[24px] border-4 border-black bg-[#57A4CD] py-2">
+                <img @click="goBack" src="../assets/home-icon.svg" alt="home icon" class="w-[44px] cursor-pointer">
+                <div class="relative">
+                    <span v-if="showHintCost" class="absolute bottom-[110%] left-1/2 -translate-x-1/2 rounded-sm bg-[#f9f9f9] px-2 py-1 font-bold">
                         {{ hintCost }}
                     </span>
-                    <img @click="showHint" @mouseover="showHintCost = true" @mouseleave="showHintCost = false" src="../assets/hint-icon.svg" alt="hint icon">
+                    <img @click="showHint" @mouseover="showHintCost = true" @mouseleave="showHintCost = false" src="../assets/hint-icon.svg" alt="hint icon" class="w-[44px] cursor-pointer"
+                    >
                 </div>
             </div>
 
-            <div class="puzzle-done" v-if="showPuzzleDone">
-                <h2>Puzzle completed!</h2>
-                <div class="rewards-txt">
-                    <div class="txt-icon">
+            <div v-if="showPuzzleDone" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl bg-[#71accc]/80 p-10 text-center backdrop-blur-md w-[90%] max-w-[600px]">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold">Puzzle completed!</h2>
+                <div class="flex justify-center gap-8 min-[601px]:gap-[64px] text-[18px] min-[601px]:text-[24px]">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleCoins }} coins</p>
-                        <img src="../assets/coin-icon.svg" alt="coin icon">
+                        <img src="../assets/coin-icon.svg" alt="coin icon" class="w-8 min-[601px]:w-12">
                     </div>
-                    <div class="txt-icon">
+                    <div class="flex items-center gap-2">
                         <p>+ {{ puzzleXp }} exp</p>
-                        <img src="../assets/exp-icon.svg" alt="exp icon">
+                        <img src="../assets/exp-icon.svg" alt="exp icon" class="w-8 min-[601px]:w-12">
                     </div>
                 </div>
-                <div class="btns">
-                    <button @click="goBack">Back</button>
-                    <button class="next-btn" @click="nextStage">Next</button>
+                <div class="mt-5 flex justify-center gap-4 min-[601px]:gap-[64px]">
+                    <button @click="goBack" class="cursor-pointer rounded-md border-2 border-black p-2 min-[601px]:p-[10px_40px] text-[20px] min-[601px]:text-[24px] bg-white">Back</button>
+                    <button @click="nextStage" class="cursor-pointer rounded-md border-2 border-black bg-[#71ACCC] p-2 min-[601px]:p-[10px_40px] text-[20px] min-[601px]:text-[24px]">Next</button>
                 </div>
             </div>
 
-            <div class="category-done" v-if="showCategoryDone">
-                <h2>Congratulations!</h2>
-                <p>You've completed all puzzles in this category</p>
-                <img src="../assets/blueFluff.svg" alt="blue fluff">
-                <div class="btns">
-                    <button @click="goBack">Back</button>
+            <div v-if="showCategoryDone" class="absolute left-1/2 top-1/2 z-[100] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl bg-[#71accc]/80 p-10 text-center backdrop-blur-md w-[90%] max-w-[600px]">
+                <h2 class="text-[40px] min-[601px]:text-[54px] font-bold">Congratulations!</h2>
+                <p class="text-[18px] min-[601px]:text-[24px]">You've completed all puzzles in this category</p>
+                <img src="../assets/blueFluff.svg" alt="blue fluff" class="my-4 w-32 min-[601px]:w-48">
+                <div class="mt-5 flex justify-center gap-[64px]">
+                    <button @click="goBack" class="cursor-pointer rounded-md border-2 border-black p-[10px_40px] text-[20px] min-[601px]:text-[24px] bg-white">Back</button>
                 </div>
             </div>
         </div>
@@ -90,1286 +65,203 @@
 </template>
 
 <script setup>
-//imports
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { databases, account } from '@/lib/appwrite';
-import { Query, ID } from 'appwrite';
-import { toast } from 'vue3-toastify';
-import { levelData } from '@/lib/levelsData';
-import { handleAchievements } from '@/lib/achievementsHandler';
-import DropdownUser from '@/components/DropdownUser.vue';
+import { databases } from '@/lib/appwrite';
+import { Query } from 'appwrite';
+import { useWordSearch } from '@/composables/useWordSearch';
+import { useUserStore } from '@/stores/user';
+import { useGameStore } from '@/stores/game';
+import WordSearchHeader from '@/components/WordSearchHeader.vue';
+import WordSearchList from '@/components/WordSearchList.vue';
+import WordSearchGrid from '@/components/WordSearchGrid.vue';
 
-//all variables
-//global variables
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
+const gameStore = useGameStore();
+
+//grid
+const { 
+    grid, selection, isSelecting, startCell, selectionColor, 
+    wordsColor, foundWordsData, allWordsData, generateGrid 
+} = useWordSearch(12);
+
 const dropdownActive = ref(false);
-
-//variables related to word search 
-const allWordsData = ref([]);
 const wordsToFind = ref([]);
-const grid = ref([]); //blank array
-const gridSize = 12;
-const category = route.query.category; //query parameters in URL adress -< /ws?category=fruit
-const categoryName = ref('');
-categoryName.value = category.charAt(0).toUpperCase()+category.slice(1);
+const category = route.query.category;
+const categoryName = ref(category.charAt(0).toUpperCase() + category.slice(1));
 const foundWords = ref([]);
-const selection = ref([]); //letters that are selected - its' coordinates x,y
-const isSelecting = ref(false); //does user is selecting letter with clicked mouse
-const startCell = ref(null); //first letter from selected word
-const selectionColor = ref(null) // current color of selecting letter
-const wordsColor = ref({}); //which word has which color
-const foundWordsData = ref([]) //info of found - value of word and it's cords
-const hintedCell = ref()// {row,col} will be stored here
+const hintedCell = ref(null);
 
-//variables related to database
 const database_id = process.env.VUE_APP_DATABASE_ID;
-const collection_id = process.env.VUE_APP_COLLECTION_PLAY_ID;
-const collection_user_id = process.env.VUE_APP_COLLECTION_ID;
 const collection_progress_id = process.env.VUE_APP_COLLECTION_PROGRESS_PLAY_ID;
-const collection_user_stats_id = process.env.VUE_APP_COLLECTION_USER_STATS_ID;
+
 let currentStage = ref(1);
 let maxStage = ref();
-const username = ref('');
-const userAvatar = ref('');
-let userCoins = ref(0);
 const showPuzzleDone = ref(false);
 const showCategoryDone = ref(false);
-let currentUser = ref(null); //needed for saving progress for currently logged in user
-let progressDocumentId = null; // storing the ID of the single progress document
-let progressData = {}; // storing the entire stages_data object
+
+let progressData = {};
 const puzzleXp = ref(0);
 const puzzleCoins = ref(0);
-const hintCost = ref(20); //cost of using a hint;
+const hintCost = ref(20);
 const showHintCost = ref(false);
 const showCoinsDeducted = ref(false);
-//variables for mobile responsibe - so user can click and select words without problem, as on website
-const cellWidth = 40; //value from mobile query, 
-const cellHeight = 40;
-const gridRef = ref(null);
-
-//functions related to database
-async function getUser() { //what user is currenlty logged in
-    try {
-        const user = await account.get(); //getting info from session
-        currentUser.value = user;
-        return user;
-    } catch (err) {
-        console.log("Error: ",err);
-    }
-}
 
 async function loadStage(stage) {
     try {
-        const stageDoc = await findStagePuzzle(stage); // Find the original puzzle data
-        if (!stageDoc) {
-            console.log("Stage not found:", stage);
-            return;
-        }
+        const stageDoc = await findStagePuzzle(stage);
+        if (!stageDoc) return;
 
-        //loading xp and coins value from current stage
         puzzleXp.value = stageDoc.xp;
         puzzleCoins.value = stageDoc.coin;
-
-        //sorting words A-Z
-        const sortedWords = stageDoc.searchWord;
-        sortedWords.sort((a, b) => a.localeCompare(b));
-        wordsToFind.value = sortedWords;
-
+        wordsToFind.value = stageDoc.searchWord.sort((a, b) => a.localeCompare(b));
         currentStage.value = stage;
 
         const stageProgress = progressData[stage];
         if (stageProgress) {
-            //loading progress from the single document
             foundWords.value = stageProgress.foundWords || [];
             foundWordsData.value = JSON.parse(stageProgress.foundWordsData || '[]');
             wordsColor.value = JSON.parse(stageProgress.wordsColor || '{}');
             grid.value = JSON.parse(stageProgress.grid || '[]');
             showPuzzleDone.value = stageProgress.completed || false;
         } else {
-            //if it's new stage, reset everything
-            foundWords.value = [];
-            foundWordsData.value = [];
-            wordsColor.value = {};
-            grid.value = [];
-            showPuzzleDone.value = false;
-            allWordsData.value = [];
+            resetStageState();
+            generateGrid(wordsToFind.value);
         }
+    } catch (err) { console.error("Error loading stage:", err); }
+}
 
-        if (grid.value.length === 0) generateGrid();
-    } catch (err) {
-        console.log("Error loading stage:", err);
-    }
+function resetStageState() {
+    foundWords.value = [];
+    foundWordsData.value = [];
+    wordsColor.value = {};
+    grid.value = [];
+    showPuzzleDone.value = false;
+    allWordsData.value = [];
 }
 
 async function findStagePuzzle(stage) {
-    //optimized query to only fetch documents for the specific category
-    const data = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
-
-    //filter the fetched documents to find the specific stage
-    return data.documents.find(doc => parseInt(doc.puzzleId.split('-')[1]) === stage);
+    const docs = await gameStore.fetchPuzzleData(category, false);
+    return docs.find(doc => parseInt(doc.puzzleId.split('-')[1]) === stage);
 }
 
 async function loadData() {
     try {
-        //finding max stage from original puzzle collection
-        const puzzlesData = await databases.listDocuments(database_id, collection_id, [Query.equal("title", category)]);
-        if (puzzlesData.total === 0) {
-            console.log("Error, couldn't find category", category);
-            return;
-        }
-
-        const stages = puzzlesData.documents.map(doc => parseInt(doc.puzzleId.split('-')[1]));
-        maxStage.value = Math.max(...stages);
+        const docs = await gameStore.fetchPuzzleData(category, false);
+        if (docs.length === 0) return;
         
-        //loading or create the single progress document
+        maxStage.value = Math.max(...docs.map(doc => parseInt(doc.puzzleId.split('-')[1])));
+        
         await loadProgressDocument();
-        
-        loadStage(currentStage.value);
-    } catch (err) {
-        console.log("Error:", err);
-    }
+        await loadStage(currentStage.value);
+    } catch (err) { console.error("Error loading data:", err); }
 }
 
 async function loadProgressDocument() {
-    const progressDocs = await databases.listDocuments(
-        database_id,
-        collection_progress_id,
-        [Query.equal("user_id", currentUser.value.$id), Query.equal("category", category)]
-    );
-
+    const progressDocs = await databases.listDocuments(database_id, collection_progress_id, [
+        Query.equal("user_id", userStore.currentUser.$id), 
+        Query.equal("category", category)
+    ]);
+    
     if (progressDocs.total > 0) {
-        //if document exists, load its data
-        const doc = progressDocs.documents[0];
-        progressDocumentId = doc.$id;
-        progressData = JSON.parse(doc.stages_data);
-        currentStage.value = progressData.userMaxStageReached || 1; //loading the highest stage reached
+        progressData = JSON.parse(progressDocs.documents[0].stages_data);
+        currentStage.value = progressData.userMaxStageReached || 1;
     } else {
-        //if document does not exist, create it
-        const newDoc = await databases.createDocument(
-            database_id,
-            collection_progress_id,
-            ID.unique(),
-            {user_id: currentUser.value.$id, category,stages_data: '{}'});
-        progressDocumentId = newDoc.$id;
         progressData = {};
         currentStage.value = 1;
     }
 }
 
 async function saveProgress(completed = false) {
-    const puzzleId = `${category}-${currentStage.value}`;
-
-    //updating the progressData object for the current stage
     progressData[currentStage.value] = {
         completed,
-        puzzleId,
+        puzzleId: `${category}-${currentStage.value}`,
         foundWords: foundWords.value,
         foundWordsData: JSON.stringify(foundWordsData.value),
         grid: JSON.stringify(grid.value),
         wordsColor: JSON.stringify(wordsColor.value),
     };
-    
-    //updating the max stage if the current stage is higher
     progressData.userMaxStageReached = Math.max(progressData.userMaxStageReached || 0, currentStage.value);
-
-    //saving the entire updated stages_data to the single document
-    await databases.updateDocument(database_id, collection_progress_id, progressDocumentId, { stages_data: JSON.stringify(progressData) });
+    
+    await gameStore.savePlayProgress(userStore.currentUser.$id, category, progressData);
 }
 
-async function processPuzzleCompletion(coinsGained, xpGained) {
-    try {
-        const userStatsDocs = await databases.listDocuments(database_id,collection_user_stats_id,[Query.equal('user_id', currentUser.value.$id)]);
+// interacting with grid
+const handleStart = (r, c) => {
+    isSelecting.value = true;
+    startCell.value = { row: r, col: c };
+    selection.value = [{ row: r, col: c }];
+    selectionColor.value = `rgb(${Math.floor(Math.random()*156+50)},${Math.floor(Math.random()*156+50)},${Math.floor(Math.random()*156+50)})`;
+};
 
-        if (userStatsDocs.total > 0) {
-            const doc = userStatsDocs.documents[0];
-            const currentCoins = doc.coin;
-            const currentXp = doc.xp;
-            let currentLevel = doc.level;
-            let currentTitle = doc.title;
-            const userStatsDocId = doc.$id;
+const handleExtend = (r, c) => {
+    if (!isSelecting.value || !startCell.value) return;
+    const dx = c - startCell.value.col;
+    const dy = r - startCell.value.row;
+    const len = Math.max(Math.abs(dx), Math.abs(dy)) + 1;
+    const stepX = dx === 0 ? 0 : dx / Math.abs(dx);
+    const stepY = dy === 0 ? 0 : dy / Math.abs(dy);
 
-            //updating local values with new gains
-            const newCoins = currentCoins + coinsGained;
-            const newXp = currentXp + xpGained;
+    selection.value = Array.from({ length: len }, (_, i) => ({
+        row: startCell.value.row + stepY * i,
+        col: startCell.value.col + stepX * i
+    }));
+};
 
-            //checking for level up
-            const sortedLevels = [...levelData].sort((a, b) => b.xpNeeded - a.xpNeeded);
-            const newLevelData = sortedLevels.find(l => l.xpNeeded <= newXp);
+const handleEnd = async () => {
+    if (!isSelecting.value) return;
+    isSelecting.value = false;
+    const word = selection.value.map(p => grid.value[p.row]?.[p.col] || '').join('');
+    const match = wordsToFind.value.find(w => w === word);
 
-            if (newLevelData && newLevelData.number > currentLevel) {
-                currentLevel = newLevelData.number;
-                currentTitle = newLevelData.title;
-                toast.success(`You've leveled up to level ${currentLevel}!`);
-            }
-
-            //updating the database with the new stats
-            await databases.updateDocument(database_id,collection_user_stats_id,userStatsDocId,{ coin: newCoins, xp: newXp, level: currentLevel, title: currentTitle });
-            
-            //passing the updated stats to the achievement checker
-            await handleAchievements({ coins: newCoins, level: currentLevel });
-
-            userCoins.value = newCoins;
-
-        } else {
-            //if user gains rewards for the first time
-            await databases.createDocument(database_id,collection_user_stats_id,ID.unique(),{user_id: currentUser.value.$id,coin: coinsGained,xp: xpGained});
-            userCoins.value = coinsGained;
-            await handleAchievements({ coins: coinsGained, level: 1 });
-        }
-    } catch (err) {
-        console.error("Error processing puzzle completion:", err);
-    }
-}
-
-
-async function getUserAvatar () {
-    try {
-        const userId = currentUser.value.$id;
-        username.value = currentUser.value.name;
-
-        //searching user by id to find avatar src
-        //Query is a class that lets use methods for each type of supported query operation, for example searching if given value is in database (method equal)
-        const searchedUser = await databases.listDocuments(database_id,collection_user_id, [Query.equal('id_user',userId)]);
-
-        if(searchedUser.total > 0) { //checking if databse return any document
-            const userDocuments = searchedUser.documents[0]; //given value from first document is assigned to userDocuments variable, so we can get avatar value from it
-            userAvatar.value = userDocuments.avatar;
-            //console.log("Img src: ",userAvatar.value);
-        }
-    } catch(err) {
-        console.log("Error: ",err);
-    }
-}
-
-async function getUserCoins () {
-    try {
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-
-        if (userStats.total > 0) {
-            const doc = userStats.documents[0];
-            userCoins.value = doc.coin;
-            //console.log("User stats updated successfully!");
-        } else {
-            console.log("Couldn't fetch coins");
-        }
-    } catch (err) {
-        console.log("Error in getting coins:",err);
-    }
-}
-
-async function hintPayment(amount) {
-    try {
-        if (!currentUser.value) {
-            await getUser();
-        }
-        
-        const userStats = await databases.listDocuments(database_id, collection_user_stats_id, [Query.equal('user_id', currentUser.value.$id)]);
-        
-        if (userStats.total > 0) {
-            const doc = userStats.documents[0];
-            const currentCoins = doc.coin;
-            
-            if (currentCoins >= amount) {
-                const newCoinAmount = currentCoins - amount;
-                await databases.updateDocument(database_id, collection_user_stats_id, doc.$id, {
-                    coin: newCoinAmount,
-                });
-                return true; //payment was successful
-            } else if(currentCoins < amount) {
-                toast.error("Not enough coins to buy a hint!");
-            }
-        }
-        return false; //payment failed (not enough coins or document not found)
-    } catch (err) {
-        console.error("Error processing hint payment:", err);
-        return false;
-    }
-}
-
-//function related to word search - creating grid, color
-function generateGrid() {
-    let allWordsPlaced = false; //flag for checking if all of the words was placed 
-
-    while (!allWordsPlaced) {
-        const temp = Array.from({length: gridSize}, () => Array(gridSize).fill("")); //creating copy of grid array - size of 12, and filling it with blank strings, 
-        //Array.from creates new copied Array from array-like object, namely grid
-        //8 directions of words placement - horizontally: x=1,y=0 / x=-1,0 (backwards), 
-        //vertically: x=0,y=1 / x=0,y=-1 (backwards), 
-        //diagonally: x=1,y=1 (down-rigth) / x=-1,y=-1 (up-left) /  x=-1,y=1 (down-left) / x=1,y=-1 (down-right)
-        const directions = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}, {x:1,y:1},{x:-1,y:-1},{x:-1,y:1},{x:1,y:-1}];
-        
-        const sortedWords = [...wordsToFind.value].sort((a, b) => b.length - a.length); //sorting words in form longest to shortest, so the longest will be placed first
-        let success = true; //if word was successfuly placed
-
-        for (const word of sortedWords) {
-            if (!placeWord(word.toUpperCase(), temp, directions, gridSize)) {
-                success = false;
-                break;
-            }
-        }
-
-        if (success) { //if all words was placed then fill rest of the grid with random letters
-            const letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            for(let i = 0; i < gridSize; i++) {
-                for(let j = 0; j < gridSize; j++) {
-                    if(temp[j][i] === '') {
-                        temp[j][i] = letter[Math.floor(Math.random()*letter.length)];
-                    }
-                }
-            }
-            grid.value = temp;
-            allWordsPlaced = true;
-        }
-    }
-}
-
-function doesWordFits(word, startX, startY, direction, tempGrid, gridSize) {
-    //firstly we need to calculate end of the word, using it's length
-    const endX = startX + direction.x * (word.length - 1); //first letter is in starting position that's why word.length-1
-    const endY = startY + direction.y * (word.length - 1);
-
-    if (endX >= gridSize || endY >= gridSize || endX < 0 || endY < 0) return false;
-
-    //checking if it's a letter coliision - if yes then given letter is shared
-    for (let i = 0; i < word.length; i++) {
-        const x = startX + direction.x * i;
-        const y = startY + direction.y * i;
-        //accessing the grid from the passed argument
-        if (tempGrid[y][x] !== '' && tempGrid[y][x] !== word[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-//function that places word in given space and direction
-function placeWord(word, tempGrid, directions, gridSize) {
-    const positions = []; //array of possible positions, that word can be placed, needed to have 100% guarantee that the word to find will be in this grid
-
-    //list of all possible positions
-    directions.forEach(direction => {
-        for (let y = 0; y < gridSize; y++) {
-            for (let x = 0; x < gridSize; x++) {
-                positions.push({ x, y, direction }); //push adds object to array
-            }
-        }
-    });
-
-    positions.sort(() => Math.random() - 0.5); //sorting array randomly
-
-    for (const p of positions) { // "writing letter in positions (random ones, after sorting)"
-    //checking if word fits with these parameters
-        if (doesWordFits(word, p.x, p.y, p.direction, tempGrid, gridSize)) {
-            const coords = [];
-            for (let i = 0; i < word.length; i++) {
-                const xx = p.x + (p.direction.x * i);
-                const yy = p.y + (p.direction.y * i);
-                //updating the grid from the passed argument
-                tempGrid[yy][xx] = word[i];
-                coords.push({ row: yy, col: xx });
-            }
-            allWordsData.value.push({ word: word, coords: coords });
-            return true;
-        }
-    }
-    return false;
-}
-
-//random selection colors
-function randomColor() {
-    const r = Math.floor(Math.random() * 156 + 50);
-    const g = Math.floor(Math.random() * 156 + 50);
-    const b = Math.floor(Math.random() * 156 + 50);
-    return `rgb(${r},${g},${b})`
-}
-
-function getCellStyle(row, col) {
-  let style = {};
-
-  //checking if the current cell is part of an active selection
-  const isSelected = selection.value?.some(c => c.row === row && c.col === col);
-  if (isSelected) {
-    style = { ...style, backgroundColor: selectionColor.value, color: 'white' };
-  }
-
-  //checking if the cell is part of a found word
-  const isFound = foundWordsData.value?.some(item => item.coords?.some(c => c.row === row && c.col === col));
-  if (isFound) {
-    const foundItem = foundWordsData.value.find(item => item.coords?.some(c => c.row === row && c.col === col));
-    if (foundItem) {
-      style = { ...style, backgroundColor: wordsColor.value[foundItem.word], color: 'white' };
-    }
-  }
-
-  const isHinted = hintedCell.value && hintedCell.value.row === row && hintedCell.value.col === col;
-  if (isHinted && !isSelected) {
-    style = { ...style, border: '2px solid red'};
-  }
-
-  return style;
-}
-
-// functions related to word search - selecting letters
-function handleTouchMove(event) { //function for users on mobile, have to calculate coords for touchmove event
-  if (!isSelecting.value || !gridRef.value) return;
-  //preventing default to stop scrolling during drag
-  event.preventDefault(); 
-  
-  //getting the current touch position
-  const touch = event.touches[0];
-  const touchX = touch.clientX;
-  const touchY = touch.clientY;
-
-  //getting the grid's position on the screen
-  const gridRect = gridRef.value.getBoundingClientRect();
-  
-  //calculating relative coordinates within the grid
-  const relativeX = touchX - gridRect.left;
-  const relativeY = touchY - gridRect.top;
-
-  //calculating the column and row index -> Math.floor(relative / size) gives the 0-indexed position
-  const col = Math.floor(relativeX / cellWidth);
-  const row = Math.floor(relativeY / cellHeight);
-
-  //calling extendSelection only if the touch is within the bounds of the grid, 
-  extendSelection(row, col);
-}
-
-function startSelection(row, col) {
-     if (!isValidCell(row, col)) return;
-    isSelecting.value = true; //letter is being selected
-    selection.value = [{ row, col }]; //coords of selected letters
-    startCell.value = { row, col }; //the same as above (only first letter)
-    selectionColor.value = randomColor(); //selecting random color for word
-}
-
-function extendSelection(row, col) { //after user drags mouse to select more letters
-  if (!isSelecting.value || !startCell.value) return;  //if user already clicked mouse
-  if (!isValidCell(row, col)) return;
-
-  //calculating distance between letter
-  const dx = col - startCell.value.col;
-  const dy = row - startCell.value.row;
-
-  const len = Math.max(Math.abs(dx), Math.abs(dy)) + 1; //how much letters should be selected from the start, +1 because if user is selecting letters from 
-  // (2,2) to (2,5) then its 4 not 3
-
-  let stepX; 
-  if(dx === 0) { //we don't move horizontally
-    stepX = 0 }
-  else {
-    stepX = dx / Math.abs(dx);} // we move in right if dx>0, in left if dx<0 
-
-  let stepY; 
-  if(dy === 0) { //we don't move vertically
-    stepY = 0 }
-  else {
-    stepY = dy / Math.abs(dy);}
-
-  const path = []; //list of selected letter
-  for (let i = 0; i < len; i++) {
-    path.push({ //pushing to list coords of every selected letter
-      row: startCell.value.row + stepY * i,
-      col: startCell.value.col + stepX * i,
-    });
-  }
-  selection.value = path; //selected space
-}
-
-async function endSelection() { //if user stops clicking mouse
-  if (!isSelecting.value) return; //if user is not selecting anything
-  isSelecting.value = false; //stop selecting
-
-const word = selection.value
-  .map(({ row, col }) => {
-    if (!grid.value[row] || grid.value[row][col] === undefined) { //checking if while selecting error will be displayed
-      console.warn(`Invalid grid access at row ${row}, col ${col}`);
-      return '';
-    }
-    return grid.value[row][col];
-  }).join(''); //making whole word from selected letters, {row,col} is coords, 
-  // .map - for every letter from grid with proper cords, .join - joining it in one word
-  const match = wordsToFind.value.find(w => w === word); //checking if selected word is in searchWord list - words to find
-
-  if (match && !foundWords.value.includes(word)) {
-    if(!wordsColor.value[match]) {
+    if (match && !foundWords.value.includes(word)) {
         wordsColor.value[match] = selectionColor.value;
+        foundWordsData.value.push({ word: match, coords: [...selection.value] });
+        foundWords.value.push(match);
+        hintedCell.value = null;
+
+        const isCompleted = foundWords.value.length === wordsToFind.value.length;
+        await saveProgress(isCompleted);
+        
+        if (isCompleted) {
+            await gameStore.updateUserStats(puzzleCoins.value, puzzleXp.value);
+            showPuzzleDone.value = true;
+        }
     }
-    foundWordsData.value.push({ word: match, coords: [...selection.value] });
-    foundWords.value.push(match); //pushing matching word to foundWords array so it can be crossed from words to found's list
-
-    hintedCell.value = null;
-
-    const isCompleted = foundWords.value.length === wordsToFind.value.length;
-    await saveProgress(isCompleted); // <-- saving progress with correct state
-
-    if (foundWords.value.length === wordsToFind.value.length) { //if all words was found
-        // await getUserStats(puzzleXp.value, puzzleCoins.value); //saving coins and xp from stage to user stats
-        await processPuzzleCompletion(puzzleCoins.value, puzzleXp.value);
-        showPuzzleDone.value = true
-    }
-  }
-
-  selection.value = []; //reseting selection
-  startCell.value = null; //reseting first selected letter
-  selectionColor.value = null //reseting selection color, so if user selectes another letters color will be different
-}
-
-//checking if selecting rows and cols fit in grid array
-function isValidCell(row, col) {
-  return row >= 0 && row < gridSize && col >= 0 && col < gridSize;
-}
+    selection.value = [];
+};
 
 async function showHint() {
-    const paymentSuccessful = await hintPayment(hintCost.value);
-    if (paymentSuccessful) {
-        //updating the user's coins variable immediately
-        userCoins.value -= hintCost.value;
-
-        //showing the animation and hiding it after a delay
+    if (userStore.coins >= hintCost.value) {
+        await gameStore.updateUserStats(-hintCost.value, 0); 
+        
         showCoinsDeducted.value = true;
-        setTimeout(() => {
-            showCoinsDeducted.value = false;
-        }, 1500);
-        const unfoundWords = allWordsData.value.filter(wordData => !foundWords.value.includes(wordData.word));
-
-        if (unfoundWords.length > 0) {
-            const randomWordData = unfoundWords[Math.floor(Math.random() * unfoundWords.length)];
-            const firstLetterCoords = randomWordData.coords[0];
-            hintedCell.value = firstLetterCoords;
-            // console.log(`Hinting for word: ${randomWordData.word}`);
-        } else {
-            // console.log('No words left to show a hint for.');
-            unfoundWords.value = [];
-        }
+        setTimeout(() => showCoinsDeducted.value = false, 1500);
+        
+        const unfound = allWordsData.value.filter(w => !foundWords.value.includes(w.word));
+        if (unfound.length > 0) hintedCell.value = unfound[Math.floor(Math.random() * unfound.length)].coords[0];
+    } else { 
+        import('vue3-toastify').then(({toast}) => toast.error("Not enough coins!")); 
     }
 }
 
-//functions for icons on bottom
-async function nextStage() {
-    if (currentStage.value < maxStage.value) {
-        currentStage.value++;
-        await loadStage(currentStage.value);
-        //completed status is false by default for a new stage
-        await saveProgress(false); 
-    } else {
-        //checking if the final stage is completed
-        if (progressData[maxStage.value]?.completed) {
-            showCategoryDone.value = true;
-        } else {
-            console.log("No more stages available or the final stage is not yet completed.");
-        }
+function nextStage() {
+    if (currentStage.value < maxStage.value) { 
+        currentStage.value++; 
+        loadStage(currentStage.value); 
+    } else { 
+        showCategoryDone.value = true; 
     }
 }
 
-function goBack() {
-    router.back();
-}
+function goBack() { router.back(); }
 
-const toggleVisibility = () => {
-  dropdownActive.value = !dropdownActive.value;
-}
-
-// loading before mounting component
 onMounted(async () => {
-   await getUser();
-   await loadData();
-   await getUserAvatar();
-   await getUserCoins();
+    if (!userStore.currentUser) {
+        await userStore.fetchUser();
+    }
+    await loadData();
 });
-
 </script>
-
-<style lang="scss" scoped>
-.background-container {
-    width: 100vw;
-    height: 100vh;
-    background-color: rgb(174, 210, 229);
-    overflow-y: scroll;
-}
-
-.container {
-    background-color: rgb(174, 210, 229);
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    position: relative;
-
-    .right-up-wrapper {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px; 
-
-        .coins-display {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-            p {
-                font-size: 24px;
-                text-align: center;
-                margin-top: 24px;
-            }
-
-            img {
-                width: 42px;
-                height: 42px;
-            }
-        }
-
-        .coins-deducted {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px; 
-            position: absolute;
-            top: 50%; 
-            left: 50%;
-            transform: translate(-50%, -50%); 
-            opacity: 0;
-            animation: deduct-animation 2s forwards;
-            
-            p {
-                font-size: 24px;
-                font-weight: 500;
-                color: #e74c3c;
-                margin: 0;
-            }
-            
-            img {
-                width: 42px;
-                height: 42px;
-            }
-        }
-
-        @keyframes deduct-animation {
-            0% {
-                transform: translate(-50%, -50%);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -150%);
-                opacity: 0; 
-            }
-        }
-
-        .avatar-wrapper {
-            cursor: pointer;
-        }
-        
-        .user-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-        }
-
-    }
-
-
-    .text-container {
-        text-align: center;
-        margin-top: 4px;
-
-        h2{
-            font-size: 56px;
-            margin: 0px;
-        }
-
-        .bigger{
-            font-size: 32px;
-            margin-bottom: 4px;
-        }
-
-        .smaller {
-            font-size: 20px;
-            margin-bottom: 16px;
-        }
-    }
-
-    .wrapper-search {
-        display: flex;
-        justify-content: center;
-        gap: 96px;
-
-        .words-list {
-            text-align: center;
-
-            h4{
-                font-size: 36px;
-                font-weight: 500;
-                margin-bottom: 4px;
-            }
-
-            ul {
-                list-style: none;
-
-                li {
-                    font-size: 24px;
-                    line-height: 1.8;
-                }
-            }
-
-            .foundWord {
-                color: rgba(0, 0, 0, 0.5);
-                text-decoration: line-through;
-                text-decoration-color: black;
-                text-decoration-thickness: 3px;
-            }
-        }
-
-        .grid{
-            display: flex;
-            flex-direction: column;
-            border: 4px solid #57A4CD;
-    
-            .row {
-                display: flex;
-
-                .hinted-cell {
-                    border: 2px solid red !important;
-                }
-    
-                .cell {
-                    background: #f9f9f9;
-                    width: 44px;
-                    height: 44px;
-                    text-align: center;
-                    line-height: 44px;
-                    font-weight: 400;
-                    font-size: 28px;
-                    cursor: pointer;
-                }
-
-                .cell:hover:not(.cell.selected):not(.cell.found) {
-                    outline: 2px solid #ccc; //unlike border, this doesn't affect size of a cell 
-                    outline-offset: -2px; //so this border won't be outside the cell
-                    
-                }
-
-            }
-    
-        }
-    }
-
-    .bottom{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 32px;
-        background-color: #57A4CD;
-        width: 280px;
-        height: auto;
-        border: 4px solid black;
-        border-radius: 24px;
-        gap: 24px;
-
-        img{
-            width: 44px;
-            cursor: pointer;
-            margin-top: 0;
-        }
-
-        .hint-wrapper {
-            position: relative;
-            
-            .hint-cost-text {
-                position: absolute;
-                bottom: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                white-space: nowrap;
-                background-color: #f9f9f9;
-                color: #333;
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 16px;
-                font-weight: bold;
-                opacity: 0; 
-                visibility: hidden;
-                transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-                z-index: 10;
-                
-                &::after {
-                    content: '';
-                    position: absolute;
-                    left: 50%;
-                    bottom: -5px;
-                    transform: translateX(-50%);
-                    border-left: 5px solid transparent;
-                    border-right: 5px solid transparent;
-                    border-top: 5px solid #f9f9f9;
-                }
-            }
-            
-            &:hover .hint-cost-text {
-                opacity: 1;
-                visibility: visible;
-                transform: translateX(-50%) translateY(-5px);
-            }
-        }
-    }
-
-    .puzzle-done{
-        border-radius: 6px;
-        width: 540px;
-        height: 420px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        background-color: rgba(113, 172, 204,0.6);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-
-        h2{
-            font-size: 54px;
-            font-weight: 500;
-            text-align: center;
-            width: 300px;
-            margin-bottom: 24px;
-            margin-top: 12px;
-        }
-
-        .rewards-txt {
-            display: flex;
-            gap: 64px;
-            font-size: 24px;
-            margin-bottom: 24px;
-
-            .txt-icon {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                
-                img {
-                    width: 48px;
-                    position: relative;
-                    bottom: 8px;
-                }
-            }
-
-        }
-
-        .btns {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            gap: 64px;
-
-            button {
-            font-size: 24px;
-            padding: 1% 12%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-            }
-
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
-
-            .next-btn {
-                background-color: #71ACCC;
-            }
-        }
-
-    }
-
-    .category-done {
-        //display: none;
-        background-color: pink;
-        border-radius: 6px;
-        width: 696px;
-        height: 496px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        background-color: rgba(113, 172, 204,0.6);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-
-    h2 {
-        font-size: 54px;
-        font-weight: 500;
-        text-align: center;
-        margin-bottom: 24px;
-        margin-top: 12px;
-    }
-
-    p{
-        font-size: 28px;
-        text-align: center;
-    }
-
-    img {
-        margin-top: 24px;
-        width: 200px;
-    }
-
-    .btns {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        gap: 64px;
-
-        button {
-            font-size: 24px;
-            padding: 1% 12%;
-            font-weight: 500;
-            background-color: #f9f9f9;
-            border: 2px solid black;
-            border-radius: 6px;
-            cursor: pointer;
-            transform: perspective(1px) translateZ(0);
-            box-shadow: 0 0 1px transparent;
-            transition-duration: 0.3s;
-            transition-property: box-shadow, transform;
-        }
-
-        button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-        }
-
-        .next-btn {
-                background-color: #71ACCC;
-        }
-        }
-}
-
-@media (max-width: 600px) {
-    .container {
-        .right-up-wrapper {
-            top: 10px;
-            right: 10px;
-            gap: 8px;
-
-            .coins-display {
-                gap: 4px;
-                
-                p {
-                    font-size: 18px;
-                    margin-top: 18px;
-                }
-
-                img {
-                    width: 30px;
-                    height: 30px;
-                }
-            }
-            
-            .coins-deducted {
-                gap: 4px;
-                p {
-                    font-size: 18px;
-                }
-                img {
-                    width: 30px;
-                    height: 30px;
-                }
-            }
-
-            .user-avatar {
-                width: 40px;
-                height: 40px;
-            }
-        }
-
-        .text-container {
-            margin-top: 10px;
-            
-            h2 {
-                font-size: 36px;
-            }
-
-            .bigger {
-                font-size: 24px; 
-            }
-
-            .smaller {
-                font-size: 16px;
-                margin-bottom: 12px;
-            }
-        }
-
-        .wrapper-search {
-            flex-direction: column;
-            gap: 16px;
-            width: 100%;
-            align-items: center;
-
-            .words-list {
-                
-                h4 {
-                    font-size: 24px;
-                    margin-bottom: 8px;
-                }
-
-                ul {
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: center;
-                    padding: 0 10px;
-                    
-                    li {
-                        font-size: 16px;
-                        line-height: 1.5;
-                        margin: 0 5px; 
-                    }
-                }
-            }
-            .grid{
-                border-width: 2px;
-        
-                .row {
-                    .cell {
-                        width: 40px; 
-                        height: 40px;
-                        line-height: 40px;
-                        font-size: 22px;
-                    }
-                }
-            }
-        }
-
-        .bottom {
-            margin-top: 16px;
-            width: 200px;
-            border-width: 2px;
-            border-radius: 16px;
-            gap: 16px;
-
-            img {
-                width: 36px;
-            }
-            
-            .hint-wrapper {
-                .hint-cost-text {
-                    font-size: 14px; 
-                    padding: 2px 6px;
-                    bottom: 90%;
-                }
-            }
-        }
-        
-        .puzzle-done, .category-done {
-            width: 90%;
-            height: auto;
-            padding: 30px 10px;
-            
-            h2 {
-                font-size: 36px;
-                margin-bottom: 16px;
-                width: 100%; 
-            }
-
-            p {
-                font-size: 18px;
-            }
-            
-            img {
-                margin-top: 16px;
-                width: 150px;
-            }
-
-            .rewards-txt {
-                flex-direction: column; 
-                gap: 16px;
-                font-size: 18px;
-                margin-bottom: 24px;
-
-                .txt-icon img {
-                    width: 30px;
-                    bottom: 4px;
-                }
-            }
-            
-            .btns {
-                gap: 24px;
-
-                button {
-                    font-size: 18px;
-                    padding: 8px 24px;
-                }
-            }
-        }
-
-        .category-done {
-            h2 {
-                font-size: 32px;
-            }
-            p {
-                font-size: 18px;
-                margin-bottom: 12px;
-            }
-            .btns {
-                margin-top: 16px;
-            }
-        }
-    }
-}
-
-@media (min-width: 992px) and (max-width: 1280px) {
-    .container {
-        
-        .right-up-wrapper {
-            top: 15px;
-            right: 15px;
-            gap: 12px; 
-
-            .coins-display {
-                p {
-                    font-size: 22px;
-                    margin-top: 20px;
-                }
-
-                img {
-                    width: 38px;
-                    height: 38px;
-                }
-            }
-            
-            .coins-deducted {
-                p {
-                    font-size: 22px;
-                }
-                img {
-                    width: 38px;
-                    height: 38px;
-                }
-            }
-
-            .user-avatar {
-                width: 54px;
-                height: 54px;
-            }
-        }
-
-        .text-container {
-            margin-top: 8px;
-
-            h2{
-                font-size: 48px;
-            }
-
-            .bigger{
-                font-size: 28px;
-            }
-
-            .smaller {
-                font-size: 18px;
-                margin-bottom: 12px;
-            }
-        }
-
-        .wrapper-search {
-            gap: 64px;
-
-            .words-list {
-                h4{
-                    font-size: 32px;
-                }
-
-                ul {
-                    li {
-                        font-size: 20px;
-                        line-height: 1.7;
-                    }
-                }
-            }
-
-            .grid{
-                border-width: 3px;
-        
-                .row {
-                    .cell {
-                        width: 38px;
-                        height: 38px;
-                        line-height: 38px;
-                        font-size: 24px;
-                    }
-                }
-            }
-        }
-
-        .bottom{
-            width: 240px;
-            border-width: 3px;
-            border-radius: 20px;
-            gap: 20px;
-
-            img{
-                width: 40px;
-            }
-        }
-        
-        .puzzle-done {
-            width: 480px;
-            height: 380px;
-            
-            h2 {
-                font-size: 48px;
-                width: 280px;
-            }
-
-            .rewards-txt {
-                gap: 48px;
-                font-size: 22px;
-
-                .txt-icon img {
-                    width: 40px;
-                    bottom: 6px;
-                }
-            }
-            
-            .btns {
-                gap: 48px;
-
-                button {
-                    font-size: 20px;
-                    padding: 10px 40px;
-                }
-            }
-        }
-
-        .category-done {
-            width: 600px;
-            height: 400px;
-            
-            h2 {
-                font-size: 48px;
-            }
-            p {
-                font-size: 24px;
-            }
-            img {
-                width: 180px;
-            }
-        }
-    }
-}
-</style>

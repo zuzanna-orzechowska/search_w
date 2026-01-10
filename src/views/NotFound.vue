@@ -1,9 +1,13 @@
 <template>
-    <div class="container">
-        <h2>404</h2>
-        <h1>Page not found.</h1>
-        <p>The page you are looking for doesn't exist or has been moved</p>
-        <button @click="goBack">Back</button>
+    <div class="flex min-h-screen w-full flex-col items-center justify-center bg-[#aed2e5] p-5 text-center">
+        <h2 class="m-0 text-[6rem] font-bold text-[#0077b6] drop-shadow-[2px_2px_4px_rgba(0,0,0,0.1)]" style="-webkit-text-stroke: black 1px;">
+            404
+        </h2>
+        <h1 class="mb-2 text-[2.5rem] font-bold">Page not found.</h1>
+        <p class="my-4 mb-8 max-w-[600px] text-[1.2rem]">The page you are looking for doesn't exist or has been moved</p>
+        <button @click="goBack" class="cursor-pointer rounded-md border-2 border-black bg-[#f9f9f9] px-[2%] py-[1%] text-[24px] font-medium transition-all duration-300 hover:scale-110 hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)]">
+            Back
+        </button>
     </div>
 </template>
 
@@ -14,60 +18,3 @@ const goBack = () => {
     router.back();
 }
 </script>
-
-<style lang="scss" scoped>
-$background-color: #aed2e5;
-$accent-color: #0077b6;
-
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-    background-color: $background-color;
-    padding: 20px;
-    width: 100%;
-}
-
-h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-h2 {
-    font-size: 6rem;
-    font-weight: 700;
-    margin: 0;
-    color: $accent-color;
-    -webkit-text-stroke: black 1px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-p {
-    font-size: 1.2rem;
-    margin: 1rem 0 2rem;
-    max-width: 600px;
-}
-
-button {
-    font-size: 24px;
-    padding: 1% 2%;
-    font-weight: 500;
-    background-color: #f9f9f9;
-    border: 2px solid black;
-    border-radius: 6px;
-    cursor: pointer;
-    transform: perspective(1px) translateZ(0);
-    box-shadow: 0 0 1px transparent;
-    transition-duration: 0.3s;
-    transition-property: box-shadow, transform;
-
-    &:hover {
-        box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-        transform: scale(1.1);
-    }
-}
-</style>

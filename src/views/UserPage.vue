@@ -1,24 +1,41 @@
 <template>
-    <div class="wrapper">
-         <div class="dropdown" v-click-outside="() => {dropdownActive = false}">
-            <!--v-click-outside directive from https://medium.com/@stjepan.crncic/crafting-a-simple-click-outside-directive-in-vue-3-980c55ab1a65-->
-          <span class="material-symbols-outlined" @click="toggleVisibility">account_circle</span>
-          <!--is dynamically loads given component if the requirement is met-->
-          <component v-if="dropdownActive" :is="DropdownUser" :username="userStore.username" :avatar="userStore.avatar"/>
+    <div class="relative flex min-h-[100dvh] w-full flex-col items-center justify-center bg-cover bg-center bg-no-repeat p-[10px] box-border md:p-5"
+        :style="{ backgroundImage: `url(${require('@/assets/lines.png')})` }">
+        
+        <div class="absolute top-[10px] right-5 md:top-5 md:right-[60px]" v-click-outside="() => {dropdownActive = false}">
+            <span class="material-symbols-outlined mt-[10px] cursor-pointer rounded-full bg-[#0077b6] text-[64px] md:mt-9" @click="toggleVisibility">account_circle</span>
+             <component v-if="dropdownActive" :is="DropdownUser" :username="userStore.username" :avatar="userStore.avatar"/>
         </div>
-        <div class="content">
-            <img src="../assets/logo_text.png" alt="SearchW" id="logo-text">
-            <div class="q-wrapper">
-              <q>The smart, fun way to test your mind and spot every hidden word.</q>
+
+        <div class="flex flex-col items-center gap-2 text-center md:gap-3">
+            <img src="../assets/logo_text.png" alt="SearchW" class="w-[120vw] max-w-[372px] md:ml-[52px] md:w-[444px]">
+            
+            <div class="w-[90vw] text-center md:ml-[52px] md:w-[408px]">
+              <q class="text-[20px] italic md:text-[18px]">The smart, fun way to test your mind and spot every hidden word.</q>
             </div>
-            <div class="btns">
-                <button type="button" id="play" @click="goToPlay">Play</button>
-                <button type="button" id="challenge" @click="goToChallenge">Challenge</button>
-                <button type="button" id="shop" @click="goToShop">Shop</button>
+
+            <div class="mt-5 flex flex-col items-center justify-center gap-4 md:ml-[52px] md:mt-6 md:gap-5">
+                <button type="button" 
+                    class="flex items-center justify-center w-[160px] md:w-[148px] h-[50px] md:h-auto md:p-[2%_10%] bg-[#3291C3] border-2 border-black rounded-md text-[20px] md:text-[24px] font-medium text-black transition-all duration-300 md:hover:scale-110 md:hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] cursor-pointer"
+                    @click="goToPlay">
+                    Play
+                </button>
+
+                <button type="button" 
+                    class="flex items-center justify-center w-[160px] md:w-[148px] h-[50px] md:h-auto md:p-[2%_10%] bg-[#FFBA08] border-2 border-black rounded-md text-[20px] md:text-[24px] font-medium text-black transition-all duration-300 md:hover:scale-110 md:hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] cursor-pointer"
+                    @click="goToChallenge">
+                    Challenge
+                </button>
+
+                <button type="button" 
+                    class="flex items-center justify-center w-[160px] md:w-[148px] h-[50px] md:h-auto md:p-[2%_10%] bg-[#f9f9f9] border-2 border-black rounded-md text-[20px] md:text-[24px] font-medium text-black transition-all duration-300 md:hover:scale-110 md:hover:shadow-[0px_8px_30px_-4px_rgba(8,73,111,0.86)] cursor-pointer"
+                    @click="goToShop">
+                    Shop
+                </button>
             </div>
         </div>
         <AppFooter />
-     </div>
+    </div>
 </template>
 
 <script setup>
@@ -47,157 +64,3 @@ onMounted(async () => {
   await userStore.fetchUserData(database_id,collection_id,collection_user_stats_id,collection_user_avatars_id,collection_user_achievements_id);
 });
 </script>
-
-<style lang="scss" scoped>
-.wrapper {
-    background-image: url(../assets/lines.png);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    min-height: 100dvh;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 20px;
-    box-sizing: border-box;
-
-      .dropdown {
-        position: absolute;
-        top: 20px;
-        right: 60px;
-
-        .material-symbols-outlined {
-            background-color: #0077b6;
-            border-radius: 50%;
-            font-size: 64px;
-            cursor: pointer;
-            margin-top: 36px;
-        }
-    }
-
-    .content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 12px;
-
-        #logo-text {
-            width: 444px;
-            margin-left: 52px;
-        }
-      
-        .q-wrapper {
-            width: 408px;
-            text-align: center;
-            margin-left: 52px;
-    
-            q {
-                font-size: 18px;
-                font-style: italic;
-            }
-        }
-      
-        .btns {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 24px;
-            margin-left: 52px;
-    
-            button{
-                -webkit-tap-highlight-color: transparent;
-                -webkit-text-fill-color: initial;
-                color: black !important;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 24px;
-                padding: 1% 6%;
-                border: 2px black solid;
-                border-radius: 6px;
-                font-weight: 500;
-                width: 148px;
-                cursor: pointer;
-                transform: perspective(1px) translateZ(0);
-                box-shadow: 0 0 1px transparent;
-                transition-duration: 0.3s;
-                transition-property: box-shadow, transform;
-            }
-    
-            button:hover {
-                box-shadow: 0px 8px 30px -4px rgba(8, 73, 111, 0.86);
-                transform: scale(1.1);
-            }
-      
-            #play {
-                background-color: #3291C3;
-            }
-      
-            #challenge {
-                background-color: #FFBA08;
-            }
-            
-            #shop {
-                background-color: #f9f9f9;
-            }
-        }
-    }
-
-    @media (max-width: 600px) {
-            padding: 10px;
-    
-            .dropdown {
-                right: 20px;
-                top: 10px;
-    
-                .material-symbols-outlined {
-                    font-size: 64px;
-                    margin-top: 10px;
-                }
-            }
-    
-            .content {
-                gap: 8px;
-    
-                #logo-text {
-                    width: 96vw;
-                    max-width: 372px;
-                    margin-left: 0;
-                }
-              
-                .q-wrapper {
-                    width: 90vw;
-                    margin-left: 0;
-            
-                    q {
-                        font-size: 20px;
-                    }
-                }
-              
-                .btns {
-                    margin-top: 20px;
-                    margin-left: 0;
-                    gap: 16px;
-    
-                    button{
-                        font-size: 20px;
-                        padding: 4px 0;
-                        width: 110px; 
-                    }
-    
-                    button:hover {
-                        box-shadow: none;
-                        transform: none;
-                    }
-                }
-            }
-    }
-    
-}
-</style>

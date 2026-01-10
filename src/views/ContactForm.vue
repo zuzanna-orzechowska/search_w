@@ -1,192 +1,50 @@
 <template>
-    <main>
-        <div class="wrapper-form">
-            <h2>Contact</h2>
-            <form action="https://formspree.io/f/xvgbngva" method="post">
-                <div class="form-group">
-                    <label for="userName" class="form-label">Name or username *</label>
-                    <input type="text" id="userName" name="userName" placeholder="Name or username" autocomplete="off" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="userEmail" class="form-label">E-mail *</label>
-                    <input type="email" id="userEmail" name="userEmail" placeholder="Email" autocomplete="off" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="topic" class="form-label">Topic</label>
-                    <input type="text" id="topic" name="topic" placeholder="Topic" autocomplete="off">
-                </div>
-                
-                <div class="form-group">
-                    <label for="message" class="form-label">Message</label>
-                    <textarea id="message" name="message" placeholder="Tell me what's bothering you..." rows="5"></textarea>
-                </div>
-                
-                <div class="form-agreement">
-                    <input type="checkbox" name="userAgreed" id="agreement" required>
-                    <label for="agreement">I consent to the storage and use of the information I provide for contact purposes.</label>
-                </div>
-                
-                <button type="submit" class="userButton">Send</button>
-            </form>
+  <main class="flex min-h-screen w-full items-center justify-center bg-[#f9f9f9] p-4 max-[600px]:p-2">
+    <div class="flex h-auto min-h-[672px] w-full max-w-[800px] flex-col items-center rounded-xl bg-[#aecde5]/50 p-8 shadow-[4px_4px_10px_3px_rgba(0,0,0,0.2)] backdrop-blur-sm max-[600px]:min-h-[642px] max-[600px]:p-4 max-[600px]:shadow-none">
+      
+      <h2 class="mb-8 mt-4 text-center text-[48px] font-medium text-[#333] max-[600px]:mt-6 max-[600px]:text-[36px]">
+        Contact
+      </h2>
+
+      <form action="https://formspree.io/f/xvgbngva" method="post" class="flex w-full flex-col items-center gap-5">
+        
+        <div class="flex w-[85%] flex-col gap-2 max-[600px]:w-full">
+          <label for="userName" class="text-[1rem] font-semibold text-[#333]">Name or username *</label>
+          <input type="text" id="userName" name="userName" placeholder="Your name" autocomplete="off" required
+            class="h-12 w-full rounded-xl border-2 border-transparent bg-[#6AAED3] px-4 py-2 text-[1.1rem] text-white placeholder:text-white/70 transition-all duration-300 focus:border-[#2A8DC1] focus:bg-[#5da0c5] focus:outline-none focus:ring-2 focus:ring-[#2A8DC1]/30">
         </div>
-    </main>
+
+        <div class="flex w-[85%] flex-col gap-2 max-[600px]:w-full">
+          <label for="userEmail" class="text-[1rem] font-semibold text-[#333]">E-mail *</label>
+          <input type="email" id="userEmail" name="userEmail" placeholder="Your email address" autocomplete="off" required
+            class="h-12 w-full rounded-xl border-2 border-transparent bg-[#6AAED3] px-4 py-2 text-[1.1rem] text-white placeholder:text-white/70 transition-all duration-300 focus:border-[#2A8DC1] focus:bg-[#5da0c5] focus:outline-none focus:ring-2 focus:ring-[#2A8DC1]/30">
+        </div>
+
+        <div class="flex w-[85%] flex-col gap-2 max-[600px]:w-full">
+          <label for="topic" class="text-[1rem] font-semibold text-[#333]">Topic</label>
+          <input type="text" id="topic" name="topic" placeholder="What is this about?" autocomplete="off"
+            class="h-12 w-full rounded-xl border-2 border-transparent bg-[#6AAED3] px-4 py-2 text-[1.1rem] text-white placeholder:text-white/70 transition-all duration-300 focus:border-[#2A8DC1] focus:bg-[#5da0c5] focus:outline-none focus:ring-2 focus:ring-[#2A8DC1]/30">
+        </div>
+
+        <div class="flex w-[85%] flex-col gap-2 max-[600px]:w-full">
+          <label for="message" class="text-[1rem] font-semibold text-[#333]">Message</label>
+          <textarea id="message" name="message" placeholder="How can I help you?" rows="4"
+            class="min-h-[120px] w-full resize-y rounded-xl border-2 border-transparent bg-[#6AAED3] px-4 py-3 text-[1.1rem] text-white placeholder:text-white/70 transition-all duration-300 focus:border-[#2A8DC1] focus:bg-[#5da0c5] focus:outline-none focus:ring-2 focus:ring-[#2A8DC1]/30"></textarea>
+        </div>
+
+        <div class="flex w-[85%] items-start gap-3 pt-2 max-[600px]:w-full">
+          <input type="checkbox" name="userAgreed" id="agreement" required 
+            class="mt-1 h-5 w-5 cursor-pointer accent-[#2A8DC1]">
+          <label for="agreement" class="cursor-pointer text-[0.9rem] leading-tight text-[#444]">
+            I consent to the storage and use of the information I provide for contact purposes.
+          </label>
+        </div>
+
+        <button type="submit" 
+          class="mt-6 w-[180px] cursor-pointer rounded-lg border-2 border-black/10 bg-[#2A8DC1] py-3 text-[1.2rem] font-bold text-black shadow-md transition-all duration-300 hover:scale-105 hover:bg-[#1e74a3] hover:shadow-lg active:scale-95 max-[600px]:w-full">
+          Send Message
+        </button>
+      </form>
+    </div>
+  </main>
 </template>
-
-<script setup>
-</script>
-
-<style lang="scss" scoped>
-main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f9f9f9;
-    width: 100%;
-
-    .wrapper-form {
-        width: 50%;
-        background-color: rgba(174, 210, 229,0.5);
-        height: 672px;
-        border-radius: 6px;
-        box-shadow:  4px 4px 10px 3px rgba(0,0,0,0.3);
-    }
-
-    h2 {
-        font-size: 64px;
-        text-align: center;
-        margin: 16px 0px;
-        font-weight: 450;
-    }
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        width: 80%; 
-    }
-
-    .form-label {
-        font-weight: 500;
-        text-align: left;
-    }
-
-    input[type="text"],input[type="email"],textarea {
-        width: 100%;
-        font-size: 1.1rem;
-        background-color: #6AAED3;
-        border: none;
-        border-radius: 12px;
-        height: 3rem;
-        padding: 0.6rem 0.8rem;
-        color: #f9f9f9;
-        transition: all 0.3s ease;
-        box-sizing: border-box;
-    }
-
-    textarea {
-        height: auto;
-        resize: vertical;
-        padding-top: 0.6rem;
-    }
-
-    input::placeholder,textarea::placeholder {
-        color: rgba(249, 249, 249, 0.82);
-        font-weight: 300;
-    }
-
-    input:focus,textarea:focus {
-        border: 2px solid #2A8DC1;
-        outline: none;
-        box-shadow: 0 0 8px rgba(#2A8DC1, 0.5);
-    }
-}
-
-.form-agreement {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: 0.875rem;
-    width: 80%;
-}
-
-.userButton {
-    margin-top: 0.5rem;
-    font-size: 1.2rem; 
-    padding: 0.6rem 0.8rem;
-    font-weight: 500;
-    background-color: #2A8DC1;
-    border: 2px solid black;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 20%;
-}
-
-.userButton:hover {
-    box-shadow: 0px 8px 15px -4px rgba(8, 73, 111, 0.6);
-    transform: translateY(-2px);
-}
-
-@media (max-width: 600px) {
-    main {
-        width: 100vw;
-        padding: 0;
-    }
-
-    .wrapper-form {
-        width: 95% !important;
-        height: 642px !important;
-        box-shadow: none;
-    }
-
-    h2 {
-        font-size: 48px;
-        margin: 30px 0 20px 0;
-    }
-
-    form {
-        gap: 1.2rem;
-
-        .form-group {
-            width: 90%;
-            gap: 0.3rem;
-        }
-
-        .form-label {
-            font-size: 1.1rem;
-        }
-
-        input[type="text"],input[type="email"],textarea {
-            font-size: 1rem;
-            height: 2.8rem; 
-            padding: 0.5rem 0.7rem;
-        }
-
-        .form-agreement {
-            width: 90%;
-            gap: 0.5rem;
-            font-size: 0.875rem; 
-            align-items: center; 
-        }
-    }
-
-    .userButton {
-        width: 60%; 
-        font-size: 1.2rem; 
-        padding: 0.8rem 1rem;
-        margin-top: 1.5rem;
-    }
-}
-</style>
