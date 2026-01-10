@@ -27,6 +27,7 @@ onMounted(async () => {
         console.log("Temporary session cleared - security measure.");
       }
     } catch (err) {
+      console.log(err);
     }
   }
 });
