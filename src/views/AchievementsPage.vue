@@ -8,20 +8,22 @@
                 
                 <div class="text-center">
                     <h2 class="mt-5 mb-1 text-[40px] font-medium md:mt-3 md:text-[56px]">Achievements</h2>
-                    <p class="mb-[10px] text-[20px] md:mb-1 md:text-[28px]">Gained: <span class="font-bold">{{ achievements_count }} / {{ achievements_amount }}</span></p>
+                    <p class="mb-[10px] text-[20px] md:mb-1 md:text-[28px]">Gained: <span>{{ achievements_count }} / {{ achievements_amount }}</span></p>
                 </div>
 
                 <div class="flex-1 w-full overflow-y-auto pb-20 md:pb-[100px]">
                     <div class="mx-[10px] flex flex-col gap-5 md:mx-10 md:gap-10">
-                        <div class="grid grid-cols-2 gap-[10px] md:grid-cols-3 lg:grid-cols-4 md:gap-3">
-                            <div class="group relative flex flex-col cursor-pointer items-center" v-for="achievement in achievements" :key="achievement.image">
+                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
+                            <div class="group relative flex aspect-square cursor-pointer items-center justify-center" 
+                                v-for="achievement in achievements" :key="achievement.image">
+                                
                                 <img :src="achievement.image" :alt="achievement.alt" 
-                                    class="h-auto w-full max-w-[180px] max-h-[180px] border-2 border-black rounded-md md:h-[200px] md:w-[200px] md:max-w-none md:max-h-none transition-all duration-300"
-                                    :class="{'grayscale': !unlockedAchievements.includes(achievement.name)}"
+                                    class="h-full w-full rounded-md border-2 border-black object-cover transition-all duration-300"
+                                    :class="{'grayscale opacity-60': !unlockedAchievements.includes(achievement.name)}"
                                 >
                                 
-                                <div class="absolute top-0 flex h-full w-full max-w-[180px] max-h-[180px] items-center justify-center rounded-md bg-black/60 p-[5px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:h-[200px] md:w-[200px] md:max-w-none md:max-h-none md:p-0">
-                                    <p class="text-center text-[14px] font-bold text-white md:text-[16px]">
+                                <div class="absolute inset-0 flex items-center justify-center rounded-md bg-black/70 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:p-4">
+                                    <p class="text-center text-[13px] font-bold text-white leading-tight md:text-[16px]">
                                         {{ achievement.description }}
                                     </p>
                                 </div>

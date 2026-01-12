@@ -9,7 +9,7 @@
                 <div class="text-center">
                     <h2 class="mt-3 mb-1 text-[56px] font-medium max-[600px]:mt-5 max-[600px]:text-[40px]">Shop</h2>
                     <div class="flex justify-center items-center gap-1">
-                        <p class="text-[28px] max-[600px]:text-[20px]">Coins: <span class="font-bold">{{userCoins}}</span></p>
+                        <p class="text-[28px] max-[600px]:text-[20px]">Coins: <span class="font-medium">{{userCoins}}</span></p>
                         <img src="../assets/coin-icon.svg" alt="coin icon" class="w-9 h-9 max-[600px]:w-7 max-[600px]:h-7">
                     </div>
                 </div>

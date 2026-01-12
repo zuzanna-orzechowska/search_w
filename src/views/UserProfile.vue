@@ -47,10 +47,14 @@
                     <div class="mx-10 my-[42px] max-[600px]:mx-[10px] max-[600px]:my-[30px]">
                         <h4 class="mb-6 text-[24px] font-medium max-[600px]:mb-4 max-[600px]:text-[20px]">Achievements</h4>
                         <div v-if="userAchievements.length > 0" class="grid grid-cols-5 gap-4 max-[1280px]:grid-cols-3 max-[992px]:grid-cols-3 max-[600px]:grid-cols-3 max-[600px]:gap-3">
-                            <div class="group relative flex justify-center" v-for="(achiev,ind) in displayedAchievements" :key="ind">
-                                <img :src="achiev.image" class="h-[180px] w-[180px] rounded-md border-2 border-black max-[600px]:h-[110px] max-[600px]:w-[110px]">
-                                <div class="absolute top-0 flex h-[180px] w-[180px] items-center justify-center rounded-md bg-black/60 p-[10px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 max-[600px]:h-[110px] max-[600px]:w-[110px] max-[600px]:p-1">
-                                    <p class="text-center text-[16px] font-bold text-white max-[600px]:text-[12px]">{{ achiev.description }}</p>
+                            <div class="group relative flex justify-center aspect-square" v-for="(achiev,ind) in displayedAchievements" :key="ind">
+                                <img :src="achiev.image" 
+                                    class="w-full h-full object-cover rounded-md border-2 border-black">
+                                
+                                <div class="absolute inset-0 flex items-center justify-center rounded-md bg-black/60 p-[10px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 max-[600px]:p-2">
+                                    <p class="text-center text-[16px] font-bold text-white max-[600px]:text-[12px]">
+                                        {{ achiev.description }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
