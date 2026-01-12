@@ -1,9 +1,20 @@
 <template>
-  <div class="flex flex-col border-2 border-[#57A4CD] min-[601px]:border-4 w-full bg-[#f9f9f9] shadow-lg touch-none max-h-[70vh] aspect-square mx-auto" ref="gridRef">
-    <div class="flex flex-1" v-for="(row, indRow) in grid" :key="indRow">
-      <span v-for="(cell, indCell) in row" :key="indCell" class="flex-1 aspect-square flex items-center justify-center cursor-pointer border-[0.5px] border-blue-100/20  uppercase transition-colors select-none"
-        :class="['text-[4.5vw] min-[601px]:text-[min(2.5vw,28px)]']" :style="getCellStyle(indRow, indCell)" @mousedown.prevent="$emit('start', indRow, indCell)" @mouseover="$emit('extend', indRow, indCell)" 
-        @mouseup="$emit('end')" @touchstart.prevent="$emit('start', indRow, indCell)" @touchmove="handleTouchMove" @touchend="$emit('end')">
+  <div class="flex flex-col border-2 border-[#57A4CD] min-[601px]:border-4 w-full bg-[#f9f9f9] shadow-lg touch-none aspect-square mx-auto overflow-hidden" 
+    ref="gridRef">
+    <div class="flex flex-1 w-full" v-for="(row, indRow) in grid" :key="indRow">
+      <span 
+        v-for="(cell, indCell) in row" 
+        :key="indCell" 
+        class="flex-1 flex items-center justify-center cursor-pointer border-[0.5px] border-blue-100/20 uppercase transition-colors select-none"
+        :class="[grid[0].length > 12 ? 'text-[0.8rem] min-[601px]:text-xl' : 'text-lg min-[601px]:text-2xl']"
+        :style="getCellStyle(indRow, indCell)" 
+        @mousedown.prevent="$emit('start', indRow, indCell)" 
+        @mouseover="$emit('extend', indRow, indCell)" 
+        @mouseup="$emit('end')" 
+        @touchstart.prevent="$emit('start', indRow, indCell)" 
+        @touchmove="handleTouchMove" 
+        @touchend="$emit('end')"
+      >
         {{ cell }}
       </span>
     </div>

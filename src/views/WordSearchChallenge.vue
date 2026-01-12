@@ -15,7 +15,7 @@
                     <WordSearchList :wordsToFind="wordsToFind" :foundWords="foundWords" :twoColumns="true" />
                 </div>
     
-                <div class="w-full max-w-[500px]">
+                <div class="w-full max-w-[90vw] min-[992px]:max-w-[600px] lg:max-w-[600px]">
                     <WordSearchGrid :grid="grid" :selection="selection" :selectionColor="selectionColor" :foundWordsData="foundWordsData" :wordsColor="wordsColor"
                         @start="handleStart" @extend="handleExtend" @end="handleEnd"/>
                 </div>
